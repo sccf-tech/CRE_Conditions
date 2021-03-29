@@ -58,10 +58,9 @@ xmaj=seq(xlim.vals[1],xlim.vals[2],by="2 months");xmin=seq(xlim.vals[1],xlim.val
 
 ### Stage Elevation
 
-
 ```{r LakeO Data, warnings=FALSE,echo=FALSE,include=FALSE}
 #LORS
-data(LORS)
+load("C:/Julian_LaCie/_GitHub/CRE_Conditions/Data/LORS.Rdata")
 LORS$Year=CurWY-1
 LORS$Date2=with(LORS,date.fun(paste(Year,Month,Day,sep="-")))
 
@@ -375,3 +374,11 @@ algae.week%>%
 
 
 ```
+
+## Caloosahatchee River Estuary
+
+### Discharge
+
+### Salinity Conditions
+
+***
