@@ -48,6 +48,7 @@ dates=c(Start.Date2,as.Date(Start.Date2+duration(366,"days")))
 xlim.vals=as.POSIXct(strptime(dates,"%Y-%m-%d"),tz="EST")
 xmaj=seq(xlim.vals[1],xlim.vals[2],by="2 months");xmin=seq(xlim.vals[1],xlim.vals[2],by="1 months")
 
+lwd.val=1
 ```
 
 
@@ -386,7 +387,7 @@ algae.week%>%
   bg(i=~alge.score=="High Concern",j=~alge.score,part="body",bg="red")%>%
   bg(i=~BG.score=="Min. Concern",j=~BG.score,part="body",bg="green")%>%
   bg(i=~BG.score=="High Concern",j=~BG.score,part="body",bg="red")%>%
-  footnote(j=2,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(7),"%m/%d/%Y")," - ",format(End.Date,"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
+  footnote(j=2:3,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(7),"%m/%d/%Y")," - ",format(End.Date,"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
   footnote(j=4,part="header",value=as_paragraph("Chlorophyll Categories:\nMin. Concern: values < 20 \u03BCg L\u207B\u00B9\nWarning: values \u2265 20\u03BCg L\u207B\u00B9 and <40 \u03BCg L\u207B\u00B9 \nHigh Concern: values \u2265 40 \u03BCg L\u207B\u00B9" ),ref_symbols=c(" 2 "))%>%
   footnote(j=5,part="header",value=as_paragraph("Phycocyanin Categories:\nMin. Concern: values < 40 \u03BCg L\u207B\u00B9\nHigh Concern: values \u2265 40 \u03BCg L\u207B\u00B9" ),ref_symbols=c(" 3 "))%>%
   add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=12,part="header")
@@ -400,6 +401,148 @@ algae.week%>%
 ## Caloosahatchee River Estuary
 
 ### Discharge
+
+```{r Caloosa Data_Flow, include=FALSE}
+cal.flow=data.frame(DBKEY=c("DJ235","DJ237"),SITE=c("S77","S79"))
+cal.flow.dat=data.frame()
+for(i in 1:2){
+  tmp=DBHYDRO_daily(date.fun(paste(CurWY-3,"05-01",sep="-")),End.Date,cal.flow$DBKEY[i])
+  tmp$DBKEY=as.character(cal.flow$DBKEY[i])
+  cal.flow.dat=rbind(tmp,cal.flow.dat)
+}
+cal.flow.dat$Date=date.fun(cal.flow.dat$Date)
+cal.flow.dat$WY=WY(cal.flow.dat$Date)
+
+cal.flow.dat.xtab=cast(merge(cal.flow.dat,cal.flow,"DBKEY"),Date+WY~SITE,value="Data.Value",mean)
+cal.flow.dat.xtab$hydro.day=hydro.day(cal.flow.dat.xtab$Date)
+cal.flow.dat.xtab$C43=with(cal.flow.dat.xtab,ifelse(S79>S77,0,S77-S79))
+
+cal.flow.dat.xtab$cum.S79=with(cal.flow.dat.xtab,ave(cfs.to.acftd(S79),WY,FUN = function(x)cumsum(ifelse(is.na(x),0,x))))
+cal.flow.dat.xtab$cum.S77=with(cal.flow.dat.xtab,ave(cfs.to.acftd(S77),WY,FUN = function(x)cumsum(ifelse(is.na(x),0,x))))
+cal.flow.dat.xtab$Q.14=with(cal.flow.dat.xtab,c(rep(NA,13),rollapply(S79,width=14,FUN=function(x)mean(x,na.rm=T))))
+cal.flow.dat.xtab$Q.30=with(cal.flow.dat.xtab,c(rep(NA,29),rollapply(S79,width=30,FUN=function(x)mean(x,na.rm=T))))
+
+```
+
+
+
+```{r Cal Flow plots, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+ylim.max=signif(max(subset(cal.flow.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$S79,na.rm=T)+max(cal.flow.dat.xtab$S79,na.rm=T)*0.1,0)
+
+ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+xlim.val=date.fun(c(TODAY-ddays(30),TODAY+ddays(3)));xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+cols=c("dodgerblue1","indianred1","black")
+
+layout(matrix(1:2,2,1,byrow=F),widths=c(2,1),heights=c(2,0.4))
+par(family="serif",cex.axis=1.2,mar=c(2,2,1,1),oma=c(0.5,3,1,2));
+plot(S79~Date,cal.flow.dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+with(cal.flow.dat.xtab,lines(Date,S79,col=cols[1],lwd=2))
+with(cal.flow.dat.xtab,lines(Date,S77,col=cols[2],lwd=2,lty=2))
+with(cal.flow.dat.xtab,lines(Date,C43,col=cols[3],lwd=2,lty=3))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+box(lwd=lwd.val)
+mtext("Date\n(MM/DD/YYYY)",side=1,line=2.75,cex=1.25)
+mtext("Daily Discharge (cfs)",side=2,line=3.5,cex=1.25)
+
+plot(0:1,0:1,type="n",yaxt="n",xaxt="n",bty="n")
+legend(0.5,0.5,
+       legend=c("S-79 (to Estuary)","S-77 (from Lake)","C-43 Basin Flow"),
+       col=cols,lty=c(1,2,3),lwd=c(2.5,2.5,2.5),pt.cex=2.5,ncol=3,cex=1.25,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
+
+```
+
+<font size=3><center>S-77 (from Lake Okeechobee) and S-79 (to Tidal Basin) flow data along the C-43 and Caloosahatchee River. C-43 Basin Flow was calculated as the difference from S-77 and S-79.</center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+
+<br>
+
+```{r Cal14Flow plots, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+ylim.max=signif(max(subset(cal.flow.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$S79,na.rm=T)+max(cal.flow.dat.xtab$S79,na.rm=T)*0.1,0)
+
+ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+xlim.val=date.fun(c(TODAY-ddays(30),TODAY+ddays(3)));xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+
+layout(matrix(1:2,2,1,byrow=F),widths=c(2,1),heights=c(1,0.5))
+par(family="serif",cex.axis=1.2,mar=c(2,2,1,1),oma=c(0.5,3,1,2));
+plot(S79~Date,cal.flow.dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
+yy3=c(2600,ylim.max,ylim.max,2600);polygon(x=xx,y=yy3,col=adjustcolor("red",0.5))
+yy4=c(2100,2600,2600,2100);polygon(x=xx,y=yy4,col=adjustcolor("yellow",0.5))
+yy5=c(750,2100,2100,750);polygon(x=xx,y=yy5,col=adjustcolor("green",0.5))
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+abline(h=457,col="red")
+with(cal.flow.dat.xtab,pt_line(Date,S79,2,"black",1,21,"grey",cex=1.25,pt.lwd=0.1))
+with(cal.flow.dat.xtab,lines(Date,Q.14,lwd=3,col=adjustcolor("dodgerblue3",0.5)))
+with(cal.flow.dat.xtab,lines(Date,Q.30,lwd=3,col=adjustcolor("black",0.5),lty=2))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+box(lwd=lwd.val)
+mtext("Date\n(MM/DD/YYYY)",side=1,line=2.75,cex=1.25)
+mtext("Discharge (cfs)",side=2,line=3.5,cex=1.25)
+
+plot(0:1,0:1,type="n",yaxt="n",xaxt="n",bty="n")
+legend(0.25,0.75,
+       legend=c( "Damaging (>2600 cfs)","Stress (2100 - 2600 cfs)","Optimum (750 - 2100 cfs)"),pch=22,
+       pt.bg=adjustcolor(c("red","yellow","green"),0.5),pt.cex=2,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5,title.adj = 0,title='RECOVER PM')
+
+legend(0.75,0.75,
+       legend=c("Daily Discharge","14-Day moving average","30-Day moving average","MFL (40E-8.221(2) FAC)"),
+       pch=c(21,NA,NA,NA),pt.bg=c("grey",NA,NA,NA),pt.cex=c(1.5,NA,NA,NA),lty=c(NA,1,2,1),lwd=c(0.5,2,2,1),col=c("black",adjustcolor(c("dodgerblue1","black"),0.5),"red"),
+       ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5,title.adj = 0,title='')
+
+```
+
+<font size=3><center>Daily and 14-day moving average discharge for S-79 relative to the Northern Estuaries RECOVER performance measure for the recent 30-day period.</center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+
+
+<br>
+
+```{r CalcumFlow plots, echo=FALSE,fig.width=7,fig.height=4,fig.align='center'}
+ylim.max=signif(max(cal.flow.dat.xtab$cum.S79),0)
+ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+xlim.val=c(0,366);xmaj=seq(xlim.val[1],xlim.val[2],90);xmin=seq(xlim.val[1],xlim.val[2],30)
+cols=c("indianred1","orange","dodgerblue1")
+
+layout(matrix(1:2,1,2,byrow=F),widths = c(1,1,0.5))
+par(family="serif",mar=c(2,2,1,1),oma=c(1,3,1,2));
+
+plot(cum.S79~hydro.day,cal.flow.dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+for(i in 1:3){
+if(i==3){
+  with(subset(cal.flow.dat.xtab,WY==seq(CurWY-2,CurWY,1)[i]),lines(hydro.day,cum.S79,lwd=2.5,col=cols[i]))}else{
+  with(subset(cal.flow.dat.xtab,WY==seq(CurWY-2,CurWY,1)[i]),lines(hydro.day,cum.S79,lwd=3,col=adjustcolor(cols[i],0.5)))}
+ }
+axis_fun(1,xmaj,xmin,xmaj,line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj/1000,cex.axis=1);box(lwd=lwd.val)
+mtext("Day of Water Year",side=1,line=2,cex=1.25)
+mtext("Cumulative Discharge (kAc-Ft D\u207B\u00B9)",side=2,line=3.5,cex=1.25)
+mtext(side=3,"S-79",adj=0)
+
+plot(cum.S79~hydro.day,cal.flow.dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+for(i in 1:3){
+if(i==3){
+  with(subset(cal.flow.dat.xtab,WY==seq(CurWY-2,CurWY,1)[i]),lines(hydro.day,cum.S77,lwd=2.5,col=cols[i]))}else{
+  with(subset(cal.flow.dat.xtab,WY==seq(CurWY-2,CurWY,1)[i]),lines(hydro.day,cum.S77,lwd=3,col=adjustcolor(cols[i],0.5)))}
+ }
+axis_fun(1,xmaj,xmin,xmaj,line=-0.5)
+axis_fun(2,ymaj,ymin,NA);box(lwd=lwd.val)
+mtext("Day of Water Year",side=1,line=2,cex=1.25)
+mtext(side=3,"S-77",adj=0)
+
+#plot(0:1,0:1,type="n",yaxt="n",xaxt="n",bty="n")
+legend("topright",
+       legend=c(paste0("WY",seq(CurWY-2,CurWY,1))),
+       col=cols,lty=c(1),lwd=c(2.5),pt.cex=1,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
+
+```
+
+<font size=3><center>Cumulative discharge for S-79 (to Tidal Basin) and S-77 (from Lake Okeechobee) for the last three Florida Water Years (May - April). Day of water year is analogous to day of year with Day 1 = May 1<sup>st</sup>.</center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
 
 ### Salinity Conditions
 
