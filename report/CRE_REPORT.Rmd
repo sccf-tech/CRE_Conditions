@@ -494,7 +494,7 @@ legend(0.75,0.75,
 
 ```
 
-<font size=3><center>Daily and 14-day moving average discharge for S-79 relative to the Northern Estuaries RECOVER performance measure for the recent 30-day period.</center></font>
+<font size=3><center>Daily, 14-day moving average and 30-day moving average discharge for S-79 relative to the Northern Estuaries RECOVER performance measure and the established minimium flows and levels (MFLs) for the recent 30-day period.</center></font>
 <font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
 
 
