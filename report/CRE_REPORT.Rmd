@@ -6,7 +6,6 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
-
 ***
 
 `r paste("Updated",as.POSIXct(Sys.time(),"%Y-%m-%d %H:%M",tz=""))`
@@ -34,7 +33,7 @@ CurWY
 
 
 ## Stage Data
-TODAY=as.POSIXct(strptime(Sys.time(),"%F"),tz="EST")-duration(1,"days")
+TODAY=as.POSIXct(strptime(Sys.time(),"%F"),tz="EST") # -duration(1,"days")
 YEST=TODAY-duration(1,"days")
 End.Date=as.Date(Sys.time())+duration(1,"days")
 
@@ -87,10 +86,25 @@ stg.da$DATE=date.fun(stg.da$Date)
 LakeO.xtab=cast(stg.da,DATE~Priority,value="Data.Value",mean)
 LakeO.xtab$Mean=with(LakeO.xtab,ifelse(is.na(P1)==T,P2,P1))
 
+if(sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
+  da.dbks=data.frame(SITE=c("L001","L005","L006","LZ40","S133TW","S352HW","S4TW"),DBKEY=c("16022","12509","12519","16265","15826","FF579","15732"),type="Daily")
+  tmp=DBHYDRO_daily(YEST-ddays(2),YEST,da.dbks$DBKEY)
+  tmp$DATE=date.fun(tmp$Date)
+  tmp2=DBHYDRO_breakpoint(YEST-ddays(2),YEST,"AI522")
+  tmp2$DATE=date.fun(tmp2$DATE)
+  tmp2.mean=ddply(tmp2,"DATE",summarise,Data.Value=round(mean(Data.Value,na.rm=T),2))
+  tmp2.mean$Station="S308HW"
+  
+  tmp.all=rbind(tmp[,c("DATE","Station","Data.Value")],tmp2.mean[,c("DATE","Station","Data.Value")])
+  calc.LakeO.stg=ddply(tmp.all,"DATE",summarise,Mean=round(mean(Data.Value,na.rm=T),2))
+  calc.LakeO.stg[,c("P1","P2")]=NA
+  LakeO.xtab=rbind(LakeO.xtab,calc.LakeO.stg[,names(LakeO.xtab)])
+  LakeO.xtab=LakeO.xtab[duplicated(LakeO.xtab$DATE,fromLast = T)==F,]
+}
+
 LakeO.xtab=merge(x=LakeO.xtab,y=LORS.gaph2Yrs,by.x="DATE",by.y="Date2",all.x=T)
 
 LakeO.xtab$Status=with(LakeO.xtab,ifelse(Mean>High,"within the High Lake",ifelse(Mean<High&Mean>Intermediate,"within the Operational High Sub-",ifelse(Mean<Intermediate&Mean>Low,"within the Operational Intermediate Sub-",ifelse(Mean<Low&Mean>BaseFlow,"within the Operational Low Sub-",ifelse(Mean<BaseFlow&Mean>BeneficialUse,"within the Operational Base Flow Sub-",ifelse(Mean<BeneficialUse&Mean>WSM,"within the Beneficial Use",ifelse(Mean<WSM,"within the Water Shortage Management",NA))))))))
-
 
 LakeO.xtab$StatusLow=with(LakeO.xtab,ifelse(Mean<Low,"Below","Above"))
 LakeO.xtab$DiffLow=with(LakeO.xtab,Mean-Low)
@@ -191,6 +205,7 @@ subset(LakeO.xtab,hydro.day==hydro.day(YEST))%>%
                     "recess_7day"="7-Day Recession Rate\n(ft 7-d\u207B\u00B9)",
                     "recess_30day"="30-Day Recession Rate\n(ft 30-d\u207B\u00B9)")%>%
   bg(i=~WY==CurWY,part="body",bg="wheat")%>%
+  footnote(i=3,j=3,value=ifelse(is.na(subset(LakeO.xtab,DATE==YEST)$P1)==T|is.na(subset(LakeO.xtab,DATE==YEST)$P2)==T,as_paragraph("Value estimated from average stage height across L001, L005, L006, LZ40, S133TW, S352HW & S4TW"),as_paragraph("Value provided by SFWMD DBKEY:N3466")),ref_symbols =c(" A "))%>%
   add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
     
 
@@ -204,7 +219,7 @@ subset(LakeO.xtab,hydro.day==hydro.day(YEST))%>%
 
 rf.dbkey=data.frame(DBKEY=c("16414","15495","16415"),SITE=c("S79 (WP Franklin)","S78 (Ortona)","S77 (Moore Haven)"))
 
-rf.dat=DBHYDRO_daily(End.Date-ddays(7),End.Date,rf.dbkey$DBKEY)
+rf.dat=DBHYDRO_daily(End.Date-ddays(9),YEST,rf.dbkey$DBKEY)
 rf.dat=merge(rf.dat,rf.dbkey,"DBKEY")
 rf.dat.da=ddply(rf.dat,c("SITE"),summarise,TRF=sum(Data.Value,na.rm=T))
 rf.dat.da=rf.dat.da[match(rf.dat.da$SITE,rf.dbkey$SITE),]
@@ -223,7 +238,7 @@ rf.dat.da%>%
   set_header_labels("SITE"="Mointoring Location",
                     "TRF"="Weekly\nRainfall\nTotal\n(inches)")%>%
   width(width=c(1.5,1))%>%
-  footnote(j=2,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(7),"%m/%d/%Y")," - ",format(End.Date,"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
+  footnote(j=2,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(9),"%m/%d/%Y")," - ",format(YEST,"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
   add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
 
 ```
@@ -259,12 +274,13 @@ sonde.dat.xtab$phy_chl=with(sonde.dat.xtab,PU/(PU+CU))
 
 ```
 
-
-```{r, out.width="40%",echo=FALSE,fig.align="center"}
+```{r, out.width="30%",echo=FALSE,fig.align="center"}
 knitr::include_graphics("LakeO_sonde_map.png")
 ```
 
 <font size=3><center> Sonde monitoring locations within Lake Okeechobee conducted by SFWMD.</center></font>
+
+<br>
 
 ```{r LO sonde plot,echo=FALSE,warning=F,fig.width=8,fig.height=5,fig.align='center'}
 EDate.plot=as.Date(Sys.time())+duration(5,"days")
@@ -283,7 +299,7 @@ ylim.val=c(1,100);ymaj=log.scale.fun(ylim.val,"major");ymin=log.scale.fun(ylim.v
 plot(CF~Date,tmp.dat,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ylab=NA,xlab=NA,log="y")
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
 with(tmp.dat,pt_line(Date,CU,2,"mediumspringgreen",1,21,"mediumspringgreen",pt.lwd=0.1,cex=1.25))
-abline(h=20,col="red",lty=2)
+abline(h=c(20,40),col="red",lty=2)
 axis_fun(1,xmaj,xmin,NA)
 if(i==1){axis_fun(2,ymaj,ymin,ymaj)}else{axis_fun(2,ymaj,ymin,NA)}
 box(lwd=1)
@@ -295,7 +311,7 @@ plot(PF~Date,tmp.dat,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ylab=NA,xlab=NA
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
 with(tmp.dat,pt_line(Date,PU,2,"lightseagreen",1,21,"lightseagreen",pt.lwd=0.1,cex=1.25))
 axis_fun(1,xmaj,xmin,NA)
-abline(h=c(20,40),lty=2,col="red")
+abline(h=c(40),lty=2,col="red")
 if(i==1){axis_fun(2,ymaj,ymin,ymaj)}else{axis_fun(2,ymaj,ymin,NA)}
 box(lwd=1)
 if(i==1){mtext(side=2,line=axisln.val,"Phycocyanin\n(\u03BCg L\u207B\u00B9)")}
@@ -338,6 +354,8 @@ mtext(side=1,outer=T,line=1,"Date (Month-Day)")
 </ul>
 
 
+<br>
+
 ```{r}
 algae.week=ddply(subset(sonde.dat.xtab,Date%in%date.fun(seq(End.Date-ddays(7),End.Date,"1 days"))),"Station.ID",summarise,
       mean.Chl=round(mean(CU,na.rm=T),0),mean.Phyco=round(mean(PU,na.rm=T),0))
@@ -345,8 +363,8 @@ algae.week$alge.score=with(algae.week,ifelse(mean.Chl<20,"Min. Concern",
                                              ifelse(mean.Chl>=40,"High Concern",
                                                     ifelse(mean.Chl>=20|mean.Chl<40,"Warning",
                                                            ifelse(mean.Chl>=20,"Concern",NA)))))
-algae.week$BG.score=with(algae.week,ifelse(mean.Chl<40,"Min. Concern",
-                                             ifelse(mean.Chl>=40,"High Concern",NA)))
+algae.week$BG.score=with(algae.week,ifelse(mean.Phyco<40,"Min. Concern",
+                                             ifelse(mean.Phyco>=40,"High Concern",NA)))
 
 cap.val=c("Weekly mean water quality sonde Chlorophyll and Phycocyanin concentration at monitoring locations across Lake Okeechobee")
 algae.week%>%
@@ -354,26 +372,30 @@ algae.week%>%
   align(j=2:5,align="center",part="all")%>%
   padding(padding=2,part="all")%>%
   font(fontname="Times New Roman",part="all")%>%
-  fontsize(size=12,part="body")%>%
-  fontsize(size=13,part="header")%>%
+  fontsize(size=10,part="body")%>%
+  fontsize(size=12,part="header")%>%
   bold(part="header")%>%
   set_header_labels("Station.ID"="Site",
                     "mean.Chl"="7-day Mean\nChlorophyll Conc.\n(\u03BCg L\u207B\u00B9)",
                     "mean.Phyco"="7-day Mean\nPhycocyanin Conc.\n(\u03BCg L\u207B\u00B9)",
                     "alge.score"="Green Algal\nConcern Category",
                     "BG.score"="Blue-green Algae\nConcern Category")%>%
-  width(width=c(1,1.5,1.75,1.5,1.5))%>%
+  width(width=c(0.8,1.5,1.75,1.6,1.6))%>%
   bg(i=~alge.score=="Min. Concern",j=~alge.score,part="body",bg="green")%>%
   bg(i=~alge.score=="Warning",j=~alge.score,part="body",bg="yellow")%>%
   bg(i=~alge.score=="High Concern",j=~alge.score,part="body",bg="red")%>%
   bg(i=~BG.score=="Min. Concern",j=~BG.score,part="body",bg="green")%>%
   bg(i=~BG.score=="High Concern",j=~BG.score,part="body",bg="red")%>%
   footnote(j=2,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(7),"%m/%d/%Y")," - ",format(End.Date,"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
-  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
+  footnote(j=4,part="header",value=as_paragraph("Chlorophyll Categories:\nMin. Concern: values < 20 \u03BCg L\u207B\u00B9\nWarning: values \u2265 20\u03BCg L\u207B\u00B9 and <40 \u03BCg L\u207B\u00B9 \nHigh Concern: values \u2265 40 \u03BCg L\u207B\u00B9" ),ref_symbols=c(" 2 "))%>%
+  footnote(j=5,part="header",value=as_paragraph("Phycocyanin Categories:\nMin. Concern: values < 40 \u03BCg L\u207B\u00B9\nHigh Concern: values \u2265 40 \u03BCg L\u207B\u00B9" ),ref_symbols=c(" 3 "))%>%
+  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=12,part="header")
   
 
 
 ```
+
+***
 
 ## Caloosahatchee River Estuary
 
