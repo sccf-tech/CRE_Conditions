@@ -544,6 +544,226 @@ legend("topright",
 <font size=3><center>Cumulative discharge for S-79 (to Tidal Basin) and S-77 (from Lake Okeechobee) for the last three Florida Water Years (May - April). Day of water year is analogous to day of year with Day 1 = May 1<sup>st</sup>.</center></font>
 <font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
 
+### Chlorophyll, Phycocyanin & fDOM
+
+```{rCal_algae,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+# 32315 relative fChl
+# 32321 relative Phycocyanin
+#cal.algae=readNWISdv("02292900",c("32315","32321"),"2017-11-01",format(End.Date,"%Y-%m-%d"))
+cal.algae=readNWISdv("02292900",c("00300","32295","32315","32321"),format(Start.Date,"%Y-%m-%d"),format(End.Date,"%Y-%m-%d"))
+cal.algae=renameNWISColumns(cal.algae)
+cal.algae$Date=date.fun(cal.algae$Date)
+
+cal.algae=merge(cal.algae,data.frame(Date=date.fun(seq(Start.Date,End.Date,"1 days")),fill=1),"Date",all.y=T)
+
+cal.algae$phy_chl=with(cal.algae,X_FLOATING_32321/(X_FLOATING_32321+X_FLOATING_32315))
+
+EDate.plot=as.Date(Sys.time())+duration(1,"days")
+SDate.plot=as.Date(EDate.plot-duration(14,"days"))
+lwd.val=1
+xlim.val=as.POSIXct(strptime(c(SDate.plot,EDate.plot),"%Y-%m-%d"),tz="EST")
+xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+
+ylim.val=c(0,250);
+by.y=50
+ymaj=seq(ylim.val[1],ylim.val[2],by.y);
+ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+
+par(family="serif",mar=c(1,3,0.5,4),oma=c(3,3,2,2));
+layout(matrix(1:3,3,1),heights=c(1,1,0.5))
+
+plot(X_FLOATING_32295~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+with(cal.algae,pt_line(Date,X_FLOATING_32295,1,"tan3",1.5,21,"tan3",cex=1.25,pt.lwd=0.1))
+axis_fun(2,ymaj,ymin,format(ymaj))
+axis_fun(1,xmaj,xmin,NA);box(lwd=1)
+mtext(side=2,line=2.5,"fDOM (RFU)")
+mtext(side=3,adj=0,"S-79 - Floating Sensor\n(USGS Site: 02292900)")
+mtext(side=3,adj=1,"Data are provisional",col="red")
+
+ylim.val=c(0,12);
+by.y=max(ylim.val)/3;
+ymaj=seq(ylim.val[1],ylim.val[2],by.y);
+ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+
+ylim.val2=c(0,6);
+by.y2=max(ylim.val2)/3;
+ymaj2=round(seq(ylim.val2[1],ylim.val2[2],by.y2),1);
+ymin2=round(seq(ylim.val2[1],ylim.val2[2],by.y2/2),1)
+
+plot(X_FLOATING_32315~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+with(cal.algae,pt_line(Date,X_FLOATING_32315,1,"forestgreen",1.5,21,"forestgreen",cex=1.25,pt.lwd=0.1))
+with(cal.algae,pt_line(Date,X_FLOATING_32321,1,"dodgerblue1",1.5,21,"dodgerblue1",cex=1.25,pt.lwd=0.1))
+axis_fun(2,ymaj,ymin,format(ymaj))
+abline(h=3.8,lty=2,col="red");# based ib fChl and grab Chl-a model (fChlAnalysis_summary.rmd). 
+
+axis_fun(1,xmaj,xmin,NA);box(lwd=1)
+mtext(side=2,line=2.5,"Relative Fluorescence Units\n(RFU) ")
+legend("topleft",legend=c("Chlorophyll","Phycocyanin","~20 \u03BCg L\u207B\u00B9 Chl-a"),
+       lty=c(1,1,2),lwd=3,col=c("forestgreen","dodgerblue1","red"),
+       ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
+ylim.val3=c(0,1);
+by.y3=0.5;
+ymaj3=seq(ylim.val3[1],ylim.val3[2],by.y3);
+ymin3=seq(ylim.val3[1],ylim.val3[2],by.y3/2)
+
+plot(phy_chl~Date,cal.algae,ylim=ylim.val3,xlim=xlim.val,type="n",axes=F,ann=F)
+abline(h=ymaj3,v=xmaj,lty=3,col="grey")
+with(cal.algae,pt_line(Date,phy_chl,1,"indianred1",1.5,21,"indianred1",cex=1.25,pt.lwd=0.1))
+axis_fun(2,ymaj3,ymin3,format(ymaj3))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"));box(lwd=1)
+mtext(side=2,line=2.5,expression(paste(frac("Phyco","Phyco + Chl"))))
+mtext("Date (MM/DD/YYYY)",side=1,line=2.25,cex=1)
+
+
+```
+
+<font size=3><center>Top: Daily dissolved organic matter (fluorescence DOM). Middle: Daily relative fluorescence Chlorophyll and Phycocyanin observed at the floating sensor bouy at S-79 monitoring by USGS. Bottom: The relative ratio of Phycocyanin (Phyco) relative to Phyco and Chlorophyll (Chl). </center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+
+
 ### Salinity Conditions
+
+```{r Caloosa Data, include=FALSE}
+End.Date=as.Date(Sys.time()); ## Update this value
+Start.Date=as.Date(End.Date-duration(30,"days"));
+
+bk.dbkeys.bot=data.frame(depth="bottom",
+                         SITE=c(rep("VALI75",2),rep("FORTMYERSM",2),rep("CCORAL",2),rep("MARKH",2),rep("SANIB2",2)),
+                         param=rep(c("WT","SPC"),5),
+                         DBKEY=c("UL030","UL026","88288","88291","UO832","AJ012","88198","88202","WN375","WN377")
+                         )
+sal.dat=data.frame()
+for(i in 1:nrow(bk.dbkeys.bot)){
+  tmp=DBHYDRO_breakpoint(Start.Date,End.Date,bk.dbkeys.bot$DBKEY[i])
+  tmp$DBKEY=bk.dbkeys.bot$DBKEY[i]
+  sal.dat=rbind(sal.dat,tmp)
+  print(i)
+}
+sal.dat=merge(sal.dat,bk.dbkeys.bot,"DBKEY")
+sal.dat$Date.EST=date.fun(sal.dat$DATETIME)
+
+sal.dat.xtab=cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T))
+sal.dat.xtab$Sal=with(sal.dat.xtab,SalinityCalc(SPC,WT))
+
+Cal.Sal=subset(sal.dat.xtab,SITE%in%c("CCORAL","FORTMYERSM","MARKH","SANIB2"))
+unique(Cal.Sal$SITE)
+
+Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7,na.rm=T)))
+
+
+```
+
+
+```{r Cal Instant Sal plot,echo=FALSE,fig.width=11,fig.height=6,fig.align='center'}
+CALSITES=c("SANIB2","MARKH","CCORAL","FORTMYERSM","S79")
+EDate.plot=as.Date(Sys.time())+duration(1,"days")
+SDate.plot=as.Date(EDate.plot-duration(14,"days"))
+lwd.val=1
+xlim.val=as.POSIXct(strptime(c(SDate.plot,EDate.plot),"%Y-%m-%d"),tz="EST")
+xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+
+ylim.val=c(0,40);
+ylim.val2=c(0,20);
+by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+colrmp=blue2green(10)
+txt.cex=2
+
+par(family="serif",cex.axis=1.2,mar=c(1,2.5,1,1),oma=c(12,3,4,1),mgp=c(3,1,0));
+layout(matrix(c(1,2,3,4),1,4,byrow=F));
+station.label=c("Sanibel","Shell Point","Cape Coral","Ft. Myers")
+for(i in 1:2){
+plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[i]),type="n",ylim=ylim.val,xlim=xlim.val,xaxt="n",xaxs="i",xlab=NA,yaxt="n",yaxs="i",ylab=NA,lwd=1.75,col=colrmp[1])
+xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
+yy=c(0,5,5,0);polygon(x=xx,y=yy,col="peachpuff1")
+yy2=c(35,40,40,35);polygon(x=xx,y=yy2,col="peachpuff1")
+yy3=c(30,35,35,30);polygon(x=xx,y=yy3,col="khaki")
+yy4=c(5,10,10,5);polygon(x=xx,y=yy4,col="khaki")
+yy5=c(10,30,30,10);polygon(x=xx,y=yy5,col="darkseagreen2")
+abline(h=seq(0,40,5))
+with(subset(Cal.Sal,SITE==CALSITES[i]),pt_line(Date.EST,Sal,1,colrmp[i],2,21,colrmp[i],cex=2,pt.col=colrmp[i]))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),cex.axis=1)
+axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+mtext(side=3,station.label[i],line=1,cex=txt.cex*0.5)
+box(lwd=lwd.val*1.5)}
+mtext(side=2,"Salinity (PSU)",line=0.75,cex=1.75,outer=T)
+mtext(expression(paste(underline("Oyster Condition"))),side=3,cex=txt.cex*0.75,line=2.25,outer=F)
+mtext(side=1,"Oyster Salinity Condition",line=6,cex=1.25)
+
+plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[3]),type="n",ylim=ylim.val,xlim=xlim.val,xaxt="n",xaxs="i",xlab=NA,yaxt="n",yaxs="i",ylab=NA,lwd=1.75,col=colrmp[3])
+xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
+yy=c(0,5,5,0);polygon(x=xx,y=yy,col="peachpuff1")
+yy2=c(35,40,40,35);polygon(x=xx,y=yy2,col="peachpuff1")
+yy3=c(30,35,35,30);polygon(x=xx,y=yy3,col="khaki")
+yy4=c(5,10,10,5);polygon(x=xx,y=yy4,col="khaki")
+yy5=c(10,30,30,10);polygon(x=xx,y=yy5,col="darkseagreen2")
+abline(h=seq(0,40,5))
+with(subset(Cal.Sal,SITE==CALSITES[3]),pt_line(Date.EST,Sal,1,colrmp[3],2,21,colrmp[3],cex=2,pt.col=colrmp[3]))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),cex.axis=1)
+axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+mtext(side=3,station.label[3],line=1,cex=txt.cex*0.5)
+box(lwd=lwd.val*1.5)
+
+plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[4]),type="n",ylim=ylim.val,xlim=xlim.val,xaxt="n",xaxs="i",xlab=NA,yaxt="n",yaxs="i",ylab=NA,lwd=2,col=colrmp[7])
+xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
+yy=c(0,10,10,0);polygon(x=xx,y=yy,col="darkseagreen2")
+yy=c(10,15,15,10);polygon(x=xx,y=yy,col="khaki")
+yy=c(15,40,40,15);polygon(x=xx,y=yy,col="peachpuff1")
+abline(h=seq(0,40,5))
+with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp[7],2,21,colrmp[7],cex=2,pt.col=colrmp[7]))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),cex.axis=1)
+axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+mtext(side=3,station.label[4],line=1,cex=txt.cex*0.5)
+box(lwd=lwd.val*1.75)
+mtext("Month/Day",side=1,line=3,cex=2,outer=T)
+mtext(expression(paste(underline("Tape grass Condition"))),side=3,cex=txt.cex*0.75,line=2.25,outer=F)
+xleg=strptime(SDate.plot-26,"%Y-%m-%d")
+xleg2=strptime(SDate.plot+7,"%Y-%m-%d")
+mtext(side=1,"Tape Grass Salinity Condition",line=6,cex=1.25)
+legend(xleg,-9,legend=c("Poor(<5 or >35)","Fair (5-10 or 30-35)","Good(10-30)"),pch=c(22,22,22),pt.bg=c("peachpuff1","khaki","darkseagreen2"),       pt.cex=3,ncol=1,cex=1.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
+
+legend(xleg2,-9,legend=c("Poor(>15)","Fair(10-15)","Good(<10)"),pch=c(22,22,22),pt.bg=c("peachpuff1","khaki","darkseagreen2"),       pt.cex=3,ncol=1,cex=1.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
+
+
+```
+
+<font size=3><center>Daily average salinity data for the last 14-days from sampling locations within the tidal Caloosahatchee River Estuary relative to oyster health (Sanibel, Shell Point and Cape Coral) and tape grass (<i>Vallisneria americana</i>) health (Ft. Myers only) conditions.</center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+
+```{r Cal 7d plots, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+par(family="serif",cex.axis=1.2,mar=c(2,2,1,1),oma=c(6,2,1,1),mgp=c(3,1,0));
+xmaj=seq(xlim.val[1],xlim.val[2],by="4 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+
+CALSITES=c("SANIB2","MARKH","CCORAL","FORTMYERSM","S79")
+cols=c("forestgreen","red","blue")
+lwd.val=1
+plot(MovingAvg.7d~Date.EST,Cal.Sal,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",yaxt="n",xaxt="n",ylab=NA,xlab=NA)
+xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
+yy=c(0,5,5,0);polygon(x=xx,y=yy,col="peachpuff1")
+yy2=c(35,40,40,35);polygon(x=xx,y=yy2,col="peachpuff1")
+yy3=c(30,35,35,30);polygon(x=xx,y=yy3,col="khaki")
+yy4=c(5,10,10,5);polygon(x=xx,y=yy4,col="khaki")
+yy5=c(10,30,30,10);polygon(x=xx,y=yy5,col="darkseagreen2")
+abline(h=seq(0,40,5))
+for(i in 1:3){with(subset(Cal.Sal,SITE==CALSITES[i]),lines(Date.EST,MovingAvg.7d,lwd=3,col=cols[i]))}
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),cex.axis=1)
+axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+box(lwd=lwd.val*1.5)
+xleg=strptime(min(xlim.val)+ddays(7),"%Y-%m-%d")
+mtext("Date (MM/DD/YYYY)",side=1,line=2.5,cex=1.5)
+mtext("Salinity (PSU)",side=2,line=2.5,cex=1.5)
+
+legend(xleg,-10,
+       legend=c("Sanibel","Shell Point","Cape Coral"),
+        col=cols,lty=c(1,1,1),lwd=c(2,2,2),pt.cex=2.5,ncol=3,cex=1.5,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
+legend(xleg,-15,
+       legend=c("Salinity Condition:","Poor(<5 or >35)","Fair (5-10 or 30-35)","Good(10-30)"),
+       pch=c(NA,22,22,22),pt.bg=c(NA,"peachpuff1","khaki","darkseagreen2"),
+     pt.cex=2,ncol=4,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
+```
+<font size=3><center>Moving 7-day average salinities observed at the Cape Coral, Shell Point and Sanibel salinity monitoring stations relative to Oyster salinity health conditions.</center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+
 
 ***
