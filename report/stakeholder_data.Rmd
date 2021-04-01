@@ -1,0 +1,236 @@
+---
+title: "Caloosahatchee Conditions Report -\nStakeholder Data Sources"
+output: 
+  html_document: 
+    toc: yes
+    includes:
+      after_body: footer.html
+editor_options: 
+  chunk_output_type: console
+---
+***
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE,
+                      message=FALSE,
+                      warning=FALSE)
+
+## Libraries
+library(AnalystHelper)
+library(rvest)
+library(lubridate)
+library(flextable)
+library(magrittr)
+
+##
+
+dates=seq(date.fun(date.fun("2021-03-31")-ddays(13)),date.fun("2021-03-31"),"1 days")
+
+```
+
+```{r data, include=F}
+## Lake Okeechobee Report
+LO.url="https://w3.saj.usace.army.mil/h2o/reports/r-oke.html"
+webpage=read_html(LO.url)
+node.val=html_nodes(webpage,"pre")
+
+LO.text.vals=html_text(node.val)
+LO.report=strsplit(as.character(LO.text.vals),"\n")
+LO.report
+
+grep("*Okeechobee Lake Elevation",LO.report[[1]])
+
+
+tmp1=data.frame(t(sapply(strsplit(LO.report[[1]][266:279],"\\s+"),c)))
+colnames(tmp1)=c("day","month","year","S77","S77_ds","S78","S79")
+tmp1$Date=with(tmp1,date.fun(paste(year,month,day),form="%Y %B %d"))
+tmp1[,4:7]=sapply(tmp1[,4:7],as.numeric)
+
+tmp2=data.frame(t(sapply(strsplit(LO.report[[1]][285:298],"\\s+"),c)))
+colnames(tmp2)=c("day","month","year","S310","S351","S352","S354","L8")
+tmp2$Date=with(tmp2,date.fun(paste(year,month,day),form="%Y %B %d"))
+tmp2[,4:8]=sapply(tmp2[,4:8],as.numeric)
+
+tmp3=data.frame(t(sapply(strsplit(LO.report[[1]][304:317],"\\s+"),c)))
+colnames(tmp3)=c("day","month","year","S308","S308_ds","S80")
+tmp3$Date=with(tmp3,date.fun(paste(year,month,day),form="%Y %B %d"))
+tmp3[,4:6]=sapply(tmp3[,4:6],as.numeric)
+
+q.dat=cbind(tmp1[,c(8,4:7)],tmp2[,c(4:8)],tmp3[,c(4:6)])
+
+## Preferred Structures
+str.url="https://w3.saj.usace.army.mil/h2o/reports/r-lonin.html"
+webpage=read_html(str.url)
+node.val=html_nodes(webpage,"pre")
+
+str.text.vals=html_text(node.val)
+str.report=strsplit(as.character(str.text.vals),"\n")
+str.report
+
+pref.struct=data.frame(t(sapply(strsplit(str.report[[1]][21:34],"\\|"),c)))
+pref.struct
+colnames(pref.struct)=c("Date","LONIN_cfs","STORAGE_cfs","S77","S308","S351","S352","S354","L8")
+pref.struct[,2:9]=sapply(pref.struct[,2:9],as.numeric)
+pref.struct$Date=date.fun(pref.struct$Date,form="%d %B %Y")
+pref.struct[,2:9]=cfs.to.acftd(pref.struct[,2:9])
+
+## Discharge data for lake and estuaries
+q.dat=merge(pref.struct[,c("Date","S77","S308","L8",'S351',"S352","S354")],
+q.dat[,c("Date","S78","S79","S310","S80")],"Date")
+
+## Maps and Archived data
+map.q=data.frame()
+for(i in 1:length(dates)){
+  map.url=paste0("https://w3.saj.usace.army.mil/h2o/reports/StatusDaily/archive/",format(dates[i],"%m%d"),"/StatusDaily.htm")
+  mapdata=readLines(map.url)
+  val=grep("CA1IN",mapdata)
+  WCA1=strsplit(strsplit(mapdata[val],"\\s+")[[1]][13],"</div>")[[1]][1]
+  
+  val=grep("CA2IN",mapdata)
+  WCA2=strsplit(strsplit(mapdata[val],"\\s+")[[1]][13],"</div>")[[1]][1]
+  
+  val=grep("CA3IN",mapdata)
+  WCA3=strsplit(strsplit(mapdata[val],"\\s+")[[1]][13],"</div>")[[1]][1]
+  
+  val=grep("S12",mapdata)
+  ENP=strsplit(strsplit(mapdata[val],"\\s+")[[1]][8],"</div>")[[1]][1]
+  
+  date.val=dates[i]-ddays(1)
+  rslt=data.frame(Date=date.val,WCA1=as.numeric(WCA1),WCA2=as.numeric(WCA2),WCA3=as.numeric(WCA3),ENP=as.numeric(ENP))
+  map.q=rbind(map.q,rslt)
+  print(i)
+}
+
+map.q[,2:5]=cfs.to.acftd(map.q[,2:5])
+
+q.dat=merge(q.dat,map.q,"Date")
+
+```
+
+```{r table1}
+vars=c("Date","S77","S78","S79","S310","S351","S352","S354","L8","S308","S80","WCA1","WCA2","WCA3","ENP")
+date.7day=seq(date.fun(date.fun("2021-03-29")-ddays(6)),date.fun("2021-03-29"),"1 days")
+
+q.dat.7day=subset(q.dat,Date%in%date.7day)[,vars]
+meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:15],2,mean))))
+totalQ=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat.7day[,2:15],2,sum))))
+
+q.dat.7day=q.dat.7day[match(q.dat.7day$Date,rev(q.dat.7day$Date)),]
+
+cap.val="Daily discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
+q.dat.7day%>%
+  flextable()%>%
+  colformat_datetime(j=1,fmt_date="%m-%d")%>%
+  colformat_double(j=2:15,big.mark = "",digits=0)%>%
+  align(j=2:15,part="all",align="center")%>%
+  padding(padding=1,part="all")%>%
+  font(fontname="Times New Roman",part="all")%>%
+  fontsize(size=10,part="body")%>%
+  fontsize(size=12,part="header")%>%
+  add_header_lines(values=cap.val)%>%
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+```
+
+
+```{r}
+library(downloadthis)
+
+q.dat.7day%>%
+  download_this(
+    output_name = "Discharge7day",
+    output_extension = ".xlsx",
+    button_label = "Download dataset as .xlsx",
+    button_type = "primary",
+    has_icon = TRUE,
+    icon = "fa fa-file-excel"
+  )
+```
+
+```{r}
+cap.val="Average and total discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
+rbind(meanQ,totalQ)%>%
+  flextable()%>%
+  colformat_double(j=2:15,big.mark = "",digits=0)%>%
+  align(j=2:15,part="all",align="center")%>%
+  padding(padding=1,part="all")%>%
+  font(fontname="Times New Roman",part="all")%>%
+  fontsize(size=10,part="body")%>%
+  fontsize(size=12,part="header")%>%
+  add_header_lines(values=cap.val)%>%
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+
+```
+
+```{r}
+q.from.Lake=sum(totalQ[,c("S77","S310","S351","S352","S354","L8","S308")])
+S77q=sum(totalQ[,c("S77")])
+S77q.per=round(S77q/q.from.Lake*100,0)
+
+S308q=sum(totalQ[,c("S308")])
+S308q.per=round(S308q/q.from.Lake*100,0)
+
+S310q=sum(totalQ[,c("S310")])
+S310q.per=round(S310q/q.from.Lake*100,0)
+
+L8q=sum(totalQ[,c("L8")])
+L8q.per=round(L8q/q.from.Lake*100,0)
+
+EAAq=sum(totalQ[,c("S351","S352","S354")])
+EAAq.per=round(EAAq/q.from.Lake*100,0)
+
+
+```
+
+**Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")`**  AF were discharged from Lake Okeechobee, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF (`r S308q.per`%)** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF (`r S310q.per`%)** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF (`r L8q.per`%)** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF (`r EAAq.per`%)** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**,respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+
+<br>
+
+<div class="row">
+<div class="col-md-6">
+**Lake Okeechobee Level: `r paste0(strsplit(LO.report[[1]][11],"\\s+")[[1]][5]," ft","(",strsplit(LO.report[[1]][13],"  Currently in ")[[1]][2],")")`**
+
+**Lake Okeechobee Inflow: `r paste(strsplit(LO.report[[1]][45],"\\s+")[[1]][3],"cfs")`**
+
+</div>
+
+<div class="col-md-6">
+**Last Week: `r paste(strsplit(LO.report[[1]][200],"\\s+")[[1]][9],"ft")`**
+
+**Lake Okeechobee Outflow: `r paste(strsplit(LO.report[[1]][52],"\\s+")[[1]][3],"cfs")`**
+</div>
+</div>
+
+```{r}
+S77.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s77m.html")
+S77.dat=data.frame(t(sapply(strsplit(S77.dat[11:17],"\\s+"),c)))
+colnames(S77.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Evap","Man.Prec")
+S77.dat$Date=date.fun(S77.dat$Date,form="%d%B%y")
+S77.dat[,2:12]=sapply(S77.dat[,2:12],as.numeric)
+
+S78.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s78m.html")
+S78.dat=data.frame(t(sapply(strsplit(S78.dat[11:17],"\\s+"),c)))
+colnames(S78.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Man.Prec")
+S78.dat$Date=date.fun(S78.dat$Date,form="%d%B%y")
+S78.dat[,2:11]=sapply(S78.dat[,2:11],as.numeric)
+
+S79.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s79m.html")
+S79.dat=data.frame(t(sapply(strsplit(S79.dat[11:17],"\\s+"),c)))
+colnames(S79.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Cl","Man.Prec")
+S79.dat$Date=date.fun(S79.dat$Date,form="%d%B%y")
+S79.dat[,2:12]=sapply(S79.dat[,2:12],as.numeric)
+```
+
+<!-- https://holtzy.github.io/Pimp-my-rmd/#several_columns -->
+<div class="row">
+<div class="col-md-3">
+**Weekly Rainfall Total:** 
+</div>
+<div class="col-md-3">
+WP Franklin **`r sum(S79.dat$Man.Prec)`"**
+</div>
+<div class="col-md-3">
+Ortona **`r sum(S78.dat$Man.Prec)`"**
+</div>
+<div class="col-md-3">
+Moore Haven **`r sum(S77.dat$Man.Prec)`"**
+</div>
+</div>

@@ -234,7 +234,8 @@ xmaj=seq(xlim.vals[1],xlim.vals[2],by="2 months");xmin=seq(xlim.vals[1],xlim.val
 #LakeO.xtab$recess_7day=with(LakeO.xtab,ifelse(is.na(recess_7day)==T,0,recess_7day))
 #LakeO.xtab$recess_30day=with(LakeO.xtab,ifelse(is.na(recess_30day)==T,0,recess_30day))
 
-par(family="serif",cex.axis=1,mar=c(2,2,1,1),oma=c(1.5,3,1,1));
+par(family="serif",cex.axis=1,mar=c(2,2,1,1),oma=c(2,3,1,1));
+# layout(matrix(1:2,2,1),heights=c(1,0.25))
 plot(recess_30day~DATE,LakeO.xtab,ylim=ylim.val,xlim=xlim.vals,type="n",lwd=2,ylab=NA,xlab=NA,yaxs="i",xaxs="i",xaxt="n",yaxt="n")
 abline(v=xmin,h=ymin,lwd=1,col="grey",lty=3)
 abline(h=0);
@@ -260,7 +261,6 @@ mtext(side=2,"Recession/Ascension Rate",line=2.5,cex=1.5)
 legend("topright",
        legend=c("Moving 7-day (Ft 7-days\u207B\u00B9)","Moving 30-day (Ft 30-days\u207B\u00B9)","Max 30-day Recession Rate\nHAB Deviation"),
        col=c("indianred1","dodgerblue1","black"),lty=c(2,1,2),lwd=c(1.5),ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
-
 ```
 
 <font size=2><center>Lake Okeechobee 7-day and 30-day water level recession/ascension rates during `r paste0("WY",CurWY)`. Negative values indicate falling water levels (recession) and positive values indicate raising water level (ascension) during this 7-day period .</center></font>
