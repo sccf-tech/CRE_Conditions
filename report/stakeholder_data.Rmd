@@ -1,5 +1,5 @@
 ---
-title: "Caloosahatchee Conditions Report -\nStakeholder Data Sources"
+title: "Caloosahatchee Conditions Report -<br>Stakeholder Data Sources"
 output: 
   html_document: 
     toc: yes
@@ -23,7 +23,7 @@ library(magrittr)
 
 ##
 
-dates=seq(date.fun(date.fun("2021-03-31")-ddays(13)),date.fun("2021-03-31"),"1 days")
+dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
 
 ```
 
@@ -108,7 +108,7 @@ q.dat=merge(q.dat,map.q,"Date")
 
 ```{r table1}
 vars=c("Date","S77","S78","S79","S310","S351","S352","S354","L8","S308","S80","WCA1","WCA2","WCA3","ENP")
-date.7day=seq(date.fun(date.fun("2021-03-29")-ddays(6)),date.fun("2021-03-29"),"1 days")
+date.7day=seq(date.fun(date.fun(Sys.Date())-ddays(6)),date.fun(Sys.Date()),"1 days")
 
 q.dat.7day=subset(q.dat,Date%in%date.7day)[,vars]
 meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:15],2,mean))))
