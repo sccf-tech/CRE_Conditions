@@ -3,6 +3,8 @@ title: "Lake Okeechobee and Caloosahatchee River Estuary Conditions <img src='ho
 output: 
   html_document: 
     toc: yes
+    includes:
+      after_body: footer.html
 editor_options: 
   chunk_output_type: console
 ---
@@ -53,6 +55,11 @@ lwd.val=1
 
 
 ## Lake Okeechobee
+<!--
+```{r, out.width="80%",echo=FALSE,fig.align="center"}
+knitr::include_graphics("LORS08_partC.png")
+```
+-->
 
 <br>
 
@@ -546,7 +553,7 @@ legend("topright",
 
 ### Chlorophyll, Phycocyanin & fDOM
 
-```{rCal_algae,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+```{r Cal_algae,echo=FALSE,fig.width=7,fig.height=5.5,fig.align='center'}
 # 32315 relative fChl
 # 32321 relative Phycocyanin
 #cal.algae=readNWISdv("02292900",c("32315","32321"),"2017-11-01",format(End.Date,"%Y-%m-%d"))
@@ -569,7 +576,7 @@ by.y=50
 ymaj=seq(ylim.val[1],ylim.val[2],by.y);
 ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
-par(family="serif",mar=c(1,3,0.5,4),oma=c(3,3,2,2));
+par(family="serif",mar=c(1,3,0.5,4),oma=c(3,3,2.5,2));
 layout(matrix(1:3,3,1),heights=c(1,1,0.5))
 
 plot(X_FLOATING_32295~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
@@ -599,7 +606,7 @@ axis_fun(2,ymaj,ymin,format(ymaj))
 abline(h=3.8,lty=2,col="red");# based ib fChl and grab Chl-a model (fChlAnalysis_summary.rmd). 
 
 axis_fun(1,xmaj,xmin,NA);box(lwd=1)
-mtext(side=2,line=2.5,"Relative Fluorescence Units\n(RFU) ")
+mtext(side=2,line=2.5,"Relative Fluorescence\nUnits (RFU) ")
 legend("topleft",legend=c("Chlorophyll","Phycocyanin","~20 \u03BCg L\u207B\u00B9 Chl-a"),
        lty=c(1,1,2),lwd=3,col=c("forestgreen","dodgerblue1","red"),
        ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
@@ -765,5 +772,3 @@ legend(xleg,-15,
 <font size=3><center>Moving 7-day average salinities observed at the Cape Coral, Shell Point and Sanibel salinity monitoring stations relative to Oyster salinity health conditions.</center></font>
 <font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
 
-
-***
