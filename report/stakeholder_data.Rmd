@@ -281,7 +281,7 @@ mtext(side=4,line=3.25,"Discharge (cfs)")
 mtext(side=3,"SCCF Surface Salinity at Fort Myers Yacht Basin")
 
 legend("topright",
-       legend=c("Hourly Salinity","30-Day Avg Sal","Daily Discharge","30-d Avg Discharge","MFL (40E-8.221(2) FAC)"),
+       legend=c("Hourly Salinity","30-Day Avg Sal","S79 Daily Discharge","30-d Avg Discharge","MFL (40E-8.221(2) FAC)"),
        lty=c(1,1,1,1,2),lwd=c(1,2,1,2,1),
        col=c("blue","darkolivegreen3","black","indianred1","red"),
        ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5)
