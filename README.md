@@ -12,4 +12,4 @@ within the Caloosahatchee - Okeechobee system.
 -   Conditions Report
     -   [Link](https://sccf-tech.github.io/CRE_Conditions/report/CRE_REPORT.html)
 -   Stakeholder Report Information
-    -   Link
+    -   [Link](https://sccf-tech.github.io/CRE_Conditions/report/stakeholder_data.html)
