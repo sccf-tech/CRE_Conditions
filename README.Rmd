@@ -20,4 +20,4 @@ knitr::include_graphics('./Plots/Surf_bot_da_GAM.gif')
     * [Link](https://sccf-tech.github.io/CRE_Conditions/report/CRE_REPORT.html)
 
 * Stakeholder Report Information
-    * Link
+    * [Link](https://sccf-tech.github.io/CRE_Conditions/report/stakeholder_data.html)

@@ -9,6 +9,9 @@ editor_options:
   chunk_output_type: console
 ---
 ***
+
+`r paste("Updated",as.POSIXct(Sys.time(),"%Y-%m-%d %H:%M",tz=""))`
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo=FALSE,
                       message=FALSE,
@@ -16,11 +19,13 @@ knitr::opts_chunk$set(echo=FALSE,
 
 ## Libraries
 library(AnalystHelper)
+library(plyr)
+library(zoo)
 library(rvest)
 library(lubridate)
 library(flextable)
 library(magrittr)
-
+library(grid)
 ##
 
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
@@ -186,7 +191,7 @@ EAAq.per=round(EAAq/q.from.Lake*100,0)
 
 <div class="row">
 <div class="col-md-6">
-**Lake Okeechobee Level: `r paste0(strsplit(LO.report[[1]][11],"\\s+")[[1]][5]," ft","(",strsplit(LO.report[[1]][13],"  Currently in ")[[1]][2],")")`**
+**Lake Okeechobee Level: `r paste0(strsplit(LO.report[[1]][11],"\\s+")[[1]][5]," ft"," (",strsplit(LO.report[[1]][13],"  Currently in ")[[1]][2],")")`**
 
 **Lake Okeechobee Inflow: `r paste(strsplit(LO.report[[1]][45],"\\s+")[[1]][3],"cfs")`**
 
@@ -225,12 +230,64 @@ S79.dat[,2:12]=sapply(S79.dat[,2:12],as.numeric)
 **Weekly Rainfall Total:** 
 </div>
 <div class="col-md-3">
-WP Franklin **`r sum(S79.dat$Man.Prec)`"**
+WP Franklin **`r format(sum(S79.dat$Man.Prec),nsmall=2)`"**
 </div>
 <div class="col-md-3">
-Ortona **`r sum(S78.dat$Man.Prec)`"**
+Ortona **`r format(sum(S78.dat$Man.Prec),nsmall=2)`"**
 </div>
 <div class="col-md-3">
-Moore Haven **`r sum(S77.dat$Man.Prec)`"**
+Moore Haven **`r format(sum(S77.dat$Man.Prec),nsmall=2)`"**
 </div>
 </div>
+
+
+***
+```{r, echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
+RECON.dates=date.fun(c(Sys.Date()-duration(6, "months"),date.fun(Sys.Date())))
+# RECON.dates
+
+dat=read.csv("C:/Julian_LaCie/_Github/CRE_Conditions/Data/stakeholder/chart.csv")
+dat$DateTime=date.fun(dat$DateTime,form="%F %X")
+dat$Date=date.fun(dat$DateTime)
+colnames(dat)=c("DateTime","Sal","Date")
+# RECON.dates=date.fun(range(dat$DateTime))
+da.dat=ddply(dat,"Date",summarise,mean.val=mean(Sal,na.rm=T))
+da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+
+cal.q=DBHYDRO_daily(RECON.dates[1]-duration(2,"months"),RECON.dates[2],"DJ237")
+cal.q$Date=date.fun(cal.q$Date)
+cal.q$Q.30=with(cal.q,c(rep(NA,29),rollapply(Data.Value,width=30,FUN=function(x)mean(x,na.rm=T))))
+
+ylim.val=c(0,30);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+xlim.val=c(RECON.dates[1],date.fun(RECON.dates[2]+duration(15,"days")));xmaj=seq(xlim.val[1],xlim.val[2],by="2 months ");xmin=seq(xlim.val[1],xlim.val[2],by="1 months")
+
+par(family="serif",cex.axis=1.2,mar=c(3.5,1.75,1,4.5),oma=c(0.5,3,1,2));
+plot(Sal~DateTime,dat,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+with(dat,lines(DateTime,Sal,lty=1,col="blue",lwd=1.5))
+with(da.dat,lines(Date,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
+axis_fun(1,xmaj,xmin,NA)
+axis_fun(2,ymaj,ymin,ymaj)
+text(xmaj,-1.5,format(xmaj,"%m/%d/%y"),srt=-45,xpd=NA,adj=0,cex=0.95)
+mtext(side=2,line=2,"Salinity (PSU)")
+mtext(side=1,line=3,"Date (MM/DD/YY)")
+ylim.val=c(0,20000);by.y=4000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+par(new=T);plot(Data.Value~Date,cal.q,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+with(cal.q,lines(Date,Data.Value,lwd=1.5,col="black"))
+with(cal.q,lines(Date,Q.30,lwd=2,col="indianred1"))
+abline(h=475,lty=2,col="red")
+axis_fun(4,ymaj,ymin,ymaj)
+mtext(side=4,line=3.25,"Discharge (cfs)")
+mtext(side=3,"SCCF Surface Salinity at Fort Myers Yacht Basin")
+
+legend("topright",
+       legend=c("Hourly Salinity","30-Day Avg Sal","Daily Discharge","30-d Avg Discharge","MFL (40E-8.221(2) FAC)"),
+       lty=c(1,1,1,1,2),lwd=c(1,2,1,2,1),
+       col=c("blue","darkolivegreen3","black","indianred1","red"),
+       ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5)
+logo=png::readPNG("c:/Julian_LaCie/_GitHub/CRE_Conditions/report/Logo no Background.png")
+grid.raster(logo,x=0.16,y=0.9,just=c("left","top"),width=unit(1.25,"inches"))
+```
+
+<font size=2><center>Fort Myers Yacht Basin salinity (SCCF-RECON) and S79 discharge (SFWMD) data for the last six months.</center></font>
+<font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
