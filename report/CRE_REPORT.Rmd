@@ -718,7 +718,7 @@ yy=c(0,10,10,0);polygon(x=xx,y=yy,col="darkseagreen2")
 yy=c(10,15,15,10);polygon(x=xx,y=yy,col="khaki")
 yy=c(15,40,40,15);polygon(x=xx,y=yy,col="peachpuff1")
 abline(h=seq(0,40,5))
-with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp[7],2,21,colrmp[7],cex=2,pt.col=colrmp[7]))
+with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp[3],2,21,colrmp[3],cex=2,pt.col=colrmp[3]))
 axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),cex.axis=1)
 axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
 mtext(side=3,station.label[4],line=1,cex=txt.cex*0.5)
@@ -735,7 +735,7 @@ legend(xleg2,-9,legend=c("Poor(>15)","Fair(10-15)","Good(<10)"),pch=c(22,22,22),
 
 ```
 
-<font size=3><center>Daily average salinity data for the last 14-days from sampling locations within the tidal Caloosahatchee River Estuary relative to oyster health (Sanibel, Shell Point and Cape Coral) and tape grass (<i>Vallisneria americana</i>) health (Ft. Myers only) conditions.</center></font>
+<font size=3><center>Daily average bottom salinity data for the last 14-days from sampling locations within the tidal Caloosahatchee River Estuary relative to oyster health (Sanibel, Shell Point and Cape Coral) and tape grass (<i>Vallisneria americana</i>) health (Ft. Myers only) conditions.</center></font>
 <font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
 
 ```{r Cal 7d plots, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
