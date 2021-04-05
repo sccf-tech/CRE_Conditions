@@ -245,13 +245,13 @@ RF.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
 **Weekly Rainfall Total:** 
 </div>
 <div class="col-md-3">
-WP Franklin **`r format(sum(S79.dat$Man.Prec,na.rm=T),nsmall=2)`"**
+WP Franklin **`r with(S79.dat,ifelse(sum(is.na(Man.Prec))!=0,paste("\u2265",format(sum(Man.Prec,na.rm=T),nsmall=2)),format(sum(Man.Prec,na.rm=T),nsmall=2)))`"**
 </div>
 <div class="col-md-3">
-Ortona **`r format(sum(S78.dat$Man.Prec,na.rm=T),nsmall=2)`"**
+Ortona **`r with(S78.dat,ifelse(sum(is.na(Man.Prec))!=0,paste("\u2265",format(sum(Man.Prec,na.rm=T),nsmall=2)),format(sum(Man.Prec,na.rm=T),nsmall=2)))`"**
 </div>
 <div class="col-md-3">
-Moore Haven **`r format(sum(S77.dat$Man.Prec,na.rm=T),nsmall=2)`"**
+Moore Haven **`r with(S77.dat,ifelse(sum(is.na(Man.Prec))!=0,paste("\u2265",format(sum(Man.Prec,na.rm=T),nsmall=2)),format(sum(Man.Prec,na.rm=T),nsmall=2)))`"**
 </div>
 </div>
 
@@ -280,6 +280,24 @@ colnames(dat)=c("DateTime","Sal","Date")
 da.dat=ddply(dat,"Date",summarise,mean.val=mean(Sal,na.rm=T))
 da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
 
+## replace RECON till fix
+bk.dbkeys.surf=data.frame(depth="Surface",
+                         SITE=c(rep("FORTMYERSM",2)),
+                         param=rep(c("WT","SPC"),5),
+                         DBKEY=c("88287","88292")
+                         )
+dat=data.frame()
+for(i in 1:nrow(bk.dbkeys.surf)){
+tmp=DBHYDRO_breakpoint(RECON.dates[1],RECON.dates[2],bk.dbkeys.surf$DBKEY[i])  
+tmp$DBKEY=as.character(bk.dbkeys.surf$DBKEY[i])
+dat=rbind(dat,tmp)
+}
+dat=merge(dat,bk.dbkeys.surf,"DBKEY")
+dat.xtab=cast(dat,SITE+DATETIME+DATE~param,value="Data.Value",mean)
+dat.xtab$Sal=with(dat.xtab,SalinityCalc(SPC,WT))
+da.dat=ddply(dat.xtab,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
+da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+
 cal.q=DBHYDRO_daily(RECON.dates[1]-duration(2,"months"),RECON.dates[2],"DJ237")
 cal.q$Date=date.fun(cal.q$Date)
 cal.q$Q.30=with(cal.q,c(rep(NA,29),rollapply(Data.Value,width=30,FUN=function(x)mean(x,na.rm=T))))
@@ -288,10 +306,12 @@ ylim.val=c(0,30);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val
 xlim.val=c(RECON.dates[1],date.fun(RECON.dates[2]+duration(15,"days")));xmaj=seq(xlim.val[1],xlim.val[2],by="2 months ");xmin=seq(xlim.val[1],xlim.val[2],by="1 months")
 
 par(family="serif",cex.axis=1.2,mar=c(3.5,1.75,1,4.5),oma=c(0.5,3,1,2));
-plot(Sal~DateTime,dat,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+plot(Sal~DATETIME,dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
-with(dat,lines(DateTime,Sal,lty=1,col="blue",lwd=1.5))
-with(da.dat,lines(Date,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
+# with(dat,lines(DateTime,Sal,lty=1,col="blue",lwd=1.5))
+# with(da.dat,lines(Date,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
+with(dat.xtab,lines(DATETIME,Sal,lty=1,col="blue",lwd=1.5))
+with(da.dat,lines(DATE,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
 axis_fun(1,xmaj,xmin,NA)
 axis_fun(2,ymaj,ymin,ymaj)
 text(xmaj,-1.5,format(xmaj,"%m/%d/%y"),srt=-45,xpd=NA,adj=0,cex=0.95)
@@ -304,7 +324,7 @@ with(cal.q,lines(Date,Q.30,lwd=2,col="indianred1"))
 abline(h=475,lty=2,col="red")
 axis_fun(4,ymaj,ymin,ymaj)
 mtext(side=4,line=3.25,"Discharge (cfs)")
-mtext(side=3,"SCCF Surface Salinity at Fort Myers Yacht Basin")
+mtext(side=3,"Surface Salinity at Fort Myers Yacht Basin")
 
 legend("topright",
        legend=c("Hourly Salinity","30-Day Avg Sal","S79 Daily Discharge","30-d Avg Discharge","MFL (40E-8.221(2) FAC)"),
