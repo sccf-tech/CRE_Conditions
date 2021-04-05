@@ -269,7 +269,8 @@ RF.dat%>%
 
 ***
 ```{r, echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
-RECON.dates=date.fun(c(Sys.Date()-duration(6, "months"),date.fun(Sys.Date())))
+# RECON.dates=date.fun(c(Sys.Date()-duration(6, "months"),date.fun(Sys.Date())))
+RECON.dates=date.fun(c(Sys.Date()-duration(1, "years"),date.fun(Sys.Date())))
 # RECON.dates
 
 dat=read.csv("C:/Julian_LaCie/_Github/CRE_Conditions/Data/stakeholder/chart.csv")
@@ -310,8 +311,8 @@ plot(Sal~DATETIME,dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
 # with(dat,lines(DateTime,Sal,lty=1,col="blue",lwd=1.5))
 # with(da.dat,lines(Date,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
-with(dat.xtab,lines(DATETIME,Sal,lty=1,col="blue",lwd=1.5))
-with(da.dat,lines(DATE,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
+with(dat.xtab,lines(DATETIME,Sal,lty=1,col="blue",lwd=2))
+with(da.dat,lines(DATE,Sal.30d,lty=1,col="darkolivegreen3",lwd=4))
 axis_fun(1,xmaj,xmin,NA)
 axis_fun(2,ymaj,ymin,ymaj)
 text(xmaj,-1.5,format(xmaj,"%m/%d/%y"),srt=-45,xpd=NA,adj=0,cex=0.95)
@@ -319,8 +320,8 @@ mtext(side=2,line=2,"Salinity (PSU)")
 mtext(side=1,line=3,"Date (MM/DD/YY)")
 ylim.val=c(0,20000);by.y=4000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 par(new=T);plot(Data.Value~Date,cal.q,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
-with(cal.q,lines(Date,Data.Value,lwd=1.5,col="black"))
-with(cal.q,lines(Date,Q.30,lwd=2,col="indianred1"))
+with(cal.q,lines(Date,Data.Value,lwd=2,col="black"))
+with(cal.q,lines(Date,Q.30,lwd=4,col="indianred1"))
 abline(h=475,lty=2,col="red")
 axis_fun(4,ymaj,ymin,ymaj)
 mtext(side=4,line=3.25,"Discharge (cfs)")
