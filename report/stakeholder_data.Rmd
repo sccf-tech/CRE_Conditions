@@ -121,7 +121,7 @@ q.dat=merge(q.dat,map.q,"Date")
 
 ```{r table1}
 vars=c("Date","S77","S78","S79","S310","S351","S352","S354","L8","S308","S80","WCA1","WCA2","WCA3","ENP")
-date.7day=seq(date.fun(date.fun(Sys.Date())-ddays(6)),date.fun(Sys.Date()),"1 days")
+date.7day=seq(date.fun(date.fun(Sys.Date())-ddays(7)),date.fun(Sys.Date()),"1 days")
 
 q.dat.7day=subset(q.dat,Date%in%date.7day)[,vars]
 meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:15],2,mean))))
@@ -410,7 +410,7 @@ legend(0.25,0.15,legend=c("Daily Average", "7-Day Moving Avg"),
        pt.bg=c("blue",NA),
        pt.cex=1.5,ncol=1,cex=1.25,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0.5,
        title.adj = 0,title="")
-legend(0.75,0.15,legend=c("Poor(<5 or >35)","Fair (5-10 or 30-35)","Good(10-30)"),
+legend(0.5,0.15,legend=c("Poor(<5 or >35)","Fair (5-10 or 30-35)","Good(10-30)"),
        pch=c(22,22,22),
        lty=NA,
        lwd=0.01,
@@ -428,7 +428,7 @@ legend(0.5,0.15,legend=c("Poor(>15)","Fair (10 - 15)","Good(<10)"),
        pt.bg=c("peachpuff1","khaki","darkseagreen2"),
        pt.cex=2.5,ncol=1,cex=1.25,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0.5,
        title.adj = 0,title="Tape Grass Salinity Condition")
-grid.raster(logo,x=0.05,y=0.05,just=c("left","bottom"),width=unit(1.25,"inches"))
+grid.raster(logo,x=0.045,y=0.055,just=c("left","bottom"),width=unit(1.25,"inches"))
 ```
 
 
