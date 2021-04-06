@@ -417,7 +417,7 @@ with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp,2,21,colrmp
 with(subset(Cal.Sal,SITE==CALSITES[4]),lines(Date.EST,MovingAvg.7d,lwd=2.5,col="orange"))
 axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),line=-0.5)
 axis_fun(2,ymaj,ymin,ymaj)
-mtext(side=3,station.label[i])
+mtext(side=3,station.label[4])
 box(lwd=lwd.val)
 mtext("Month/Day",side=1,line=-6,cex=1.25,outer=T)
 mtext(expression(paste(underline("Tape grass Condition"))),side=3,cex=1,line=1.75,outer=F)
