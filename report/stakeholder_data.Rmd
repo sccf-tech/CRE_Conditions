@@ -336,8 +336,48 @@ logo=png::readPNG("c:/Julian_LaCie/_GitHub/CRE_Conditions/report/Logo no Backgro
 grid.raster(logo,x=0.16,y=0.9,just=c("left","top"),width=unit(1.25,"inches"))
 ```
 
-<font size=2><center>Fort Myers Yacht Basin salinity (SCCF-RECON) and S79 discharge (SFWMD) data for the last six months.</center></font>
+<font size=2><center>Fort Myers Yacht Basin salinity (SCCF-RECON) and S79 discharge (SFWMD) data for the last 12 months.</center></font>
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+
+```{r,echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
+ylim.val=c(0,30);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+xlim.val=c(date.fun(RECON.dates[2]-duration(30,"days")),date.fun(RECON.dates[2]+duration(15,"days")));xmaj=seq(xlim.val[1],xlim.val[2],by="14 days ");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+
+par(family="serif",cex.axis=1.2,mar=c(3.5,1.75,1,4.5),oma=c(0.5,3,1,2));
+plot(Sal~DATETIME,dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+# with(dat,lines(DateTime,Sal,lty=1,col="blue",lwd=1.5))
+# with(da.dat,lines(Date,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
+with(dat.xtab,lines(DATETIME,Sal,lty=1,col="blue",lwd=2))
+with(da.dat,lines(DATE,Sal.30d,lty=1,col="darkolivegreen3",lwd=4))
+axis_fun(1,xmaj,xmin,NA)
+axis_fun(2,ymaj,ymin,ymaj)
+text(xmaj,-1.5,format(xmaj,"%m/%d/%y"),srt=-45,xpd=NA,adj=0,cex=0.95)
+mtext(side=2,line=2,"Salinity (PSU)")
+mtext(side=1,line=3,"Date (MM/DD/YY)")
+ylim.val=c(0,14000);by.y=4000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+par(new=T);plot(Data.Value~Date,cal.q,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+with(cal.q,lines(Date,Data.Value,lwd=2,col="black"))
+with(cal.q,lines(Date,Q.30,lwd=4,col="indianred1"))
+abline(h=475,lty=2,col="red")
+axis_fun(4,ymaj,ymin,ymaj)
+mtext(side=4,line=3.25,"Discharge (cfs)")
+mtext(side=3,"Surface Salinity at Fort Myers Yacht Basin")
+
+legend("topright",
+       legend=c("Hourly Salinity","30-Day Avg Sal","S79 Daily Discharge","30-d Avg Discharge","MFL (40E-8.221(2) FAC)"),
+       lty=c(1,1,1,1,2),lwd=c(1,2,1,2,1),
+       col=c("blue","darkolivegreen3","black","indianred1","red"),
+       ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5)
+logo=png::readPNG("c:/Julian_LaCie/_GitHub/CRE_Conditions/report/Logo no Background.png")
+grid.raster(logo,x=0.16,y=0.9,just=c("left","top"),width=unit(1.25,"inches"))
+
+```
+
+<font size=2><center>Fort Myers Yacht Basin salinity (SCCF-RECON) and S79 discharge (SFWMD) data for the last last 30 days.</center></font>
+<font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
 
 ***
 
