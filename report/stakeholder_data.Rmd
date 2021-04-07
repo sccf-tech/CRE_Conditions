@@ -294,7 +294,7 @@ tmp$DBKEY=as.character(bk.dbkeys.surf$DBKEY[i])
 dat=rbind(dat,tmp)
 }
 dat=merge(dat,bk.dbkeys.surf,"DBKEY")
-dat.xtab=cast(dat,SITE+DATETIME+DATE~param,value="Data.Value",mean)
+dat.xtab=data.frame(cast(dat,SITE+DATETIME+DATE~param,value="Data.Value",mean))
 dat.xtab$Sal=with(dat.xtab,SalinityCalc(SPC,WT))
 da.dat=ddply(dat.xtab,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
 da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
@@ -304,7 +304,7 @@ cal.q$Date=date.fun(cal.q$Date)
 cal.q$Q.30=with(cal.q,c(rep(NA,29),rollapply(Data.Value,width=30,FUN=function(x)mean(x,na.rm=T))))
 
 ylim.val=c(0,30);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-xlim.val=c(RECON.dates[1],date.fun(RECON.dates[2]+duration(15,"days")));xmaj=seq(xlim.val[1],xlim.val[2],by="2 months ");xmin=seq(xlim.val[1],xlim.val[2],by="1 months")
+xlim.val=c(date.fun(RECON.dates[2]-duration(6, "months")),date.fun(RECON.dates[2]+duration(15,"days")));xmaj=seq(xlim.val[1],xlim.val[2],by="2 months ");xmin=seq(xlim.val[1],xlim.val[2],by="1 months")
 
 par(family="serif",cex.axis=1.2,mar=c(3.5,1.75,1,4.5),oma=c(0.5,3,1,2));
 plot(Sal~DATETIME,dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
@@ -322,25 +322,34 @@ ylim.val=c(0,20000);by.y=4000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(yl
 par(new=T);plot(Data.Value~Date,cal.q,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
 with(cal.q,lines(Date,Data.Value,lwd=2,col="black"))
 with(cal.q,lines(Date,Q.30,lwd=4,col="indianred1"))
-abline(h=475,lty=2,col="red")
+# abline(h=475,lty=2,col="red")
 axis_fun(4,ymaj,ymin,ymaj)
 mtext(side=4,line=3.25,"Discharge (cfs)")
 mtext(side=3,"Surface Salinity at Fort Myers Yacht Basin")
 
+# legend("topright",
+#        legend=c("Hourly Salinity","30-Day Avg Sal","S79 Daily Discharge","30-d Avg Discharge","MFL (40E-8.221(2) FAC)"),
+#        lty=c(1,1,1,1,2),lwd=c(1,2,1,2,1),
+#        col=c("blue","darkolivegreen3","black","indianred1","red"),
+#        ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5)
 legend("topright",
-       legend=c("Hourly Salinity","30-Day Avg Sal","S79 Daily Discharge","30-d Avg Discharge","MFL (40E-8.221(2) FAC)"),
-       lty=c(1,1,1,1,2),lwd=c(1,2,1,2,1),
-       col=c("blue","darkolivegreen3","black","indianred1","red"),
+       legend=c("Hourly Salinity","30-Day Avg Sal","S79 Daily Discharge","30-d Avg Discharge"),
+       lty=c(1,1,1,1),lwd=c(1,2,1,2),
+       col=c("blue","darkolivegreen3","black","indianred1"),
        ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5)
 logo=png::readPNG("c:/Julian_LaCie/_GitHub/CRE_Conditions/report/Logo no Background.png")
 grid.raster(logo,x=0.16,y=0.9,just=c("left","top"),width=unit(1.25,"inches"))
 ```
 
-<font size=2><center>Fort Myers Yacht Basin salinity (SCCF-RECON) and S79 discharge (SFWMD) data for the last 12 months.</center></font>
+<font size=2><center>Fort Myers Yacht Basin salinity (SCCF-RECON) and S79 discharge (SFWMD) data for the last six months.</center></font>
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 
 ```{r,echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
+seq.30d=seq(date.fun(RECON.dates[2]-duration(30,"days")),date.fun(RECON.dates[2]+duration(15,"days")),"1 days")
+
+max.ylim.2=round(max(subset(cal.q,Date%in%seq.30d)$Data.Value,na.rm=T)+max(subset(cal.q,Date%in%seq.30d)$Data.Value,na.rm=T)*0.25,-3)
+
 ylim.val=c(0,30);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 xlim.val=c(date.fun(RECON.dates[2]-duration(30,"days")),date.fun(RECON.dates[2]+duration(15,"days")));xmaj=seq(xlim.val[1],xlim.val[2],by="14 days ");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
 
@@ -356,11 +365,12 @@ axis_fun(2,ymaj,ymin,ymaj)
 text(xmaj,-1.5,format(xmaj,"%m/%d/%y"),srt=-45,xpd=NA,adj=0,cex=0.95)
 mtext(side=2,line=2,"Salinity (PSU)")
 mtext(side=1,line=3,"Date (MM/DD/YY)")
-ylim.val=c(0,14000);by.y=4000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+ylim.val=c(0,max.ylim.2);by.y=max.ylim.2/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 par(new=T);plot(Data.Value~Date,cal.q,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
 with(cal.q,lines(Date,Data.Value,lwd=2,col="black"))
 with(cal.q,lines(Date,Q.30,lwd=4,col="indianred1"))
 abline(h=475,lty=2,col="red")
+text(date.fun(xlim.val[2]-ddays(6)),475,"MFL (30d Q)",font=2,cex=0.75,col="red",pos=3)
 axis_fun(4,ymaj,ymin,ymaj)
 mtext(side=4,line=3.25,"Discharge (cfs)")
 mtext(side=3,"Surface Salinity at Fort Myers Yacht Basin")
@@ -380,6 +390,77 @@ grid.raster(logo,x=0.16,y=0.9,just=c("left","top"),width=unit(1.25,"inches"))
 
 
 ***
+```{r, out.width = '100%', out.height='400px' }
+library(plotly)
+xlim.val.ly=c(RECON.dates[1],date.fun(RECON.dates[2]+duration(15,"days")))
+
+plot_ly(x=~DATETIME,y=~round(Sal,1),
+        data=dat.xtab,
+        type="scatter",mode="lines",color=I(adjustcolor('blue',0.5)),name="Hourly Salinity (Ft Myers)",
+        line=list(width=1))%>%
+  add_trace(x=~DATE,y=~round(Sal.30d,1),
+            data=da.dat,
+            color=I("forestgreen"),
+            type="scatter",mode='lines+markers',name="30-day Moving Avg Salinity",
+            line=list(width=3))%>%
+  add_trace(x=~Date,y=~round(Data.Value,0),
+            data=cal.q,color=I("black"),
+            type="scatter",mode='lines+markers',name="S79 Daily Discharge",
+            line=list(width=1),yaxis="y2")%>%
+  add_trace(x=~Date,y=~round(Q.30,0),
+            data=cal.q,color=I("indianred1"),
+            type="scatter",mode='lines+markers',name="30-day Moving Avg Discharge",
+            line=list(width=4),yaxis="y2")%>%
+#  add_trace(x=~RECON.dates,y=~c(5,5),color=I("black"),line=list(width=4))%>%
+  layout(yaxis=list(title="Salinity (PSU)",
+                    # zeroline=T,
+                    showline = TRUE,
+                    mirror = "ticks",
+                    gridcolor = toRGB("gray"),
+                    gridwidth = 0.5,
+                    zerolinecolor = toRGB("black"),
+                    zerolinewidth = 1,
+                    linecolor = toRGB("black"),
+                    linewidth = 1,
+                    range=c(0,30)),
+         xaxis=list(title="Date",
+                    zeroline=T,
+                    showline = TRUE,
+                    mirror = "ticks",
+                    gridcolor = toRGB("gray"),
+                    gridwidth = 0.5,
+                    zerolinecolor = toRGB("black"),
+                    zerolinewidth = 1,
+                    linecolor = toRGB("black"),
+                    linewidth = 1,
+                    range=xlim.val.ly),
+         yaxis2=list(title="Discharge (cfs)",
+                     side="right",
+                     zeroline=T,
+                     showline = TRUE,
+                     mirror = "ticks",
+                     gridcolor = toRGB("black",0),
+                     gridwidth = 0.5,
+                     zerolinecolor = toRGB("black"),
+                     zerolinewidth = 1,
+                     linecolor = toRGB("black"),
+                     linewidth = 1,
+                     range=c(0,30000),
+                     overlaying="y"),
+         legend=list(bgcolor='rgba(0,0,0,0)',
+                     orientation="h",
+                     xanchor="center",
+                     x=0.5,y=-0.15),
+                    font=list(family="Times New Roman"),
+         margin=list(r=80))
+
+```
+
+<font size=2><center>Interactive plot for Fort Myers Yacht Basin salinity (SCCF-RECON and/or SFWMD) and S79 discharge (SFWMD) data.</center></font>
+<font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+
+***
 
 ```{r Caloosa Data, include=FALSE}
 End.Date=as.Date(Sys.time()); ## Update this value
@@ -388,8 +469,7 @@ Start.Date=as.Date(End.Date-duration(30,"days"));
 bk.dbkeys.bot=data.frame(depth="bottom",
                          SITE=c(rep("VALI75",2),rep("FORTMYERSM",2),rep("CCORAL",2),rep("MARKH",2),rep("SANIB2",2)),
                          param=rep(c("WT","SPC"),5),
-                         DBKEY=c("UL030","UL026","88288","88291","UO832","AJ012","88198","88202","WN375","WN377")
-                         )
+                         DBKEY=c("UL030","UL026","88288","88291","UO832","AJ012","88198","88202","WN375","WN377")                         )
 sal.dat=data.frame()
 for(i in 1:nrow(bk.dbkeys.bot)){
   tmp=DBHYDRO_breakpoint(Start.Date,End.Date,bk.dbkeys.bot$DBKEY[i])
