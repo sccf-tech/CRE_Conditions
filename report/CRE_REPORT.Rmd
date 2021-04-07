@@ -193,7 +193,7 @@ legend(0.5,0.5,
 <br>
 
 ```{r}
-cap.val="Stage and recession rates this time for the last three water years"
+cap.val="Stage and recession rates this time for the current and last three water years"
 
 subset(LakeO.xtab,hydro.day==hydro.day(YEST))%>%
   flextable(col_keys=c("DATE","WY","Mean","recess_7day","recess_30day"))%>%
@@ -214,7 +214,8 @@ subset(LakeO.xtab,hydro.day==hydro.day(YEST))%>%
                     "recess_30day"="30-Day Recession Rate\n(ft 30-d\u207B\u00B9)")%>%
   bg(i=~WY==CurWY,part="body",bg="wheat")%>%
   footnote(i=4,j=3,value=ifelse(is.na(subset(LakeO.xtab,DATE==YEST)$P1)==T|is.na(subset(LakeO.xtab,DATE==YEST)$P2)==T,as_paragraph("Value estimated from average stage height across L001, L005, L006, LZ40, S133TW, S352HW & S4TW"),as_paragraph("Value provided by SFWMD DBKEY:N3466")),ref_symbols =c(" A "))%>%
-  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
+  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")%>%
+  footnote(j=5,part="header",value=as_paragraph("-0.5 ft 30-d\u207B\u00B9 maximum 30-day Recession Rate for HAB Deviation"),ref_symbols =c(" B "))
     
 
 ```
@@ -275,12 +276,18 @@ legend("topright",
 
 rf.dbkey=data.frame(DBKEY=c("16414","15495","16415"),SITE=c("S79 (WP Franklin)","S78 (Ortona)","S77 (Moore Haven)"))
 
-rf.dat=DBHYDRO_daily(End.Date-ddays(9),YEST,rf.dbkey$DBKEY)
+rf.dat=DBHYDRO_daily(Start.Date,YEST,rf.dbkey$DBKEY)
+rf.dat$Data.Value[rf.dat$Data.Value<0]<-0
 rf.dat=merge(rf.dat,rf.dbkey,"DBKEY")
-rf.dat.da=ddply(rf.dat,c("SITE"),summarise,TRF=sum(Data.Value,na.rm=T))
+rf.dat$Date=date.fun(rf.dat$Date)
+rf.dat$WY=WY(rf.dat$Date)
+rf.dat$hydro.DOY=hydro.day(rf.dat$Date)
+rf.dat$cumRF=with(rf.dat,ave(Data.Value,paste(SITE,WY),FUN=function(x) cumsum(x)))
+
+rf.dat.da=ddply(subset(rf.dat,Date%in%seq(date.fun(YEST-ddays(6)),date.fun(YEST),"1 days")),c("SITE"),summarise,TRF=sum(Data.Value,na.rm=T))
 rf.dat.da=rf.dat.da[match(rf.dat.da$SITE,rf.dbkey$SITE),]
 
-cap.val="Weekly rainfall totals along the Caloosahatchee River"
+cap.val=paste("Weekly (",format(date.fun(YEST-ddays(6)),"%m/%d"),"-", format(YEST,"%m/%d"),") rainfall totals along the Caloosahatchee River")
 
 rf.dat.da%>%
   flextable()%>%
@@ -293,9 +300,63 @@ rf.dat.da%>%
   bold(part="header")%>%
   set_header_labels("SITE"="Mointoring Location",
                     "TRF"="Weekly\nRainfall\nTotal\n(inches)")%>%
-  width(width=c(1.5,1))%>%
-  footnote(j=2,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(9),"%m/%d/%Y")," - ",format(YEST,"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
+  width(width=c(1.5,1.5))%>%
+  footnote(j=1,part="header",value=as_paragraph("Data Source: SFWMD DBHYDRO (DBKEYS 16414,15495,16415)"),ref_symbols=c(" 1 "))%>%
+  footnote(j=2,part="header",value=as_paragraph(paste("Based on data from ",format(date.fun(YEST-ddays(6)),"%m/%d/%Y")," - ",format(YEST,"%m/%d/%Y"))),ref_symbols =c(" 2 "))%>%
   add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
+
+```
+
+
+```{r ,echo=FALSE,warning=F,fig.width=6.5,fig.height=4,fig.align='center'}
+
+xlim.val=date.fun(c(paste(CurWY-1,05,01,sep="-"),paste(CurWY,05,01,sep="-")));by.x=90;by.x.min=30;
+xmaj=seq(xlim.val[1],xlim.val[2],by=paste(by.x,"days"));
+xmin=seq(xlim.val[1],xlim.val[2],paste(by.x.min,"days"))
+
+xlim.val2=c(0,366);
+xmaj2=seq(xlim.val2[1],xlim.val2[2],by.x);
+xmin2=seq(xlim.val2[1],xlim.val2[2],by.x.min)
+
+ylim.max=max(subset(rf.dat,Date%in%seq(xlim.val[1],xlim.val[2],"1 days"))$Data.Value,na.rm=T)
+ylim.val=c(0,ceiling(ylim.max+ylim.max*0.1));by.y=2;
+ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+
+par(family="serif",cex.axis=1,mar=c(1,1,1,1),oma=c(2.5,4,1,1));
+layout(matrix(1:6,2,3,byrow=T),heights=c(0.5,1))
+for(i in 1:3){
+plot(Data.Value~Date,rf.dat,ylim=rev(ylim.val),xlim=xlim.val,ann=F,axes=F,type="n",yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+with(subset(rf.dat,SITE==rf.dbkey$SITE[i]),segments(Date,0,Date,Data.Value,col="dodgerblue1",lwd=2))
+# with(subset(rf.dat,SITE==rf.dbkey$SITE[i]),points(Date,Data.Value,pch=19,col="dodgerblue1",lwd=0.01))
+# axis_fun(1,xmaj,xmin,format(xmaj,"%m-%Y"))
+axis_fun(1,xmaj,xmin,NA)
+if(i==1){axis_fun(2,ymaj,ymin,ymaj)}else(axis_fun(2,ymaj,ymin,NA))
+box(lwd=1)
+mtext(side=3,rf.dbkey$SITE[i])
+if(i==1){mtext(side=2,line=2,"Daily Rainfall\n(inches)")}
+}
+
+
+ylim.max=max(subset(rf.dat,SITE%in%rf.dbkey$SITE)$cumRF,na.rm=T)
+ylim.val=c(0,ceiling(ylim.max+ylim.max*0.1));by.y=20;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+for(i in 1:3){
+plot(Data.Value~hydro.DOY,rf.dat,ylim=ylim.val,xlim=xlim.val2,ann=F,axes=F,type="n",yaxs="i")
+abline(h=ymaj,v=xmaj2,lty=3,col="grey")
+with(subset(rf.dat,SITE==rf.dbkey$SITE[i]&WY==CurWY),lines(hydro.DOY,cumRF,lwd=2,col="dodgerblue1"))
+with(subset(rf.dat,SITE==rf.dbkey$SITE[i]&WY==CurWY-1),lines(hydro.DOY,cumRF,lwd=1,col=adjustcolor("indianred1",0.5)))
+if(i==1){
+  legend("topleft",legend=c(paste0("WY",CurWY-1),paste0("WY",CurWY)),
+         lwd=c(1,2),col=c(adjustcolor("indianred1",0.5),"dodgerblue1"),pch=NA,
+         ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
+}
+axis_fun(1,xmaj2,xmin2,format(xmaj,"%m-%y"),line=-0.5)
+if(i==1){axis_fun(2,ymaj,ymin,ymaj)}else{axis_fun(2,ymaj,ymin,NA)}
+box(lwd=1)
+if(i==1){mtext(side=2,line=2,"Cumulative Rainfall (inches)")}
+if(i==2){mtext(side=1,line=2.5,"Date (Month-Year)")}
+}
+
 
 ```
 
@@ -711,7 +772,7 @@ Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7,
 ```
 
 
-```{r Cal Instant Sal plot,echo=FALSE,fig.width=11,fig.height=6,fig.align='center'}
+```{r Cal Instant Sal plot,echo=FALSE,fig.width=10,fig.height=5,fig.align='center'}
 CALSITES=c("SANIB2","MARKH","CCORAL","FORTMYERSM","S79")
 EDate.plot=as.Date(Sys.time())+duration(1,"days")
 SDate.plot=as.Date(EDate.plot-duration(14,"days"))
@@ -722,14 +783,15 @@ xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],b
 ylim.val=c(0,40);
 ylim.val2=c(0,20);
 by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-colrmp=blue2green(10)
-txt.cex=2
+colrmp="blue"
+txt.cex=1
 
-par(family="serif",cex.axis=1.2,mar=c(1,2.5,1,1),oma=c(12,3,4,1),mgp=c(3,1,0));
-layout(matrix(c(1,2,3,4),1,4,byrow=F));
+par(family="serif",cex.axis=1.2,mar=c(1.5,2,1,1),oma=c(2,3,4,1),mgp=c(3,1,0));
+layout(matrix(c(1:4,rep(5,3),6),2,4,byrow=T),heights=c(1,0.25));
+
 station.label=c("Sanibel","Shell Point","Cape Coral","Ft. Myers")
-for(i in 1:2){
-plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[i]),type="n",ylim=ylim.val,xlim=xlim.val,xaxt="n",xaxs="i",xlab=NA,yaxt="n",yaxs="i",ylab=NA,lwd=1.75,col=colrmp[1])
+for(i in 1:3){
+plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[i]),type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",ann=F,axes=F)
 xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
 yy=c(0,5,5,0);polygon(x=xx,y=yy,col="peachpuff1")
 yy2=c(35,40,40,35);polygon(x=xx,y=yy2,col="peachpuff1")
@@ -737,86 +799,62 @@ yy3=c(30,35,35,30);polygon(x=xx,y=yy3,col="khaki")
 yy4=c(5,10,10,5);polygon(x=xx,y=yy4,col="khaki")
 yy5=c(10,30,30,10);polygon(x=xx,y=yy5,col="darkseagreen2")
 abline(h=seq(0,40,5))
-with(subset(Cal.Sal,SITE==CALSITES[i]),pt_line(Date.EST,Sal,1,colrmp[i],2,21,colrmp[i],cex=2,pt.col=colrmp[i]))
-axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),cex.axis=1)
-axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
-mtext(side=3,station.label[i],line=1,cex=txt.cex*0.5)
-box(lwd=lwd.val*1.5)}
-mtext(side=2,"Salinity (PSU)",line=0.75,cex=1.75,outer=T)
-mtext(expression(paste(underline("Oyster Condition"))),side=3,cex=txt.cex*0.75,line=2.25,outer=F)
-mtext(side=1,"Oyster Salinity Condition",line=6,cex=1.25)
+with(subset(Cal.Sal,SITE==CALSITES[i]),pt_line(Date.EST,Sal,1,colrmp,2,21,colrmp,cex=2,pt.col=colrmp))
+with(subset(Cal.Sal,SITE==CALSITES[i]),lines(Date.EST,MovingAvg.7d,lwd=2.5,col="orange"))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj)
+mtext(side=3,station.label[i])
+box(lwd=lwd.val)
+if(i==1){mtext(side=2,"Salinity (PSU)",line=2,cex=1.25)}
+if(i==2){mtext(expression(paste(underline("Oyster Condition"))),side=3,cex=1,line=1.75,outer=F)}
+}
 
-plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[3]),type="n",ylim=ylim.val,xlim=xlim.val,xaxt="n",xaxs="i",xlab=NA,yaxt="n",yaxs="i",ylab=NA,lwd=1.75,col=colrmp[3])
-xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
-yy=c(0,5,5,0);polygon(x=xx,y=yy,col="peachpuff1")
-yy2=c(35,40,40,35);polygon(x=xx,y=yy2,col="peachpuff1")
-yy3=c(30,35,35,30);polygon(x=xx,y=yy3,col="khaki")
-yy4=c(5,10,10,5);polygon(x=xx,y=yy4,col="khaki")
-yy5=c(10,30,30,10);polygon(x=xx,y=yy5,col="darkseagreen2")
-abline(h=seq(0,40,5))
-with(subset(Cal.Sal,SITE==CALSITES[3]),pt_line(Date.EST,Sal,1,colrmp[3],2,21,colrmp[3],cex=2,pt.col=colrmp[3]))
-axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),cex.axis=1)
-axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
-mtext(side=3,station.label[3],line=1,cex=txt.cex*0.5)
-box(lwd=lwd.val*1.5)
-
-plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[4]),type="n",ylim=ylim.val,xlim=xlim.val,xaxt="n",xaxs="i",xlab=NA,yaxt="n",yaxs="i",ylab=NA,lwd=2,col=colrmp[7])
+plot(Sal~Date.EST,subset(Cal.Sal,SITE==CALSITES[i]),type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",ann=F,axes=F)
 xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
 yy=c(0,10,10,0);polygon(x=xx,y=yy,col="darkseagreen2")
 yy=c(10,15,15,10);polygon(x=xx,y=yy,col="khaki")
 yy=c(15,40,40,15);polygon(x=xx,y=yy,col="peachpuff1")
 abline(h=seq(0,40,5))
-with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp[3],2,21,colrmp[3],cex=2,pt.col=colrmp[3]))
-axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),cex.axis=1)
-axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
-mtext(side=3,station.label[4],line=1,cex=txt.cex*0.5)
-box(lwd=lwd.val*1.75)
-mtext("Month/Day",side=1,line=3,cex=2,outer=T)
-mtext(expression(paste(underline("Tape grass Condition"))),side=3,cex=txt.cex*0.75,line=2.25,outer=F)
-xleg=strptime(SDate.plot-26,"%Y-%m-%d")
-xleg2=strptime(SDate.plot+7,"%Y-%m-%d")
-mtext(side=1,"Tape Grass Salinity Condition",line=6,cex=1.25)
-legend(xleg,-9,legend=c("Poor(<5 or >35)","Fair (5-10 or 30-35)","Good(10-30)"),pch=c(22,22,22),pt.bg=c("peachpuff1","khaki","darkseagreen2"),       pt.cex=3,ncol=1,cex=1.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
+with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp,2,21,colrmp,cex=2,pt.col=colrmp))
+with(subset(Cal.Sal,SITE==CALSITES[4]),lines(Date.EST,MovingAvg.7d,lwd=2.5,col="orange"))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj)
+mtext(side=3,station.label[4])
+box(lwd=lwd.val)
+mtext("Month/Day",side=1,line=-6,cex=1.25,outer=T)
+mtext(expression(paste(underline("Tape grass Condition"))),side=3,cex=1,line=1.75,outer=F)
 
-legend(xleg2,-9,legend=c("Poor(>15)","Fair(10-15)","Good(<10)"),pch=c(22,22,22),pt.bg=c("peachpuff1","khaki","darkseagreen2"),       pt.cex=3,ncol=1,cex=1.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
+plot(0:1,0:1,ann=F,axes=F,type="n")
+legend(0.25,0.15,legend=c("Daily Average", "7-Day Moving Avg"),
+       pch=c(21,NA),
+       lty=c(NA,1),
+       lwd=c(0.01,3),
+       col=c("blue","orange"),
+       pt.bg=c("blue",NA),
+       pt.cex=1.5,ncol=1,cex=1.25,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0.5,
+       title.adj = 0,title="")
+legend(0.5,0.15,legend=c("Poor(<5 or >35)","Fair (5-10 or 30-35)","Good(10-30)"),
+       pch=c(22,22,22),
+       lty=NA,
+       lwd=0.01,
+       col="black",
+       pt.bg=c("peachpuff1","khaki","darkseagreen2"),
+       pt.cex=2.5,ncol=1,cex=1.25,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0.5,
+       title.adj = 0,title="Oyster Salinity Condition")
 
-
+plot(0:1,0:1,ann=F,axes=F,type="n")
+legend(0.5,0.15,legend=c("Poor(>15)","Fair (10 - 15)","Good(<10)"),
+       pch=c(22,22,22),
+       lty=NA,
+       lwd=0.01,
+       col="black",
+       pt.bg=c("peachpuff1","khaki","darkseagreen2"),
+       pt.cex=2.5,ncol=1,cex=1.25,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0.5,
+       title.adj = 0,title="Tape Grass Salinity Condition")
+# grid.raster(logo,x=0.045,y=0.055,just=c("left","bottom"),width=unit(1.25,"inches"))
 ```
 
-<font size=3><center>Daily average bottom salinity data for the last 14-days from sampling locations within the tidal Caloosahatchee River Estuary relative to oyster health (Sanibel, Shell Point and Cape Coral) and tape grass (<i>Vallisneria americana</i>) health (Ft. Myers only) conditions.</center></font>
-<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
 
-```{r Cal 7d plots, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
-par(family="serif",cex.axis=1.2,mar=c(2,2,1,1),oma=c(6,2,1,1),mgp=c(3,1,0));
-xmaj=seq(xlim.val[1],xlim.val[2],by="4 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
-
-CALSITES=c("SANIB2","MARKH","CCORAL","FORTMYERSM","S79")
-cols=c("forestgreen","red","blue")
-lwd.val=1
-plot(MovingAvg.7d~Date.EST,Cal.Sal,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",yaxt="n",xaxt="n",ylab=NA,xlab=NA)
-xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
-yy=c(0,5,5,0);polygon(x=xx,y=yy,col="peachpuff1")
-yy2=c(35,40,40,35);polygon(x=xx,y=yy2,col="peachpuff1")
-yy3=c(30,35,35,30);polygon(x=xx,y=yy3,col="khaki")
-yy4=c(5,10,10,5);polygon(x=xx,y=yy4,col="khaki")
-yy5=c(10,30,30,10);polygon(x=xx,y=yy5,col="darkseagreen2")
-abline(h=seq(0,40,5))
-for(i in 1:3){with(subset(Cal.Sal,SITE==CALSITES[i]),lines(Date.EST,MovingAvg.7d,lwd=3,col=cols[i]))}
-axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),cex.axis=1)
-axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
-box(lwd=lwd.val*1.5)
-xleg=strptime(min(xlim.val)+ddays(7),"%Y-%m-%d")
-mtext("Date (MM/DD/YYYY)",side=1,line=2.5,cex=1.5)
-mtext("Salinity (PSU)",side=2,line=2.5,cex=1.5)
-
-legend(xleg,-10,
-       legend=c("Sanibel","Shell Point","Cape Coral"),
-        col=cols,lty=c(1,1,1),lwd=c(2,2,2),pt.cex=2.5,ncol=3,cex=1.5,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
-legend(xleg,-15,
-       legend=c("Salinity Condition:","Poor(<5 or >35)","Fair (5-10 or 30-35)","Good(10-30)"),
-       pch=c(NA,22,22,22),pt.bg=c(NA,"peachpuff1","khaki","darkseagreen2"),
-     pt.cex=2,ncol=4,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
-```
-<font size=3><center>Moving 7-day average salinities observed at the Cape Coral, Shell Point and Sanibel salinity monitoring stations relative to Oyster salinity health conditions.</center></font>
-<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+<font size=2><center>Daily average bottom salinity data for the last 14-days from sampling locations within the tidal Caloosahatchee River Estuary relative to oyster health (Sanibel, Shell Point and Cape Coral) and tape grass (<i>Vallisneria americana</i>) health (Ft. Myers only) conditions.</center></font>
+<font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
