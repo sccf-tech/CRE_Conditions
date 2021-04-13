@@ -116,11 +116,7 @@ for(i in 1:length(dates)){
 map.q[,2:5]=cfs.to.acftd(map.q[,2:5])
 
 q.dat=merge(q.dat,map.q,"Date")
-
-q.dat.melt=melt(q.dat,id.vars = "Date")
-q.dat.melt$value[q.dat.melt$value<0]<-NA
-
-q.dat=cast(q.dat.melt,Date~variable,value="value",mean)
+q.dat[q.dat<0]<-NA
 
 ```
 
@@ -131,16 +127,14 @@ date.7day=seq(date.fun(date.fun(Sys.Date())-ddays(7)),date.fun(Sys.Date()),"1 da
 q.dat.7day=subset(q.dat,Date%in%date.7day)[,vars]
 meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:15],2,mean,na.rm=T))))
 colnames(meanQ)<-c("Statistic",vars[2:length(vars)])
-
 totalQ=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat.7day[,2:15],2,sum,na.rm=T))))
 colnames(totalQ)<-c("Statistic",vars[2:length(vars)])
-
 sumstats=rbind(meanQ,totalQ)
 
-meanQ.14=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat[,2:15],2,mean,na.rm=T))))
-colnames(meanQ.14)<-c("Statistic",vars[2:length(vars)])
 
-totalQ.14=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat[,2:15],2,sum,na.rm=T))))
+meanQ.14=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat[,vars[2:length(vars)]],2,mean,na.rm=T))))
+colnames(meanQ.14)<-c("Statistic",vars[2:length(vars)])
+totalQ.14=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat[,vars[2:length(vars)]],2,sum,na.rm=T))))
 colnames(totalQ.14)<-c("Statistic",vars[2:length(vars)])
 
 sumstats14=rbind(meanQ.14,totalQ.14)
@@ -150,7 +144,7 @@ q.dat.7day=q.dat.7day[match(q.dat.7day$Date,rev(q.dat.7day$Date)),]
 q.dat=q.dat[match(q.dat$Date,rev(q.dat$Date)),]
 
 cap.val="Daily discharge volume in Acre-Feet per day for the last 14-days. Data Source: USACE"
-q.dat%>%
+q.dat[,vars]%>%
   flextable()%>%
   colformat_datetime(j=1,fmt_date="%m-%d")%>%
   colformat_double(j=2:15,big.mark = "",digits=0)%>%
@@ -160,7 +154,8 @@ q.dat%>%
   fontsize(size=10,part="body")%>%
   fontsize(size=12,part="header")%>%
   add_header_lines(values=cap.val)%>%
-  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")%>%
+  footnote(i=1,j=1,value=as_paragraph("Negative flow values omitted from this table and statistical summaries below."),ref_symbols =c(" "),part="header")
 ```
 
 
