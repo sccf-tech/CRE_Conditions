@@ -117,6 +117,11 @@ map.q[,2:5]=cfs.to.acftd(map.q[,2:5])
 
 q.dat=merge(q.dat,map.q,"Date")
 
+q.dat.melt=melt(q.dat,id.vars = "Date")
+q.dat.melt$value[q.dat.melt$value<0]<-NA
+
+q.dat=cast(q.dat.melt,Date~variable,value="value",mean)
+
 ```
 
 ```{r table1}
@@ -124,8 +129,14 @@ vars=c("Date","S77","S78","S79","S310","S351","S352","S354","L8","S308","S80","W
 date.7day=seq(date.fun(date.fun(Sys.Date())-ddays(7)),date.fun(Sys.Date()),"1 days")
 
 q.dat.7day=subset(q.dat,Date%in%date.7day)[,vars]
-meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:15],2,mean))))
-totalQ=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat.7day[,2:15],2,sum))))
+meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:15],2,mean,na.rm=T))))
+colnames(meanQ)<-c("Statistic",vars[2:length(vars)])
+
+totalQ=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat.7day[,2:15],2,sum,na.rm=T))))
+colnames(totalQ)<-c("Statistic",vars[2:length(vars)])
+
+sumstats=rbind(meanQ,totalQ)
+
 
 q.dat.7day=q.dat.7day[match(q.dat.7day$Date,rev(q.dat.7day$Date)),]
 
@@ -160,7 +171,7 @@ q.dat.7day%>%
 
 ```{r}
 cap.val="Average and total discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
-rbind(meanQ,totalQ)%>%
+sumstats%>%
   flextable()%>%
   colformat_double(j=2:15,big.mark = "",digits=0)%>%
   align(j=2:15,part="all",align="center")%>%
