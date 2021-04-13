@@ -137,11 +137,20 @@ colnames(totalQ)<-c("Statistic",vars[2:length(vars)])
 
 sumstats=rbind(meanQ,totalQ)
 
+meanQ.14=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat[,2:15],2,mean,na.rm=T))))
+colnames(meanQ.14)<-c("Statistic",vars[2:length(vars)])
+
+totalQ.14=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat[,2:15],2,sum,na.rm=T))))
+colnames(totalQ.14)<-c("Statistic",vars[2:length(vars)])
+
+sumstats14=rbind(meanQ.14,totalQ.14)
+
 
 q.dat.7day=q.dat.7day[match(q.dat.7day$Date,rev(q.dat.7day$Date)),]
+q.dat=q.dat[match(q.dat$Date,rev(q.dat$Date)),]
 
-cap.val="Daily discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
-q.dat.7day%>%
+cap.val="Daily discharge volume in Acre-Feet per day for the last 14-days. Data Source: USACE"
+q.dat%>%
   flextable()%>%
   colformat_datetime(j=1,fmt_date="%m-%d")%>%
   colformat_double(j=2:15,big.mark = "",digits=0)%>%
@@ -158,7 +167,7 @@ q.dat.7day%>%
 ```{r}
 library(downloadthis)
 
-q.dat.7day%>%
+q.dat%>%
   download_this(
     output_name = "Discharge7day",
     output_extension = ".xlsx",
@@ -172,6 +181,22 @@ q.dat.7day%>%
 ```{r}
 cap.val="Average and total discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
 sumstats%>%
+  flextable()%>%
+  colformat_double(j=2:15,big.mark = "",digits=0)%>%
+  align(j=2:15,part="all",align="center")%>%
+  padding(padding=1,part="all")%>%
+  font(fontname="Times New Roman",part="all")%>%
+  fontsize(size=10,part="body")%>%
+  fontsize(size=12,part="header")%>%
+  add_header_lines(values=cap.val)%>%
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+
+```
+
+
+```{r}
+cap.val="Average and total discharge volume in Acre-Feet per day for the last 14-days. Data Source: USACE"
+sumstats14%>%
   flextable()%>%
   colformat_double(j=2:15,big.mark = "",digits=0)%>%
   align(j=2:15,part="all",align="center")%>%
