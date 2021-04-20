@@ -116,7 +116,7 @@ for(i in 1:length(dates)){
 map.q[,2:5]=cfs.to.acftd(map.q[,2:5])
 
 q.dat=merge(q.dat,map.q,"Date")
-q.dat[q.dat<0]<-NA
+# q.dat[q.dat<0]<-NA
 
 ```
 
@@ -154,8 +154,8 @@ q.dat[,vars]%>%
   fontsize(size=10,part="body")%>%
   fontsize(size=12,part="header")%>%
   add_header_lines(values=cap.val)%>%
-  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")%>%
-  footnote(i=1,j=1,value=as_paragraph("Negative flow values omitted from this table and statistical summaries below."),ref_symbols =c(" "),part="header")
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+  # footnote(i=1,j=1,value=as_paragraph("Negative flow values omitted from this table and statistical summaries below."),ref_symbols =c(" "),part="header")
 ```
 
 
@@ -224,7 +224,7 @@ EAAq.per=round(EAAq/q.from.Lake*100,0)
 
 ```
 
-**Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")`**  AF were discharged from Lake Okeechobee, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF (`r S308q.per`%)** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF (`r S310q.per`%)** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF (`r L8q.per`%)** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF (`r EAAq.per`%)** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**,respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+**Lake Flows:** In the past 7 days `r ifelse(min(apply(q.dat.7day,1,FUN=function(x)min(x,na.rm=T)))<0,"a net flow of","")` **`r format(round(q.from.Lake,0),big.mark=",")`**  AF were discharged from Lake Okeechobee, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF (`r S308q.per`%)** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF (`r S310q.per`%)** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF (`r L8q.per`%)** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF (`r EAAq.per`%)** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**,respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
 
@@ -303,19 +303,21 @@ RF.dat%>%
 # RECON.dates=date.fun(c(Sys.Date()-duration(6, "months"),date.fun(Sys.Date())))
 RECON.dates=date.fun(c(Sys.Date()-duration(1, "years"),date.fun(Sys.Date())))
 # RECON.dates
+dates.fill=data.frame(DATE=seq(RECON.dates[1],RECON.dates[2],"1 days"),fill=1)
 
-dat=read.csv("C:/Julian_LaCie/_Github/CRE_Conditions/Data/stakeholder/chart.csv")
-dat$DateTime=date.fun(dat$DateTime,form="%F %X")
-dat$Date=date.fun(dat$DateTime)
-colnames(dat)=c("DateTime","Sal","Date")
+dat.recon=read.csv("C:/Julian_LaCie/_Github/CRE_Conditions/Data/stakeholder/chart.csv")
+dat.recon$DateTime=date.fun(dat.recon$DateTime,form="%F %X")
+dat.recon$Date=date.fun(dat.recon$DateTime)
+colnames(dat.recon)=c("DATETIME","Sal","DATE")
+dat.recon$source="RECON"
 # RECON.dates=date.fun(range(dat$DateTime))
-da.dat=ddply(dat,"Date",summarise,mean.val=mean(Sal,na.rm=T))
-da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+# da.dat.recon=ddply(dat.recon,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
+# da.dat.recon$Sal.30d=with(da.dat.recon,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
 
 ## replace RECON till fix
 bk.dbkeys.surf=data.frame(depth="Surface",
                          SITE=c(rep("FORTMYERSM",2)),
-                         param=rep(c("WT","SPC"),5),
+                         param=rep(c("WT","SPC"),1),
                          DBKEY=c("88287","88292")
                          )
 dat=data.frame()
@@ -323,12 +325,24 @@ for(i in 1:nrow(bk.dbkeys.surf)){
 tmp=DBHYDRO_breakpoint(RECON.dates[1],RECON.dates[2],bk.dbkeys.surf$DBKEY[i])  
 tmp$DBKEY=as.character(bk.dbkeys.surf$DBKEY[i])
 dat=rbind(dat,tmp)
+# print(i)
 }
 dat=merge(dat,bk.dbkeys.surf,"DBKEY")
 dat.xtab=data.frame(cast(dat,SITE+DATETIME+DATE~param,value="Data.Value",mean))
 dat.xtab$Sal=with(dat.xtab,SalinityCalc(SPC,WT))
-da.dat=ddply(dat.xtab,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
+dat.xtab$source="SFWMD"
+# da.dat=ddply(dat.xtab,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
+# da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+
+
+vars=c("DATETIME","DATE","Sal","source")
+dat.xtab.comb=rbind(dat.xtab[,vars],dat.recon[,vars])
+dat.xtab2=cast(dat.xtab.comb,DATETIME+DATE~source,value="Sal",mean)
+dat.xtab2$Sal=with(dat.xtab2,ifelse(is.na(SFWMD)==T,RECON,SFWMD))
+dat.xtab2=merge(dat.xtab2,dates.fill,"DATE",all.y=T)
+da.dat=ddply(dat.xtab2,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
 da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+#da.dat=merge(da.dat,dates.fill,"DATE",all.y=T)
 
 cal.q=DBHYDRO_daily(RECON.dates[1]-duration(2,"months"),RECON.dates[2],"DJ237")
 cal.q$Date=date.fun(cal.q$Date)
@@ -342,7 +356,7 @@ plot(Sal~DATETIME,dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
 # with(dat,lines(DateTime,Sal,lty=1,col="blue",lwd=1.5))
 # with(da.dat,lines(Date,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
-with(dat.xtab,lines(DATETIME,Sal,lty=1,col="blue",lwd=2))
+with(dat.xtab2,lines(DATETIME,Sal,lty=1,col="blue",lwd=2))
 with(da.dat,lines(DATE,Sal.30d,lty=1,col="darkolivegreen3",lwd=4))
 axis_fun(1,xmaj,xmin,NA)
 axis_fun(2,ymaj,ymin,ymaj)
@@ -389,7 +403,7 @@ plot(Sal~DATETIME,dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
 # with(dat,lines(DateTime,Sal,lty=1,col="blue",lwd=1.5))
 # with(da.dat,lines(Date,Sal.30d,lty=1,col="darkolivegreen3",lwd=2))
-with(dat.xtab,lines(DATETIME,Sal,lty=1,col="blue",lwd=2))
+with(dat.xtab2,lines(DATETIME,Sal,lty=1,col="blue",lwd=2))
 with(da.dat,lines(DATE,Sal.30d,lty=1,col="darkolivegreen3",lwd=4))
 axis_fun(1,xmaj,xmin,NA)
 axis_fun(2,ymaj,ymin,ymaj)
@@ -426,7 +440,7 @@ library(plotly)
 xlim.val.ly=c(RECON.dates[1],date.fun(RECON.dates[2]+duration(15,"days")))
 
 plot_ly(x=~DATETIME,y=~round(Sal,1),
-        data=dat.xtab,
+        data=dat.xtab2,
         type="scatter",mode="lines",color=I(adjustcolor('blue',0.5)),name="Hourly Salinity (Ft Myers)",
         line=list(width=1))%>%
   add_trace(x=~DATE,y=~round(Sal.30d,1),

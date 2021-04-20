@@ -1,0 +1,140 @@
+---
+title: "Okeechobee/Caloosahatchee Conditions"
+runtime: shiny
+output: 
+  html_document: 
+    toc: no
+    includes:
+      after_body: footer.html
+
+---
+
+***
+`r paste("Updated: ",as.POSIXct(Sys.time(),"%Y-%m-%d %H:%M",tz=""))`
+
+<mark> Still in Development </mark>
+
+
+- Data presented in Florida Water Year (WY). Florida WY start May 1<sup>st</sup> of the prior year and ends April 30<sup>th</sup>. Therefore, WY2020 spans May 1, 2019 to April 30, 2020. 
+
+***
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(AnalystHelper);
+library(plyr)
+library(reshape)
+library(lubridate)
+library(zoo)
+
+library(shiny)
+
+dates=date.fun(c("1999-05-01",as.character(Sys.Date()-ddays(1))))
+WYs=WY(dates)[1]:WY(dates)[2]
+cols=wesanderson::wes_palette("Zissou1",length(WYs),"continuous")
+
+# Lake Stage --------------------------------------------------------------
+lake.stg=DBHYDRO_daily(dates[1],dates[2],"00268")
+lake.stg$WY=WY(lake.stg$Date)
+lake.stg$DOWY=hydro.day(lake.stg$Date)
+
+# CRE Discharge -----------------------------------------------------------
+q.DBKEY=data.frame(SITE=c("S77","S79"),DBKEY=c("DJ235","DJ237"))
+q.dat=DBHYDRO_daily(dates[1],dates[2],q.DBKEY$DBKEY)
+
+q.dat$WY=WY(q.dat$Date)
+q.dat$DOWY=hydro.day(q.dat$Date)
+q.dat$Data.Value[q.dat$Data.Value<0]<-0
+q.dat$Data.Value[is.na(q.dat$Data.Value)==T]<-0
+range(q.dat$Data.Value)
+
+flow.dat.xtab=cast(merge(q.dat,q.DBKEY,"DBKEY"),Date+DOWY+WY~SITE,value="Data.Value",mean)
+flow.dat.xtab$C43=with(flow.dat.xtab,ifelse(S79>S77,0,S77-S79))
+flow.dat.xtab$CumFlow.S77=with(flow.dat.xtab,ave(S77,WY,FUN=function(x) cumsum(cfs.to.acftd(x))))
+flow.dat.xtab$CumFlow.S79=with(flow.dat.xtab,ave(S79,WY,FUN=function(x) cumsum(cfs.to.acftd(x))))
+flow.dat.xtab$S77.Q14=with(flow.dat.xtab,c(rep(NA,13),rollapply(S77,width=14,FUN=function(x)mean(x,na.rm=T))))
+flow.dat.xtab$S79.Q14=with(flow.dat.xtab,c(rep(NA,13),rollapply(S79,width=14,FUN=function(x)mean(x,na.rm=T))))
+
+```
+
+
+
+```{r ,echo=FALSE}
+sidebarPanel(
+  checkboxGroupInput("WY","Florida Water YearMay - April):",
+                     choices=WYs)
+)
+```
+
+```{r plot,echo=F}
+output$unsized <-
+renderPlot({
+  cols=wesanderson::wes_palette("Zissou1",length(input$WY),"continuous")
+
+xlim.val=c(1,366);by.x=90;xmaj=seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/3)
+xmaj.month=c("May","Jul","Oct","Jan","Apr")
+
+par(family="serif",mar=c(1.5,2,0.5,1),oma=c(2,4,1,1));
+layout(matrix(1:6,3,2,byrow=T),width=c(1,0.25))  
+
+ylim.val=c(8,18);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+plot(Data.Value~DOWY,lake.stg,xlim=xlim.val,ylim=ylim.val,type="n",ann=F,axes=F,xaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+for(i in 1:length(input$WY)){
+  with(subset(lake.stg,WY==input$WY[i]),lines(DOWY,Data.Value,col=adjustcolor(cols[i],0.5),lwd=2))
+}
+axis_fun(1,xmaj,xmin,NA,line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj)
+box(lwd=1)
+mtext(side=2,line=3.25,"Stage Elevation (Ft, NGVD29)")
+# mtext(side=1,line=2,"Month")
+plot(0:1,0:1,ann=F,axes=F,type="n")
+legend(0,0.8,legend=paste0("WY",input$WY),
+       pch=NA,
+       lty=1,
+       lwd=2,
+       col=cols,
+       ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1)
+
+ylim.val=c(0,30000);by.y=10000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+plot(S79~DOWY,flow.dat.xtab,xlim=xlim.val,ylim=ylim.val,type="n",ann=F,axes=F,xaxs="i",yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+for(i in 1:length(input$WY)){
+  with(subset(flow.dat.xtab,WY==input$WY[i]),lines(DOWY,S79,col=adjustcolor(cols[i],0.5),lwd=1))
+}
+abline(h=2600,lty=3)
+axis_fun(1,xmaj,xmin,NA,line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj);box(lwd=1)
+mtext(side=2,line=3.25,"Daily Discharge (cfs)")
+mtext(side=3,"S79",adj=0)
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+
+ylim.val=c(0,40e5);by.y=10e5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+plot(S79~DOWY,flow.dat.xtab,xlim=xlim.val,ylim=ylim.val,type="n",ann=F,axes=F,xaxs="i",yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+for(i in 1:length(input$WY)){
+  with(subset(flow.dat.xtab,WY==WYs[i]),lines(DOWY,CumFlow.S79,col=adjustcolor(cols[i],0.5),lwd=1.5))
+  with(subset(flow.dat.xtab,WY==WYs[i]),lines(DOWY,CumFlow.S77,col=adjustcolor(cols[i],0.5),lwd=1.5,lty=2))
+}
+abline(h=2600,lty=3.25)
+axis_fun(1,xmaj,xmin,xmaj.month,line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj/10e3);box(lwd=1)
+mtext(side=2,line=3,"Cum Discharge\n(x10\u00B3 Ac-Ft WY\u207B\u00B9)")
+plot(0:1,0:1,ann=F,axes=F,type="n")
+legend("topleft",legend=c("S79","S77"),
+       pch=NA,
+       lty=c(1,2),
+       lwd=2,
+       col="grey",
+       ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1)
+
+})
+
+renderUI({
+  plotOutput("unsized",width="100%",height="480px")
+})
+```
+
+
