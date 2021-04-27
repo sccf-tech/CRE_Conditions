@@ -328,25 +328,31 @@ dat=rbind(dat,tmp)
 # print(i)
 }
 dat=merge(dat,bk.dbkeys.surf,"DBKEY")
+dat$Data.Value[dat$Data.Value==-999]<-NA
 dat.xtab=data.frame(cast(dat,SITE+DATETIME+DATE~param,value="Data.Value",mean))
 dat.xtab$Sal=with(dat.xtab,SalinityCalc(SPC,WT))
 dat.xtab$source="SFWMD"
 # da.dat=ddply(dat.xtab,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
 # da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
 
-
 vars=c("DATETIME","DATE","Sal","source")
 dat.xtab.comb=rbind(dat.xtab[,vars],dat.recon[,vars])
 dat.xtab2=cast(dat.xtab.comb,DATETIME+DATE~source,value="Sal",mean)
-dat.xtab2$Sal=with(dat.xtab2,ifelse(is.na(SFWMD)==T,RECON,SFWMD))
+dat.xtab2$Sal=with(dat.xtab2,ifelse(is.na(RECON)==T,SFWMD,RECON))
 dat.xtab2=merge(dat.xtab2,dates.fill,"DATE",all.y=T)
 da.dat=ddply(dat.xtab2,"DATE",summarise,mean.val=mean(Sal,na.rm=T))
-da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+#da.dat$Sal.30d=with(da.dat,c(rep(NA,29),rollapply(mean.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+da.dat$Sal.30d=with(da.dat,roll_meanr(mean.val,n=30))
 #da.dat=merge(da.dat,dates.fill,"DATE",all.y=T)
 
-cal.q=DBHYDRO_daily(RECON.dates[1]-duration(2,"months"),RECON.dates[2],"DJ237")
+cal.dbkeys=data.frame(DBKEY=c("DJ237","00865"),priority=c("P1","P2"))
+cal.q=DBHYDRO_daily(RECON.dates[1]-duration(2,"months"),RECON.dates[2],cal.dbkeys$DBKEY)
 cal.q$Date=date.fun(cal.q$Date)
-cal.q$Q.30=with(cal.q,c(rep(NA,29),rollapply(Data.Value,width=30,FUN=function(x)mean(x,na.rm=T))))
+cal.q=merge(cal.q,cal.dbkeys,"DBKEY")
+cal.q=cast(cal.q,Date~priority,value="Data.Value",mean)
+cal.q$Data.Value=with(cal.q,ifelse(is.na(P1)==T,P2,P1))
+cal.q$Q.30=with(cal.q,roll_meanr(Data.Value,n=30))
+#cal.q$Q.30=with(cal.q,c(rep(NA,29),rollapply(Data.Value,width=30,FUN=function(x)mean(x,na.rm=T))))
 
 ylim.val=c(0,30);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 xlim.val=c(date.fun(RECON.dates[2]-duration(6, "months")),date.fun(RECON.dates[2]+duration(15,"days")));xmaj=seq(xlim.val[1],xlim.val[2],by="2 months ");xmin=seq(xlim.val[1],xlim.val[2],by="1 months")
@@ -514,7 +520,8 @@ Start.Date=as.Date(End.Date-duration(30,"days"));
 bk.dbkeys.bot=data.frame(depth="bottom",
                          SITE=c(rep("VALI75",2),rep("FORTMYERSM",2),rep("CCORAL",2),rep("MARKH",2),rep("SANIB2",2)),
                          param=rep(c("WT","SPC"),5),
-                         DBKEY=c("UL030","UL026","88288","88291","UO832","AJ012","88198","88202","WN375","WN377")                         )
+                         DBKEY=c("UL030","UL026","88288","88291","UO832","AJ012","88198","88202","WN375","WN377")
+                         )
 sal.dat=data.frame()
 for(i in 1:nrow(bk.dbkeys.bot)){
   tmp=DBHYDRO_breakpoint(Start.Date,End.Date,bk.dbkeys.bot$DBKEY[i])
@@ -524,14 +531,17 @@ for(i in 1:nrow(bk.dbkeys.bot)){
 }
 sal.dat=merge(sal.dat,bk.dbkeys.bot,"DBKEY")
 sal.dat$Date.EST=date.fun(sal.dat$DATETIME)
+sal.dat$Data.Value[sal.dat$Data.Value==-999]<-NA
+#subset(sal.dat,Data.Value<0)
 
-sal.dat.xtab=cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T))
+sal.dat.xtab=data.frame(cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
+fill=data.frame(expand.grid(SITE=unique(bk.dbkeys.bot$SITE),Date.EST=date.fun(seq(Start.Date,End.Date,"1 days"))))
+sal.dat.xtab=merge(sal.dat.xtab,fill,c("SITE","Date.EST"),all.y=T)
 sal.dat.xtab$Sal=with(sal.dat.xtab,SalinityCalc(SPC,WT))
-
 Cal.Sal=subset(sal.dat.xtab,SITE%in%c("CCORAL","FORTMYERSM","MARKH","SANIB2"))
 unique(Cal.Sal$SITE)
 
-Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7,na.rm=T)))
+Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7)))
 
 ```
 

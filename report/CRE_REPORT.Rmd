@@ -94,11 +94,15 @@ stg.da$DATE=date.fun(stg.da$Date)
 LakeO.xtab=cast(stg.da,DATE~Priority,value="Data.Value",mean)
 LakeO.xtab$Mean=with(LakeO.xtab,ifelse(is.na(P1)==T,P2,P1))
 
-if(sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
+tail(LakeO.xtab)
+
+
+if(max(LakeO.xtab$DATE)!=YEST|sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
   da.dbks=data.frame(SITE=c("L001","L005","L006","LZ40","S133TW","S352HW","S4TW"),DBKEY=c("16022","12509","12519","16265","15826","FF579","15732"),type="Daily")
-  tmp=DBHYDRO_daily(YEST-ddays(2),YEST,da.dbks$DBKEY)
+  date1=if(max(LakeO.xtab$DATE)!=YEST){max(LakeO.xtab$DATE)}else{YEST}
+  tmp=DBHYDRO_daily(date1,YEST,da.dbks$DBKEY)
   tmp$DATE=date.fun(tmp$Date)
-  tmp2=DBHYDRO_breakpoint(YEST-ddays(2),YEST,"AI522")
+  tmp2=DBHYDRO_breakpoint(date1,YEST,"AI522")
   tmp2$DATE=date.fun(tmp2$DATE)
   tmp2.mean=ddply(tmp2,"DATE",summarise,Data.Value=round(mean(Data.Value,na.rm=T),2))
   tmp2.mean$Station="S308HW"
@@ -519,24 +523,28 @@ algae.week%>%
 ### Discharge
 
 ```{r Caloosa Data_Flow, include=FALSE}
-cal.flow=data.frame(DBKEY=c("DJ235","DJ237"),SITE=c("S77","S79"))
+cal.flow=data.frame(DBKEY=c("DJ235","88280","DJ237","00865"),SITE=c(rep("S77",2),rep("S79",2)),priority=rep(c("P1","P2"),2))
 cal.flow.dat=data.frame()
-for(i in 1:2){
+for(i in 1:nrow(cal.flow)){
   tmp=DBHYDRO_daily(date.fun(paste(CurWY-3,"05-01",sep="-")),End.Date,cal.flow$DBKEY[i])
   tmp$DBKEY=as.character(cal.flow$DBKEY[i])
   cal.flow.dat=rbind(tmp,cal.flow.dat)
 }
 cal.flow.dat$Date=date.fun(cal.flow.dat$Date)
 cal.flow.dat$WY=WY(cal.flow.dat$Date)
+cal.flow.dat=merge(cal.flow.dat,cal.flow,"DBKEY")
+cal.flow.dat.xtab=cast(cal.flow.dat,SITE+Date+WY~priority,value="Data.Value",mean)
+cal.flow.dat.xtab$Data.Value=with(cal.flow.dat.xtab,ifelse(is.na(P1)==T,P2,P1))
 
-cal.flow.dat.xtab=cast(merge(cal.flow.dat,cal.flow,"DBKEY"),Date+WY~SITE,value="Data.Value",mean)
+cal.flow.dat.xtab=cast(cal.flow.dat.xtab,Date+WY~SITE,value="Data.Value",mean)
 cal.flow.dat.xtab$hydro.day=hydro.day(cal.flow.dat.xtab$Date)
 cal.flow.dat.xtab$C43=with(cal.flow.dat.xtab,ifelse(S79>S77,0,S77-S79))
 
 cal.flow.dat.xtab$cum.S79=with(cal.flow.dat.xtab,ave(cfs.to.acftd(S79),WY,FUN = function(x)cumsum(ifelse(is.na(x),0,x))))
 cal.flow.dat.xtab$cum.S77=with(cal.flow.dat.xtab,ave(cfs.to.acftd(S77),WY,FUN = function(x)cumsum(ifelse(is.na(x),0,x))))
-cal.flow.dat.xtab$Q.14=with(cal.flow.dat.xtab,c(rep(NA,13),rollapply(S79,width=14,FUN=function(x)mean(x,na.rm=T))))
-cal.flow.dat.xtab$Q.30=with(cal.flow.dat.xtab,c(rep(NA,29),rollapply(S79,width=30,FUN=function(x)mean(x,na.rm=T))))
+cal.flow.dat.xtab$Q.14=with(cal.flow.dat.xtab,roll_meanr(S79,n=14))
+cal.flow.dat.xtab$Q.30=with(cal.flow.dat.xtab,roll_meanr(S79,n=30))
+# cal.flow.dat.xtab$Q.30=with(cal.flow.dat.xtab,c(rep(NA,29),rollapply(S79,width=30,FUN=function(x)mean(x,na.rm=T))))
 
 ```
 
@@ -759,15 +767,17 @@ for(i in 1:nrow(bk.dbkeys.bot)){
 }
 sal.dat=merge(sal.dat,bk.dbkeys.bot,"DBKEY")
 sal.dat$Date.EST=date.fun(sal.dat$DATETIME)
+sal.dat$Data.Value[sal.dat$Data.Value==-999]<-NA
+#subset(sal.dat,Data.Value<0)
 
-sal.dat.xtab=cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T))
+sal.dat.xtab=data.frame(cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
+fill=data.frame(expand.grid(SITE=unique(bk.dbkeys.bot$SITE),Date.EST=date.fun(seq(Start.Date,End.Date,"1 days"))))
+sal.dat.xtab=merge(sal.dat.xtab,fill,c("SITE","Date.EST"),all.y=T)
 sal.dat.xtab$Sal=with(sal.dat.xtab,SalinityCalc(SPC,WT))
-
 Cal.Sal=subset(sal.dat.xtab,SITE%in%c("CCORAL","FORTMYERSM","MARKH","SANIB2"))
 unique(Cal.Sal$SITE)
 
-Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7,na.rm=T)))
-
+Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7)))
 
 ```
 
