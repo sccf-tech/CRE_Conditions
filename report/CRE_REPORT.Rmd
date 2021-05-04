@@ -276,7 +276,33 @@ legend("topright",
 
 ### Regional Rainfall
 
-```{r,echo=F}
+```{r,echo=F,warning=F}
+## From USACE pages
+S77.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s77m.html")
+S77.dat=data.frame(t(sapply(strsplit(S77.dat[11:17],"\\s+"),c)))
+colnames(S77.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Evap","Man.Prec")
+S77.dat$Date=date.fun(S77.dat$Date,form="%d%B%y")
+S77.dat[,2:12]=sapply(S77.dat[,2:12],as.numeric)
+S77.dat$SITE="S77 (Moore Haven)"
+
+S78.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s78m.html")
+S78.dat=data.frame(t(sapply(strsplit(S78.dat[11:17],"\\s+"),c)))
+colnames(S78.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Man.Prec")
+S78.dat$Date=date.fun(S78.dat$Date,form="%d%B%y")
+S78.dat[,2:11]=sapply(S78.dat[,2:11],as.numeric)
+S78.dat$SITE="S78 (Ortona)"
+
+S79.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s79m.html")
+S79.dat=data.frame(t(sapply(strsplit(S79.dat[11:17],"\\s+"),c)))
+colnames(S79.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Cl","Man.Prec")
+S79.dat$Date=date.fun(S79.dat$Date,form="%d%B%y")
+S79.dat[,2:12]=sapply(S79.dat[,2:12],as.numeric)
+S79.dat$SITE="S79 (WP Franklin)"
+
+vars=c("Date","SITE","Man.Prec")
+RF.dat.USACE=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
+colnames(RF.dat.USACE)<-c("Date","SITE","Data.Value")
+
 
 rf.dbkey=data.frame(DBKEY=c("16414","15495","16415"),SITE=c("S79 (WP Franklin)","S78 (Ortona)","S77 (Moore Haven)"))
 
@@ -284,6 +310,10 @@ rf.dat=DBHYDRO_daily(Start.Date,YEST,rf.dbkey$DBKEY)
 rf.dat$Data.Value[rf.dat$Data.Value<0]<-0
 rf.dat=merge(rf.dat,rf.dbkey,"DBKEY")
 rf.dat$Date=date.fun(rf.dat$Date)
+
+rf.dat=rbind(rf.dat[,c("SITE","Date","Data.Value")],RF.dat.USACE)
+rf.dat=ddply(rf.dat,c('Date',"SITE"),summarise,Data.Value=max(Data.Value,na.rm=T))
+
 rf.dat$WY=WY(rf.dat$Date)
 rf.dat$hydro.DOY=hydro.day(rf.dat$Date)
 rf.dat$cumRF=with(rf.dat,ave(Data.Value,paste(SITE,WY),FUN=function(x) cumsum(x)))
@@ -305,7 +335,7 @@ rf.dat.da%>%
   set_header_labels("SITE"="Mointoring Location",
                     "TRF"="Weekly\nRainfall\nTotal\n(inches)")%>%
   width(width=c(1.5,1.5))%>%
-  footnote(j=1,part="header",value=as_paragraph("Data Source: SFWMD DBHYDRO (DBKEYS 16414,15495,16415)"),ref_symbols=c(" 1 "))%>%
+  footnote(j=1,part="header",value=as_paragraph("Data Source: SFWMD DBHYDRO (DBKEYS 16414,15495,16415) and USACE reports"),ref_symbols=c(" 1 "))%>%
   footnote(j=2,part="header",value=as_paragraph(paste("Based on data from ",format(date.fun(YEST-ddays(6)),"%m/%d/%Y")," - ",format(YEST,"%m/%d/%Y"))),ref_symbols =c(" 2 "))%>%
   add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
 
@@ -323,7 +353,8 @@ xmaj2=seq(xlim.val2[1],xlim.val2[2],by.x);
 xmin2=seq(xlim.val2[1],xlim.val2[2],by.x.min)
 
 ylim.max=max(subset(rf.dat,Date%in%seq(xlim.val[1],xlim.val[2],"1 days"))$Data.Value,na.rm=T)
-ylim.val=c(0,ceiling(ylim.max+ylim.max*0.1));by.y=2;
+# if(ylim.max==0){ylim.max=max(subset(rf.dat,WY==CurWY-1)$Data.Value,na.rm=T)}
+ylim.val=c(0,ceiling(ylim.max+ylim.max*0.2));by.y=max(ylim.val)/2;
 ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 par(family="serif",cex.axis=1,mar=c(1,1,1,1),oma=c(2.5,4,1,1));
@@ -335,7 +366,7 @@ with(subset(rf.dat,SITE==rf.dbkey$SITE[i]),segments(Date,0,Date,Data.Value,col="
 # with(subset(rf.dat,SITE==rf.dbkey$SITE[i]),points(Date,Data.Value,pch=19,col="dodgerblue1",lwd=0.01))
 # axis_fun(1,xmaj,xmin,format(xmaj,"%m-%Y"))
 axis_fun(1,xmaj,xmin,NA)
-if(i==1){axis_fun(2,ymaj,ymin,ymaj)}else(axis_fun(2,ymaj,ymin,NA))
+if(i==1){axis_fun(2,ymaj,ymin,format(ymaj))}else(axis_fun(2,ymaj,ymin,NA))
 box(lwd=1)
 mtext(side=3,rf.dbkey$SITE[i])
 if(i==1){mtext(side=2,line=2,"Daily Rainfall\n(inches)")}
@@ -670,7 +701,7 @@ legend("topright",
 
 ### Chlorophyll, Phycocyanin & fDOM
 
-```{r Cal_algae,echo=FALSE,fig.width=7,fig.height=5.5,fig.align='center'}
+```{r Cal_algae,echo=FALSE,fig.width=6.5,fig.height=5,fig.align='center'}
 # 32315 relative fChl
 # 32321 relative Phycocyanin
 #cal.algae=readNWISdv("02292900",c("32315","32321"),"2017-11-01",format(End.Date,"%Y-%m-%d"))
@@ -698,7 +729,7 @@ layout(matrix(1:3,3,1),heights=c(1,1,0.5))
 
 plot(X_FLOATING_32295~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
-with(cal.algae,pt_line(Date,X_FLOATING_32295,1,"tan3",1.5,21,"tan3",cex=1.25,pt.lwd=0.1))
+with(cal.algae,pt_line(Date,X_FLOATING_32295,2,"tan3",1.5,21,"tan3",cex=1.5,pt.lwd=0.1))
 axis_fun(2,ymaj,ymin,format(ymaj))
 axis_fun(1,xmaj,xmin,NA);box(lwd=1)
 mtext(side=2,line=2.5,"fDOM (RFU)")
@@ -717,8 +748,8 @@ ymin2=round(seq(ylim.val2[1],ylim.val2[2],by.y2/2),1)
 
 plot(X_FLOATING_32315~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
-with(cal.algae,pt_line(Date,X_FLOATING_32315,1,"forestgreen",1.5,21,"forestgreen",cex=1.25,pt.lwd=0.1))
-with(cal.algae,pt_line(Date,X_FLOATING_32321,1,"dodgerblue1",1.5,21,"dodgerblue1",cex=1.25,pt.lwd=0.1))
+with(cal.algae,pt_line(Date,X_FLOATING_32315,1,"forestgreen",1.5,21,"forestgreen",cex=1.5,pt.lwd=0.1))
+with(cal.algae,pt_line(Date,X_FLOATING_32321,1,"dodgerblue1",1.5,21,"dodgerblue1",cex=1.5,pt.lwd=0.1))
 axis_fun(2,ymaj,ymin,format(ymaj))
 abline(h=3.8,lty=2,col="red");# based ib fChl and grab Chl-a model (fChlAnalysis_summary.rmd). 
 
@@ -734,7 +765,7 @@ ymin3=seq(ylim.val3[1],ylim.val3[2],by.y3/2)
 
 plot(phy_chl~Date,cal.algae,ylim=ylim.val3,xlim=xlim.val,type="n",axes=F,ann=F)
 abline(h=ymaj3,v=xmaj,lty=3,col="grey")
-with(cal.algae,pt_line(Date,phy_chl,1,"indianred1",1.5,21,"indianred1",cex=1.25,pt.lwd=0.1))
+with(cal.algae,pt_line(Date,phy_chl,1,"indianred1",1.5,21,"indianred1",cex=1.5,pt.lwd=0.1))
 axis_fun(2,ymaj3,ymin3,format(ymaj3))
 axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"));box(lwd=1)
 mtext(side=2,line=2.5,expression(paste(frac("Phyco","Phyco + Chl"))))
