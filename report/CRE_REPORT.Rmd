@@ -97,22 +97,22 @@ LakeO.xtab$Mean=with(LakeO.xtab,ifelse(is.na(P1)==T,P2,P1))
 tail(LakeO.xtab)
 
 
-if(max(LakeO.xtab$DATE)!=YEST|sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
-  da.dbks=data.frame(SITE=c("L001","L005","L006","LZ40","S133TW","S352HW","S4TW"),DBKEY=c("16022","12509","12519","16265","15826","FF579","15732"),type="Daily")
-  date1=if(max(LakeO.xtab$DATE)!=YEST){max(LakeO.xtab$DATE)}else{YEST}
-  tmp=DBHYDRO_daily(date1,YEST,da.dbks$DBKEY)
-  tmp$DATE=date.fun(tmp$Date)
-  tmp2=DBHYDRO_breakpoint(date1,YEST,"AI522")
-  tmp2$DATE=date.fun(tmp2$DATE)
-  tmp2.mean=ddply(tmp2,"DATE",summarise,Data.Value=round(mean(Data.Value,na.rm=T),2))
-  tmp2.mean$Station="S308HW"
-  
-  tmp.all=rbind(tmp[,c("DATE","Station","Data.Value")],tmp2.mean[,c("DATE","Station","Data.Value")])
-  calc.LakeO.stg=ddply(tmp.all,"DATE",summarise,Mean=round(mean(Data.Value,na.rm=T),2))
-  calc.LakeO.stg[,c("P1","P2")]=NA
-  LakeO.xtab=rbind(LakeO.xtab,calc.LakeO.stg[,names(LakeO.xtab)])
-  LakeO.xtab=LakeO.xtab[duplicated(LakeO.xtab$DATE,fromLast = T)==F,]
-}
+# if(max(LakeO.xtab$DATE)!=YEST|sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
+#   da.dbks=data.frame(SITE=c("L001","L005","L006","LZ40","S133TW","S352HW","S4TW"),DBKEY=c("16022","12509","12519","16265","15826","FF579","15732"),type="Daily")
+#   date1=if(max(LakeO.xtab$DATE)!=YEST){max(LakeO.xtab$DATE)}else{YEST}
+#   tmp=DBHYDRO_daily(date1,YEST,da.dbks$DBKEY)
+#   tmp$DATE=date.fun(tmp$Date)
+#   tmp2=DBHYDRO_breakpoint(date1,YEST,"AI522")
+#   tmp2$DATE=date.fun(tmp2$DATE)
+#   tmp2.mean=ddply(tmp2,"DATE",summarise,Data.Value=round(mean(Data.Value,na.rm=T),2))
+#   tmp2.mean$Station="S308HW"
+#   
+#   tmp.all=rbind(tmp[,c("DATE","Station","Data.Value")],tmp2.mean[,c("DATE","Station","Data.Value")])
+#   calc.LakeO.stg=ddply(tmp.all,"DATE",summarise,Mean=round(mean(Data.Value,na.rm=T),2))
+#   calc.LakeO.stg[,c("P1","P2")]=NA
+#   LakeO.xtab=rbind(LakeO.xtab,calc.LakeO.stg[,names(LakeO.xtab)])
+#   LakeO.xtab=LakeO.xtab[duplicated(LakeO.xtab$DATE,fromLast = T)==F,]
+# }
 
 LakeO.xtab=merge(x=LakeO.xtab,y=LORS.gaph2Yrs,by.x="DATE",by.y="Date2",all.x=T)
 
