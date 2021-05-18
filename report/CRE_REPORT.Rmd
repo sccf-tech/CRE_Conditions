@@ -255,7 +255,7 @@ if(subset(LakeO.xtab,DATE==YEST)$recess_7day!=0){text(text.x,subset(LakeO.xtab,D
 points(YEST,subset(LakeO.xtab,DATE==YEST)$recess_7day,pch=21,bg="indianred1",cex=1.25)
 text.x=if(YEST>date.fun(paste0(CurWY,"-04-01"))){YEST-ddays(15)}else{YEST+ddays(15)}
 if(subset(LakeO.xtab,DATE==YEST)$recess_7day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_7day,round(subset(LakeO.xtab,DATE==YEST)$recess_7day,2),cex=0.8)}
-abline(h=-0.5,lty=2,col="black",lwd=2); #max 30d recession - HAB deviation
+# abline(h=-0.5,lty=2,col="black",lwd=2); #max 30d recession - HAB deviation
 axis_fun(1,xmaj,xmin,format(xmaj,"%b"),cex.axis=1)
 axis_fun(2,ymaj,ymin,format(ymaj),cex.axis=1)
 box(lwd=lwd.val)
@@ -263,9 +263,12 @@ mtext(side=1,"Month",line=2.25,cex=1.5)
 mtext(side=2,"Recession/Ascension Rate",line=2.5,cex=1.5)
 
 # plot(0:1,0:1,type = 'n', axes = F,xlab=NA, ylab=NA)
+# legend("topright",
+#        legend=c("Moving 7-day (Ft 7-days\u207B\u00B9)","Moving 30-day (Ft 30-days\u207B\u00B9)","Max 30-day Recession Rate\nHAB Deviation"),
+#        col=c("indianred1","dodgerblue1","black"),lty=c(2,1,2),lwd=c(1.5),ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
 legend("topright",
-       legend=c("Moving 7-day (Ft 7-days\u207B\u00B9)","Moving 30-day (Ft 30-days\u207B\u00B9)","Max 30-day Recession Rate\nHAB Deviation"),
-       col=c("indianred1","dodgerblue1","black"),lty=c(2,1,2),lwd=c(1.5),ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
+       legend=c("Moving 7-day (Ft 7-days\u207B\u00B9)","Moving 30-day (Ft 30-days\u207B\u00B9)"),
+       col=c("indianred1","dodgerblue1"),lty=c(2,1),lwd=c(1.5),ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
 ```
 
 <font size=2><center>Lake Okeechobee 7-day and 30-day water level recession/ascension rates during `r paste0("WY",CurWY)`. Negative values indicate falling water levels (recession) and positive values indicate raising water level (ascension) during this 7-day period .</center></font>
@@ -316,12 +319,13 @@ rf.dat=ddply(rf.dat,c('Date',"SITE"),summarise,Data.Value=max(Data.Value,na.rm=T
 
 rf.dat$WY=WY(rf.dat$Date)
 rf.dat$hydro.DOY=hydro.day(rf.dat$Date)
+rf.dat=rf.dat[order(rf.dat$SITE,rf.dat$Date),]
 rf.dat$cumRF=with(rf.dat,ave(Data.Value,paste(SITE,WY),FUN=function(x) cumsum(x)))
 
 rf.dat.da=ddply(subset(rf.dat,Date%in%seq(date.fun(YEST-ddays(6)),date.fun(YEST),"1 days")),c("SITE"),summarise,TRF=sum(Data.Value,na.rm=T))
 rf.dat.da=rf.dat.da[match(rf.dat.da$SITE,rf.dbkey$SITE),]
 
-cap.val=paste("Weekly (",format(date.fun(YEST-ddays(6)),"%m/%d"),"-", format(YEST,"%m/%d"),") rainfall totals along the Caloosahatchee River")
+cap.val=paste0("Weekly (",format(date.fun(YEST-ddays(6)),"%m/%d")," - ", format(YEST,"%m/%d"),") rainfall totals along the Caloosahatchee River")
 
 rf.dat.da%>%
   flextable()%>%
