@@ -8,6 +8,11 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
+
+<style type="text/css">
+font-family: Arial
+</stlye>
+
 ***
 
 `r paste("Updated",as.POSIXct(Sys.time(),"%Y-%m-%d %H:%M",tz=""))`
@@ -224,7 +229,7 @@ EAAq.per=round(EAAq/q.from.Lake*100,0)
 
 ```
 
-**Lake Flows:** In the past 7 days `r ifelse(min(apply(q.dat.7day,1,FUN=function(x)min(x,na.rm=T)))<0,"a net flow of","")` **`r format(round(q.from.Lake,0),big.mark=",")`**  AF were discharged from Lake Okeechobee, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF (`r S308q.per`%)** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF (`r S310q.per`%)** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF (`r L8q.per`%)** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF (`r EAAq.per`%)** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**,respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+**Lake Flows:** In the past 7 days `r ifelse(min(apply(q.dat.7day,1,FUN=function(x)min(x,na.rm=T)))<0,"a net flow of","")` **`r format(round(q.from.Lake,0),big.mark=",")` AF**   were discharged from Lake Okeechobee, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF (`r S308q.per`%)** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF (`r S310q.per`%)** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF (`r L8q.per`%)** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF (`r EAAq.per`%)** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
 
