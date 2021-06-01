@@ -39,3 +39,5 @@ rsconnect/
 *.Rproj
 
 /Data/
+
+/src/archive/*.R

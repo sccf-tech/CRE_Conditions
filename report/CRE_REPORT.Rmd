@@ -80,7 +80,7 @@ rm(LORS,LORS2)
 LORS.gaph2Yrs$Date2=date.fun(LORS.gaph2Yrs$Date2)
 
 #Lake Okeechobee
-comp.dbkey=data.frame(DBKEY=c("N3466","06832"),Priority=c("P1","P2"))
+comp.dbkey=data.frame(DBKEY=c("N3466","06832"),Priority=c("P2","P1"))
 
 stg.da=data.frame()
 for(i in 1:nrow(comp.dbkey)){
@@ -96,6 +96,29 @@ LakeO.xtab$Mean=with(LakeO.xtab,ifelse(is.na(P1)==T,P2,P1))
 
 tail(LakeO.xtab)
 
+## USACE Stage data for the current year
+# LO.url="https://w3.saj.usace.army.mil/h2o/reports/r-oke365.html"
+# webpage=read_html(LO.url)
+# node.val=html_nodes(webpage,"pre")
+# 
+# LO.text.vals=html_text(node.val)
+# LO.report=strsplit(as.character(LO.text.vals),"\n")
+
+# Stg.day_CYR=data.frame(day=NA,Jan=NA,Feb=NA,Mar=NA,Apr=NA,May=NA,Jun=NA,Jul=NA,Aug=NA,Sep=NA,Oct=NA,Nov=NA,Dec=NA)
+# stg.dat=gsub("\\s[|]\\s",",",LO.report[[1]][10:40])
+# for(i in 1:31){
+# day.lne=strsplit(as.character(stg.dat[i]),",")
+# day.lne=unlist(day.lne)
+# day.lne2=unlist(lapply(day.lne,trimws))
+# 
+# Stg.day_CYR=rbind(Stg.day_CYR,day.lne2)
+# }
+# Stg.day_CYR[2:13]=sapply(Stg.day_CYR[2:13],as.numeric)
+# Stg.day_CYR
+# Stg.day_CYR=melt(Stg.day_CYR)
+# Stg.day_CYR$date=with(Stg.day_CYR,date.fun(paste(day,variable,format(Sys.Date(),'%Y'),sep="-"),form="%d-%B-%Y"))
+# Stg.day_CYR=subset(Stg.day_CYR,is.na(date)==F)
+
 
 # if(max(LakeO.xtab$DATE)!=YEST|sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
 #   da.dbks=data.frame(SITE=c("L001","L005","L006","LZ40","S133TW","S352HW","S4TW"),DBKEY=c("16022","12509","12519","16265","15826","FF579","15732"),type="Daily")
@@ -106,7 +129,7 @@ tail(LakeO.xtab)
 #   tmp2$DATE=date.fun(tmp2$DATE)
 #   tmp2.mean=ddply(tmp2,"DATE",summarise,Data.Value=round(mean(Data.Value,na.rm=T),2))
 #   tmp2.mean$Station="S308HW"
-#   
+# 
 #   tmp.all=rbind(tmp[,c("DATE","Station","Data.Value")],tmp2.mean[,c("DATE","Station","Data.Value")])
 #   calc.LakeO.stg=ddply(tmp.all,"DATE",summarise,Mean=round(mean(Data.Value,na.rm=T),2))
 #   calc.LakeO.stg[,c("P1","P2")]=NA
