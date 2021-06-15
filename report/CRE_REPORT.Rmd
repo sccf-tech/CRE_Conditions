@@ -592,6 +592,7 @@ cal.flow.dat$Date=date.fun(cal.flow.dat$Date)
 cal.flow.dat$WY=WY(cal.flow.dat$Date)
 cal.flow.dat=merge(cal.flow.dat,cal.flow,"DBKEY")
 cal.flow.dat.xtab=cast(cal.flow.dat,SITE+Date+WY~priority,value="Data.Value",mean)
+cal.flow.dat.xtab$P1=with(cal.flow.dat.xtab,ifelse(SITE=="S77"&P1>=7587,NA,P1)); #Extreme value reported for 6/7/2021
 cal.flow.dat.xtab$Data.Value=with(cal.flow.dat.xtab,ifelse(is.na(P1)==T,P2,P1))
 
 cal.flow.dat.xtab=cast(cal.flow.dat.xtab,Date+WY~SITE,value="Data.Value",mean)

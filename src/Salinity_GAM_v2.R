@@ -291,12 +291,24 @@ GAM.sal.stack=raster::stack(Q14d.200,
                             Q14d.2900,
                             Q14d.3000)
 
+# library(RColorBrewer)
+# png(filename=paste0(plot.path,"sal_grad.png"),width=2,height=1.5,units="in",res=200,type="windows",bg=NA)
+par(mar=c(0.1,0.1,0.1,0.1),oma=c(0,0,0,0))
+bbox.lims=bbox(gBuffer(cre.nnc.segs.dis,width=-1000))
+plot(Q14d.200,xlim=bbox.lims[1,],ylim=bbox.lims[2,],axes=F,box=F,legend=F,col=brewer.pal(9,"YlGnBu"))
+dev.off()
+
 tmap_mode("plot")
 bbox.lims=bbox(gBuffer(cre.nnc.segs.dis,width=2000))
 
 bbox.poly=as(raster::extent(gBuffer(cre.nnc.segs.dis,width=2000)),"SpatialPolygons")#makes the polygon
 proj4string(bbox.poly)=utm17#projects the polygon
 # plot(crop(roads.all,gBuffer(bbox.poly,width=200)))
+
+tm_shape(Q14d.600,bbox=bbox.lims)+
+  tm_raster(title="",palette="Blues",
+            breaks=c(-5,5,10,15,20,25,30,35,40),
+            labels=c("0","<5","5 - 10","10 - 15", "15 - 20","20 - 25","25 - 30","30 - 35","35 - 40"))
 
 GAM.sal=tm_shape(GAM.sal.stack,bbox=bbox.lims)+
   tm_raster(title="",palette="Blues",
