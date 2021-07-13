@@ -597,7 +597,7 @@ cal.flow.dat.xtab$Data.Value=with(cal.flow.dat.xtab,ifelse(is.na(P1)==T,P2,P1))
 
 cal.flow.dat.xtab=cast(cal.flow.dat.xtab,Date+WY~SITE,value="Data.Value",mean)
 cal.flow.dat.xtab$hydro.day=hydro.day(cal.flow.dat.xtab$Date)
-cal.flow.dat.xtab$C43=with(cal.flow.dat.xtab,ifelse(S79>S77,0,S77-S79))
+cal.flow.dat.xtab$C43=with(cal.flow.dat.xtab,ifelse(S79<S77,0,S79-S77))
 
 cal.flow.dat.xtab$cum.S79=with(cal.flow.dat.xtab,ave(cfs.to.acftd(S79),WY,FUN = function(x)cumsum(ifelse(is.na(x),0,x))))
 cal.flow.dat.xtab$cum.S77=with(cal.flow.dat.xtab,ave(cfs.to.acftd(S77),WY,FUN = function(x)cumsum(ifelse(is.na(x),0,x))))
@@ -747,8 +747,8 @@ lwd.val=1
 xlim.val=as.POSIXct(strptime(c(SDate.plot,EDate.plot),"%Y-%m-%d"),tz="EST")
 xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
 
-ylim.val=c(0,250);
-by.y=50
+ylim.val=c(100,400);
+by.y=100
 ymaj=seq(ylim.val[1],ylim.val[2],by.y);
 ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 

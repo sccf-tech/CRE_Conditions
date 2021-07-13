@@ -135,9 +135,17 @@ plot(places.shp)
 places.shp=spTransform(places.shp,wkt(utm17))
 coordinates(places.shp)
 
+places.towns=data.frame(NAME=c("Okeechobee", "Buckhead Ridge","Moore Haven","Clewiston","Pahokee","Port Mayaca"),
+                        LAT=c(27.206360,27.121495,26.840340,26.760773,26.825926,26.984051),
+                        LONG=c(-80.797028,-80.895867,-81.085124,-80.917910,-80.667568,-80.620958))
+places.towns.shp=SpatialPointsDataFrame(places.towns[,c("LONG","LAT")],places.towns,proj4string = wgs84)
+plot(places.towns.shp)
+places.towns.shp=spTransform(places.towns.shp,wkt(utm17))
+coordinates(places.towns.shp)
 
-d <- paste(tempdir(), "/rayshader_plots", sep="/")
-dir.create(d, showWarnings = FALSE)
+
+# d <- paste(tempdir(), "/rayshader_plots", sep="/")
+# dir.create(d, showWarnings = FALSE)
 
 
 # z.vals=c(seq(10,17,1),rev(seq(10,16,1)))
@@ -199,6 +207,48 @@ gifski::gifski(ray.files,
                delay = 40 / 100, 
                gif_file  = paste0(plot.path,"rayshader/LOK_rayshader_gifski.gif"),
                loop = T)
+
+## Wednesday update
+z.vals=c(9,17)
+for(j in 1:2){
+  elmat %>%
+    sphere_shade(zscale=0.04,texture = "imhof1") %>%
+    plot_3d(elmat, zscale = 50, fov = 0, theta = -45, zoom = 0.6, phi = 45, windowsize = c(800, 600),
+            water = TRUE, waterdepth = z.vals[j], wateralpha = 0.25, watercolor = "brown",
+            waterlinecolor = "white", waterlinealpha = 0.5)
+  
+  alt.vals=c(2500,2500,2500,5000,1500,2000);# was 5000
+  for(i in 1:nrow(places.towns.shp@data)){
+    render_label(elmat,
+                 lat=as.numeric(coordinates(places.towns.shp)[i,2]),
+                 long=as.numeric(coordinates(places.towns.shp)[i,1]),
+                 altitude=alt.vals[i],
+                 zscale=20,extent=attr(bath_200,"extent"),
+                 text=places.towns.shp@data$NAME[i],
+                 family="serif",
+                 textsize = 1.25, linewidth = 2.5)
+  }
+  render_label(elmat,
+               lat=as.numeric(coordinates(places.shp)[7,2]),
+               long=as.numeric(coordinates(places.shp)[7,1]),
+               altitude=500,
+               zscale=20,extent=attr(bath_200,"extent"),
+               family="serif",
+               text=paste0(z.vals[j]," Ft NGVD"),
+               textsize = 1.5, linewidth = 1,textcolor = "white",linecolor="white")
+
+  render_compass(position = "E",color_bevel ="grey",compass_radius=100)
+  # render_snapshot(clear=T)
+  rgl::snapshot3d(paste0(plot.path,"rayshader/",j,"_LOK_wed_", z.vals[j],"ft.png"))
+  rgl::rgl.close()
+  print(j)
+}
+
+
+
+
+
+
 
 
 # http://www.pieceofk.fr/a-3d-tour-over-lake-geneva-with-rayshader/
