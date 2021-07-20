@@ -212,24 +212,24 @@ sumstats14%>%
 ```{r}
 q.from.Lake=sum(totalQ[,c("S77","S310","S351","S352","S354","L8","S308")])
 S77q=sum(totalQ[,c("S77")])
-S77q.per=round(S77q/q.from.Lake*100,0)
+S77q.per=if((S77q/sum(totalQ[,totalQ>0][-1]))*100<1){"< 1"}else{round((S77q/sum(totalQ[,totalQ>0][-1]))*100,0)}
 
 S308q=sum(totalQ[,c("S308")])
-S308q.per=round(S308q/q.from.Lake*100,0)
+S308q.per=ifelse(S308q<0,NA,round(S308q/sum(totalQ[,totalQ>0][-1])*100,0))
 
 S310q=sum(totalQ[,c("S310")])
-S310q.per=round(S310q/q.from.Lake*100,0)
+S310q.per=ifelse(S310q<0,NA,round(S310q/sum(totalQ[,totalQ>0][-1])*100,0))
 
 L8q=sum(totalQ[,c("L8")])
-L8q.per=round(L8q/q.from.Lake*100,0)
+L8q.per=ifelse(L8q<0,NA,round(L8q/sum(totalQ[,totalQ>0][-1])*100,0))
 
 EAAq=sum(totalQ[,c("S351","S352","S354")])
-EAAq.per=round(EAAq/q.from.Lake*100,0)
+EAAq.per=ifelse(EAAq<0,NA,round(EAAq/sum(totalQ[,totalQ>0][-1])*100,0))
 
 
 ```
 
-**Lake Flows:** In the past 7 days `r ifelse(min(apply(q.dat.7day,1,FUN=function(x)min(x,na.rm=T)))<0,"a net flow of","")` **`r format(round(q.from.Lake,0),big.mark=",")` AF**   were discharged from Lake Okeechobee, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF (`r S308q.per`%)** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF (`r S310q.per`%)** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF (`r L8q.per`%)** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF (`r EAAq.per`%)** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+**Lake Flows:** In the past 7 days **`r format(round(sum(totalQ[,totalQ>0][-1]),0),big.mark=",")` AF**   was discharged from Lake Okeechobee `r  ifelse(ncol(totalQ[,totalQ<0])>0,paste0("(",format(round(sum(totalQ[,totalQ<0])*-1,0),big.mark=",")," AF backflowed to the Lake)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
 

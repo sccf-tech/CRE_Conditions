@@ -61,16 +61,31 @@ rf.dat.da=ddply(rf.dat,"Date",summarise,mean.val=mean(Data.Value,na.rm=T),N.val=
 rf.dat.da$CY=as.numeric(format(rf.dat.da$Date,"%Y"))
 rf.dat.da$month=as.numeric(format(rf.dat.da$Date,"%m"))
 
-rf.dat.mon=ddply(rf.dat.da,c("month","CY"),summarise,TRF.in=sum(mean.val,na.rm=T))
+rf.dat.mon=ddply(rf.dat.da,c("CY","month"),summarise,TRF.in=sum(mean.val,na.rm=T))
+rf.dat.mon=merge(rf.dat.mon,expand.grid(CY=1979:2021,month=1:12),c("CY","month"),all.y=T)
 rf.dat.mon$RF.cat=as.factor(findInterval(rf.dat.mon$TRF.in,c(0,1,2.5,5,7.5,10,12.5,100)))
 rf.dat.mon=merge(rf.dat.mon,
-                 data.frame(RF.cat=1:7,
-                            RF.cat.txt=c("<1","1 - 2.5","2.5 - 5","5 - 7.5","7.5 - 10","10 - 12.5",">12.5"),
-                            txt.cols=c(rep("black",3),rep("white",4))),
+                 data.frame(RF.cat=c(NA,1:7),
+                            RF.cat.txt=c("<NA>","<1","1 - 2.5","2.5 - 5","5 - 7.5","7.5 - 10","10 - 12.5",">12.5"),
+                            txt.cols=c(NA,rep("black",3),rep("white",4))),
                  "RF.cat")
 rf.dat.mon$month.f=month.abb[rf.dat.mon$month]
-library(ggplot2)
+rf.dat.mon=rf.dat.mon[order(rf.dat.mon$CY,rf.dat.mon$month),]
+head(rf.dat.mon)
+cols.vir=rev(viridis::inferno(7))
+cols=c("1"=cols.vir[1],"2"=cols.vir[2],"3"=cols.vir[3],"4"=cols.vir[4],"5"=cols.vir[5],"6"=cols.vir[6],"7"=cols.vir[7])
 
+plot(CY~month,rf.dat.mon,xlim=c(0.5,12.5),xaxs="i",ylim=c(2021,1979))
+for(i in 2021:1979){
+tmp=subset(rf.dat.mon,CY==i)
+rect(seq(0.5,12.5,1),i+0.5,12.5,i-0.5,col=cols[tmp$RF.cat])
+}
+
+
+
+
+
+library(ggplot2)
 cols.wes=rev(wesanderson::wes_palette("Zissou1",7,"continuous"))
 cols.vir=rev(viridis::inferno(7))
 # cols=c("1"="red","2"="orange","3"="darkolivegreen1","4"="lightblue1","5"="deepskyblue","6"="royalblue","7"="black")
@@ -101,3 +116,133 @@ rf_POR=ggplot(rf.dat.mon, aes(x = month, y = CY, fill = RF.cat)) +
        y="Year")
 rf_POR
 # ggsave(paste0(plot.path,"rf_POR.png"),rf_POR,device="png",height =7,width=5,units="in")
+
+rf.dat.mon=rf.dat.mon[order(rf.dat.mon$CY,rf.dat.mon$month),]
+mon.mean=ddply(rf.dat.mon,"month",summarise, mean.val=mean(TRF.in,na.rm=T))
+
+month.POR=ggplot()+
+  geom_col(data=mon.mean,
+           aes(x=month,y=mean.val,fill="POR Mean"),width=1,color='dodgerblue1',alpha=0.25)+
+  scale_fill_manual(name = NULL, values = c("POR Mean" = "dodgerblue1"))+
+  scale_x_continuous(limits = c(0.5,12.5),breaks=seq(1,12,1))+
+  scale_y_continuous(limits = c(0,10), expand = c(0, 0)) +
+  geom_point(data=subset(rf.dat.mon,CY==2021),
+             aes(x=month,y=TRF.in,color="CY 2021"),
+             size=2.5,fill="indianred1",shape=21)+
+  scale_color_manual(name = NULL, values = c("CY 2021" = "indianred1"))+
+  theme_bw() +
+  theme(
+    legend.position="bottom",
+    #legend.position = 'none',
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(x="Month",
+       y="Rainfall (Inches)")+
+  guides(fill=guide_legend(label.position="top"),color=guide_legend(label.position="top"))
+month.POR
+
+# GIS libraries 
+library(rgdal)
+library(rgeos)
+library(raster)
+library(tmap)
+library(ggmap)
+library(ggsn)
+GIS.path.gen=paste0(dirname(dirname(wd)),"/_GISData")
+# Helper variables
+nad83.pro=CRS(SRS_string ="EPSG:4269")
+utm17=CRS(SRS_string ="EPSG:26917")
+## 
+shoreline=spTransform(readOGR(paste0(GIS.path.gen,"/FWC"),"FWC_Shoreline"),utm17)
+shoreline=gSimplify(shoreline,100)
+shoreline2=sf::st_as_sf(shoreline)
+shoreline.f=fortify(shoreline)
+
+est_nnc_seg=spTransform(readOGR(paste0(GIS.path.gen,"/FDEP"),"Estuary_NNC"),wkt(utm17))
+segs=c("Upper Caloosahatchee River Estuary","Middle Caloosahatchee River Estuary","Lower Caloosahatchee River Estuary","San Carlos Bay")
+cre.nnc.segs=subset(est_nnc_seg,SEGMENT_NA%in%segs)
+
+wmd.mon=spTransform(readOGR(paste0(GIS.path.gen,"/SFWMD_Monitoring_20200221"),"Environmental_Monitoring_Stations"),wkt(utm17))
+rf.sites.shp=subset(wmd.mon,STATION%in%wx.sites$SITE&ACTIVITY_S=="Rain")
+rf.sites.shp2=sf::st_as_sf(rf.sites.shp)
+
+roads.all=spTransform(readOGR(paste0(GIS.path.gen,"/FDOT"),"FDOT_Roads"),utm17)
+roads=sf::st_as_sf(roads.all)
+
+# http://eriqande.github.io/rep-res-web/lectures/making-maps-with-R.html
+# https://timogrossenbacher.ch/2016/12/beautiful-thematic-maps-with-ggplot2-only/
+theme_map <- function(...) {
+  theme_minimal() +
+    theme(
+      text = element_text(family = "serif", color = "#22211d"),
+      axis.line = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      # panel.grid.minor = element_line(color = "#ebebe5", size = 0.2),
+      # panel.grid.major = element_line(color = "#ebebe5", size = 0.2),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      # plot.background = element_rect(fill = "lightblue", color = NA),
+      panel.background = element_rect(fill = "lightblue", color = NA),
+      # legend.background = element_rect(fill = "#f5f5f2", color = NA),
+      plot.background = element_blank(),
+      # panel.background = element_blank(),
+      legend.background = element_blank(),
+      panel.border = element_blank(),
+      plot.title=element_text(size=12),
+      plot.subtitle = element_text(color = "grey50",size=8),
+      plot.caption = element_text(hjust = 0),
+      ...
+    )
+}
+
+# Scale bar
+# https://stackoverflow.com/questions/39067838/parsimonious-way-to-add-north-arrow-and-scale-bar-to-ggmap
+
+# northSymbols()
+
+bbox.lims2=bbox(gBuffer(cre.nnc.segs,width=5000))
+bbox.lims=bbox(gBuffer(rf.sites.shp,width=5000))
+
+map=ggplot()+
+  # geom_polygon(data=shoreline.f,
+  #              aes(long,lat,group=group),
+  #              fill="cornsilk",colour="grey")+
+  geom_sf(data=shoreline2,fill="cornsilk",colour="grey",size=0.1)+
+  geom_sf(data=roads,lty=1,colour="grey",size=0.5,alpha=0.5)+
+  geom_sf(data=rf.sites.shp2,size=2,shape=21,fill="dodgerblue1")+
+  theme_map()+
+  coord_sf(xlim=c(bbox.lims2[1,1],bbox.lims[1,2]),ylim=c(bbox.lims[2,1],bbox.lims[2,2]))+
+  labs(subtitle = "Rainfall monitoring locations")
+map      
+library(cowplot)
+
+comboplot=plot_grid(
+  rf_POR,map,
+  ncol=1,
+  rel_heights = c(3,1),
+  rel_widths = c(2,0.75))
+comboplot
+# ggsave(paste0(plot.path,"rf_POR_map.png"),comboplot,device="png",height =8,width=4.5,units="in")
+
+
+map.bar=plot_grid(
+  map,month.POR,
+  ncol=1,
+  rel_heights = c(1,1.5))
+map.bar
+
+comboplot2=plot_grid(
+  rf_POR,map.bar,
+  ncol=2,
+  rel_widths = c(1.5,1)
+)
+comboplot2
+
+ggsave(paste0(plot.path,"rf_POR_map2.png"),comboplot2,device="png",height =8,width=7,units="in")

@@ -97,27 +97,39 @@ LakeO.xtab$Mean=with(LakeO.xtab,ifelse(is.na(P1)==T,P2,P1))
 tail(LakeO.xtab)
 
 ## USACE Stage data for the current year
-# LO.url="https://w3.saj.usace.army.mil/h2o/reports/r-oke365.html"
-# webpage=read_html(LO.url)
-# node.val=html_nodes(webpage,"pre")
-# 
-# LO.text.vals=html_text(node.val)
-# LO.report=strsplit(as.character(LO.text.vals),"\n")
+library(rvest)
+LO.url="https://w3.saj.usace.army.mil/h2o/reports/r-oke365.html"
+webpage=read_html(LO.url)
+node.val=html_nodes(webpage,"pre")
 
-# Stg.day_CYR=data.frame(day=NA,Jan=NA,Feb=NA,Mar=NA,Apr=NA,May=NA,Jun=NA,Jul=NA,Aug=NA,Sep=NA,Oct=NA,Nov=NA,Dec=NA)
-# stg.dat=gsub("\\s[|]\\s",",",LO.report[[1]][10:40])
-# for(i in 1:31){
-# day.lne=strsplit(as.character(stg.dat[i]),",")
-# day.lne=unlist(day.lne)
-# day.lne2=unlist(lapply(day.lne,trimws))
-# 
-# Stg.day_CYR=rbind(Stg.day_CYR,day.lne2)
-# }
-# Stg.day_CYR[2:13]=sapply(Stg.day_CYR[2:13],as.numeric)
-# Stg.day_CYR
-# Stg.day_CYR=melt(Stg.day_CYR)
-# Stg.day_CYR$date=with(Stg.day_CYR,date.fun(paste(day,variable,format(Sys.Date(),'%Y'),sep="-"),form="%d-%B-%Y"))
-# Stg.day_CYR=subset(Stg.day_CYR,is.na(date)==F)
+LO.text.vals=html_text(node.val)
+LO.report=strsplit(as.character(LO.text.vals),"\n")
+
+Stg.day_CYR=data.frame(day=NA,Jan=NA,Feb=NA,Mar=NA,Apr=NA,May=NA,Jun=NA,Jul=NA,Aug=NA,Sep=NA,Oct=NA,Nov=NA,Dec=NA)
+stg.dat=gsub("\\s[|]\\s",",",LO.report[[1]][10:40])
+for(i in 1:31){
+day.lne=strsplit(as.character(stg.dat[i]),",")
+day.lne=unlist(day.lne)
+day.lne2=unlist(lapply(day.lne,trimws))
+
+Stg.day_CYR=rbind(Stg.day_CYR,day.lne2)
+}
+Stg.day_CYR[2:13]=sapply(Stg.day_CYR[2:13],as.numeric)
+Stg.day_CYR
+Stg.day_CYR=melt(Stg.day_CYR)
+Stg.day_CYR$date=with(Stg.day_CYR,date.fun(paste(day,variable,format(Sys.Date(),'%Y'),sep="-"),form="%d-%B-%Y"))
+Stg.day_CYR=subset(Stg.day_CYR,is.na(date)==F)
+Stg.day_CYR=subset(Stg.day_CYR,is.na(value)==F)
+
+tail(Stg.day_CYR)
+
+Stg.day_CYR2=data.frame(DATE=Stg.day_CYR$date,P1=Stg.day_CYR$value,P2=NA,Mean=Stg.day_CYR$value)
+
+if(max(LakeO.xtab$DATE)!=YEST){
+  LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
+                   subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
+}
+
 
 
 # if(max(LakeO.xtab$DATE)!=YEST|sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
@@ -338,6 +350,7 @@ rf.dat=merge(rf.dat,rf.dbkey,"DBKEY")
 rf.dat$Date=date.fun(rf.dat$Date)
 
 rf.dat=rbind(rf.dat[,c("SITE","Date","Data.Value")],RF.dat.USACE)
+rf.dat=subset(rf.dat,is.na(Data.Value)==F)
 rf.dat=ddply(rf.dat,c('Date',"SITE"),summarise,Data.Value=max(Data.Value,na.rm=T))
 
 rf.dat$WY=WY(rf.dat$Date)
