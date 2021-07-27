@@ -125,7 +125,7 @@ tail(Stg.day_CYR)
 
 Stg.day_CYR2=data.frame(DATE=Stg.day_CYR$date,P1=Stg.day_CYR$value,P2=NA,Mean=Stg.day_CYR$value)
 
-if(max(LakeO.xtab$DATE)!=YEST){
+if(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)!=YEST){
   LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
                    subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
 }
@@ -618,6 +618,8 @@ cal.flow.dat.xtab$Q.14=with(cal.flow.dat.xtab,roll_meanr(S79,n=14))
 cal.flow.dat.xtab$Q.30=with(cal.flow.dat.xtab,roll_meanr(S79,n=30))
 # cal.flow.dat.xtab$Q.30=with(cal.flow.dat.xtab,c(rep(NA,29),rollapply(S79,width=30,FUN=function(x)mean(x,na.rm=T))))
 
+# cal.flow.dat.xtab$Q.14>2600
+
 ```
 
 
@@ -841,6 +843,10 @@ sal.dat=merge(sal.dat,bk.dbkeys.bot,"DBKEY")
 sal.dat$Date.EST=date.fun(sal.dat$DATETIME)
 sal.dat$Data.Value[sal.dat$Data.Value==-999]<-NA
 #subset(sal.dat,Data.Value<0)
+
+
+test=data.frame(cast(subset(sal.dat,SITE=="MARKH"),SITE+DATETIME+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
+test$Sal=with(test,SalinityCalc(SPC,WT))
 
 sal.dat.xtab=data.frame(cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
 fill=data.frame(expand.grid(SITE=unique(bk.dbkeys.bot$SITE),Date.EST=date.fun(seq(Start.Date,End.Date,"1 days"))))

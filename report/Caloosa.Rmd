@@ -1,0 +1,26 @@
+---
+title: "Caloosahatchee River Rainfall and Discharge"
+output: 
+  html_document: 
+    toc: yes
+    includes:
+      after_body: footer.html
+editor_options: 
+  chunk_output_type: console
+---
+
+***
+
+`r paste("Updated",as.POSIXct(Sys.time(),"%Y-%m-%d %H:%M",tz=""))`
+
+***
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r,out.width="50%",echo=FALSE,fig.align="center",fig.cap=paste("Diagram of pre-drainage condition for the Caloosahatchee River and its connections to Lakes Flirt, Bonnet, Hicpochee and Okeechobee. Source: [GoHydrology.org](https://gohydrology.org/water-room/caloosahatchee/){target='_blank'}")}
+knitr::include_graphics("https://i2.wp.com/gohydrology.org/wp-content/uploads/2021/01/Fig_Animate.gif")
+```

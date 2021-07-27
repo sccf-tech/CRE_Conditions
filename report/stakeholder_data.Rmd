@@ -43,6 +43,7 @@ library(RcppRoll)
 
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
 
+
 ```
 
 ```{r data, include=F}
@@ -179,7 +180,7 @@ q.dat%>%
 ```
 
 ```{r}
-cap.val="Average and total discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
+cap.val="Average and total net discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
 sumstats%>%
   flextable()%>%
   colformat_double(j=2:15,big.mark = "",digits=0)%>%
@@ -195,7 +196,7 @@ sumstats%>%
 
 
 ```{r}
-cap.val="Average and total discharge volume in Acre-Feet per day for the last 14-days. Data Source: USACE"
+cap.val="Average and total net discharge volume in Acre-Feet per day for the last 14-days. Data Source: USACE"
 sumstats14%>%
   flextable()%>%
   colformat_double(j=2:15,big.mark = "",digits=0)%>%
@@ -210,26 +211,28 @@ sumstats14%>%
 ```
 
 ```{r}
-q.from.Lake=sum(totalQ[,c("S77","S310","S351","S352","S354","L8","S308")])
-S77q=sum(totalQ[,c("S77")])
-S77q.per=if((S77q/sum(totalQ[,totalQ>0][-1]))*100<1){"< 1"}else{round((S77q/sum(totalQ[,totalQ>0][-1]))*100,0)}
+laketotalQ=q.dat.7day[,c("S77","S310","S351","S352","S354","L8","S308")]
+laketotalQ$EAA=rowSums(laketotalQ[,c("S351","S352","S354")],na.rm=T)
+q.from.Lake=sum(laketotalQ[laketotalQ>0])
+S77q=sum(laketotalQ[laketotalQ$S77>0,c("S77")])
+S77q.per=if((S77q/q.from.Lake)*100<1){"< 1"}else{round((S77q/q.from.Lake)*100,0)}
 
-S308q=sum(totalQ[,c("S308")])
-S308q.per=ifelse(S308q<0,NA,round(S308q/sum(totalQ[,totalQ>0][-1])*100,0))
+S308q=sum(laketotalQ[,c("S308")])
+S308q.per=ifelse(S308q<0,NA,round((S308q/q.from.Lake)*100,0))
 
-S310q=sum(totalQ[,c("S310")])
-S310q.per=ifelse(S310q<0,NA,round(S310q/sum(totalQ[,totalQ>0][-1])*100,0))
+S310q=sum(laketotalQ[,c("S310")])
+S310q.per=ifelse(S310q<0,NA,round((S310q/q.from.Lake)*100,0))
 
-L8q=sum(totalQ[,c("L8")])
-L8q.per=ifelse(L8q<0,NA,round(L8q/sum(totalQ[,totalQ>0][-1])*100,0))
+L8q=sum(laketotalQ[,c("L8")])
+L8q.per=ifelse(L8q<0,NA,round((L8q/q.from.Lake)*100,0))
 
-EAAq=sum(totalQ[,c("S351","S352","S354")])
-EAAq.per=ifelse(EAAq<0,NA,round(EAAq/sum(totalQ[,totalQ>0][-1])*100,0))
+EAAq=sum(laketotalQ[,c("EAA")])
+EAAq.per=ifelse(EAAq<0,NA,round((EAAq/q.from.Lake)*100,0))
 
 
 ```
 
-**Lake Flows:** In the past 7 days **`r format(round(sum(totalQ[,totalQ>0][-1]),0),big.mark=",")` AF**   was discharged from Lake Okeechobee `r  ifelse(ncol(totalQ[,totalQ<0])>0,paste0("(",format(round(sum(totalQ[,totalQ<0])*-1,0),big.mark=",")," AF backflowed to the Lake)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+**Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")` AF**   was discharged from Lake Okeechobee `r  ifelse(length(laketotalQ[laketotalQ<0])>0,paste0("(",format(round(sum(laketotalQ[laketotalQ<0],na.rm=T)*-1,0),big.mark=",")," AF backflowed to the Lake)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
 
@@ -564,6 +567,7 @@ by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],
 colrmp="blue"
 txt.cex=1
 
+# png(filename=paste0(plot.path,"Cal_Sal.png"),width=10,height=5,units="in",res=200,type="windows",bg="white")
 par(family="serif",cex.axis=1.2,mar=c(1.5,2,1,1),oma=c(2,3,4,1),mgp=c(3,1,0));
 layout(matrix(c(1:4,rep(5,3),6),2,4,byrow=T),heights=c(1,0.25));
 
@@ -630,6 +634,7 @@ legend(0.5,0.15,legend=c("Poor(>15)","Fair (10 - 15)","Good(<10)"),
        pt.cex=2.5,ncol=1,cex=1.25,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0.5,
        title.adj = 0,title="Tape Grass Salinity Condition")
 grid.raster(logo,x=0.045,y=0.055,just=c("left","bottom"),width=unit(1.25,"inches"))
+# dev.off()
 ```
 
 
