@@ -113,27 +113,49 @@ for(i in 1:length(dates)){
   val=grep("S12",mapdata)
   ENP=strsplit(strsplit(mapdata[val],"\\s+")[[1]][8],"</div>")[[1]][1]
   
+  val=grep("Istokpoga</a>",mapdata)
+  Istok=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</div>")[[1]][1]
+  
+  val=grep("S-65E</a>",mapdata)
+  S65E=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"<br>")[[1]][1]
+  
+  val=grep("S-65EX1</a>",mapdata)
+  S65EX1=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"<br>")[[1]][1]
+  
+  val=grep("Fisheating Creek",mapdata)
+  FEC=strsplit(strsplit(mapdata[val],"\\s+")[[1]][7],"</div>")[[1]][1]
+  
   date.val=dates[i]-ddays(1)
-  rslt=data.frame(Date=date.val,WCA1=as.numeric(WCA1),WCA2=as.numeric(WCA2),WCA3=as.numeric(WCA3),ENP=as.numeric(ENP))
-  map.q=rbind(map.q,rslt)
+  rslt=data.frame(Date=date.val,
+                  FEC=as.numeric(FEC),
+                  Istok=as.numeric(Istok),
+                  S65E=as.numeric(S65E),
+                  S65EX1=as.numeric(S65EX1),
+                  WCA1=as.numeric(WCA1),
+                  WCA2=as.numeric(WCA2),
+                  WCA3=as.numeric(WCA3),
+                  ENP=as.numeric(ENP))
+    map.q=rbind(map.q,rslt)
   print(i)
 }
 
-map.q[,2:5]=cfs.to.acftd(map.q[,2:5])
+map.q[,2:ncol(map.q)]=cfs.to.acftd(map.q[,2:ncol(map.q)])
 
 q.dat=merge(q.dat,map.q,"Date")
 # q.dat[q.dat<0]<-NA
 
+q.dat$NthLake=rowSums(q.dat[,c("FEC","Istok","S65E","S65EX1")],na.rm=T)
+
 ```
 
 ```{r table1}
-vars=c("Date","S77","S78","S79","S310","S351","S352","S354","L8","S308","S80","WCA1","WCA2","WCA3","ENP")
+vars=c("Date","S77","S78","S79","S310","S351","S352","S354","L8","S308","S80","NthLake","WCA1","WCA2","WCA3","ENP")
 date.7day=seq(date.fun(date.fun(Sys.Date())-ddays(7)),date.fun(Sys.Date()),"1 days")
 
 q.dat.7day=subset(q.dat,Date%in%date.7day)[,vars]
-meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:15],2,mean,na.rm=T))))
+meanQ=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat.7day[,2:16],2,mean,na.rm=T))))
 colnames(meanQ)<-c("Statistic",vars[2:length(vars)])
-totalQ=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat.7day[,2:15],2,sum,na.rm=T))))
+totalQ=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat.7day[,2:16],2,sum,na.rm=T))))
 colnames(totalQ)<-c("Statistic",vars[2:length(vars)])
 sumstats=rbind(meanQ,totalQ)
 
@@ -160,7 +182,8 @@ q.dat[,vars]%>%
   fontsize(size=10,part="body")%>%
   fontsize(size=12,part="header")%>%
   add_header_lines(values=cap.val)%>%
-  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")%>%
+  footnote(j=~NthLake,value=as_paragraph("Includes discharges from Fisheating Creek, S71, S72,S84, S84X, S65E and S65EX1"),ref_symbols =c(" 1"),part="header")
   # footnote(i=1,j=1,value=as_paragraph("Negative flow values omitted from this table and statistical summaries below."),ref_symbols =c(" "),part="header")
 ```
 
@@ -218,21 +241,35 @@ S77q=sum(laketotalQ[laketotalQ$S77>0,c("S77")])
 S77q.per=if((S77q/q.from.Lake)*100<1){"< 1"}else{round((S77q/q.from.Lake)*100,0)}
 
 S308q=sum(laketotalQ[,c("S308")])
+S308q.pos=sum(laketotalQ[laketotalQ$S308>0,c("S308")])
 S308q.per=ifelse(S308q<0,NA,round((S308q/q.from.Lake)*100,0))
 
 S310q=sum(laketotalQ[,c("S310")])
+S310q.pos=sum(laketotalQ[laketotalQ$S310>0,c("S310")])
 S310q.per=ifelse(S310q<0,NA,round((S310q/q.from.Lake)*100,0))
 
 L8q=sum(laketotalQ[,c("L8")])
+L8q.pos=sum(laketotalQ[laketotalQ$L8>0,c("L8")])
 L8q.per=ifelse(L8q<0,NA,round((L8q/q.from.Lake)*100,0))
 
 EAAq=sum(laketotalQ[,c("EAA")])
+EAAq.pos=sum(laketotalQ[laketotalQ$EAA>0,c("EAA")])
 EAAq.per=ifelse(EAAq<0,NA,round((EAAq/q.from.Lake)*100,0))
 
 
+laketotalQ2=q.dat.7day[,c("S77","S310","S351","S352","S354","L8","S308")]
+tmp=apply(laketotalQ2,2,min)
+v=names(tmp[tmp<0])
+v[v=="L8"]="C10A"
+v.val=knitr::combine_words(v)
+
+q.BF.Lake=sum(abs(laketotalQ2[laketotalQ2<0]))
+q.in.Lake=sum(q.dat.7day[,"NthLake"])
 ```
 
-**Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")` AF** was discharged from Lake Okeechobee `r  ifelse(length(laketotalQ[laketotalQ<0])>0,paste0("(",format(round(sum(laketotalQ[laketotalQ<0],na.rm=T)*-1,0),big.mark=",")," AF return to the Lake via backflow)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r ifelse(S308q<0,format(round(abs(S308q),0),big.mark=","),format(round(S308q,0),big.mark=","))` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** `r ifelse(S308q<0,"to Lake Okeechobee","to the St. Lucie River")` through **S-308**, **`r ifelse(S310q<0,format(round(abs(S310q),0),big.mark=","),format(round(S310q,0),big.mark=","))` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r ifelse(L8q<0,format(round(abs(L8q),0),big.mark=","),format(round(L8q,0),big.mark=","))` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** `r ifelse(L8q<0,"to Lake Okeecobee","to the L-8 canal")`, and **`r ifelse(EAAq<0,format(round(abs(EAAq),0),big.mark=","),format(round(EAAq,0),big.mark=","))` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** `r ifelse(EAAq<0,"to Lake Okeechobee","to the EAA")` through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+<!-- **Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")` AF** was discharged from Lake Okeechobee `r  ifelse(length(laketotalQ[laketotalQ<0])>0,paste0("(",format(round(sum(laketotalQ[laketotalQ<0],na.rm=T)*-1,0),big.mark=",")," AF return to the Lake via backflow)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r ifelse(S308q<0,format(round(abs(S308q),0),big.mark=","),format(round(S308q,0),big.mark=","))` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** `r ifelse(S308q<0,"to Lake Okeechobee","to the St. Lucie River")` through **S-308**, **`r ifelse(S310q<0,format(round(abs(S310q),0),big.mark=","),format(round(S310q,0),big.mark=","))` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r ifelse(L8q<0,format(round(abs(L8q),0),big.mark=","),format(round(L8q,0),big.mark=","))` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** `r ifelse(L8q<0,"to Lake Okeecobee","to the L-8 canal")`, and **`r ifelse(EAAq<0,format(round(abs(EAAq),0),big.mark=","),format(round(EAAq,0),big.mark=","))` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** `r ifelse(EAAq<0,"to Lake Okeechobee","to the EAA")` through **S-351, S-352, and S-354**.  -->
+
+**Lake Flows:** In the past 7 days the total outflow from Lake Okeechobee was **`r format(round(q.from.Lake,0),big.mark=",")` AF** with **`r format(round(S77q,0),big.mark=",")` AF** to the Caloosahatchee through **S-77**,`r if(S308q.pos>0){paste("**",format(round(S308q.pos,0),big.mark=",")," AF** to St Lucie through **S-308**,",sep="")}` **`r format(round(S310q.pos,0),big.mark=",")` AF** through **S-310** in Clewiston, and **`r format(round(EAAq.pos,0),big.mark=",")` AF** to the EAA through **S-351**, **S-352** and **S-354**. The total net inflow to the Lake was **`r format(round(q.in.Lake+q.BF.Lake,0),big.mark=",")` AF** `r if(q.BF.Lake>0){paste(" with a total backflow volume of ","**",format(round(q.BF.Lake,0),big.mark=",")," AF** from **", v.val,"**",sep="")}`. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
 
