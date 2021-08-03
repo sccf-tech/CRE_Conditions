@@ -23,11 +23,12 @@ library(lubridate)
 ## Paths
 wd="C:/Julian_LaCie/_Github/CRE_Conditions"
 
-paths=paste0(wd,c("/Plots/","/Export/","/Data/","/src"))
+paths=paste0(wd,c("/Plots/","/Export/","/Data/","/src","/GIS"))
 # Folder.Maker(paths);#One and done. Creates folders in working directory.
 plot.path=paths[1]
 export.path=paths[2]
 data.path=paths[3]
+GIS.path=paths[5]
 
 #Current WY
 CurWY=WY(Sys.time())
@@ -37,8 +38,8 @@ CurWY
 # -------------------------------------------------------------------------
 dates=c(date.fun("1979-05-01"),date.fun(as.Date(Sys.time())-duration(1,"days")))
 
-wx.sites=data.frame(SITE=c('FPWX','SLEE_R','S79_R','CORK_R','CORK_R','CRKSWPS_R'),
-                    DBKEY=c('FZ598','06081','16414','DO541','VN012','63883'))
+wx.sites=data.frame(SITE=c('FPWX','SLEE_R','S79_R','CORK_R','CORK_R','CRKSWPS_R',"S78_R","S78_R","DEVILS_R","PALMDALE_R","PALMDALE_R","S77_R","S77_R","S77_R"),
+                    DBKEY=c('FZ598','06081','16414','DO541','VN012','63883',"06243","16625","IV150","06093","15786","05913","KD314","16415"))
 
 rf.dat=data.frame()
 for(i in 1:nrow(wx.sites)){
@@ -53,7 +54,7 @@ range(rf.dat$Date,na.rm=T)
 range(rf.dat$Data.Value,na.rm=T)
 rf.dat$Data.Value[rf.dat$Data.Value<0]<-NA;# remove negative values
 rf.dat$Data.Value[rf.dat$Data.Value>40]<-NA; # removed extreme values
-
+unique(rf.dat$SITE)
 # rf.dat$CY=as.numeric(format(rf.dat$Date,"%Y"))
 # rf.dat$month=as.numeric(format(rf.dat$Date,"%m"))
 
@@ -86,6 +87,7 @@ rect(seq(0.5,12.5,1),i+0.5,12.5,i-0.5,col=cols[tmp$RF.cat])
 
 
 library(ggplot2)
+library(cowplot)
 cols.wes=rev(wesanderson::wes_palette("Zissou1",7,"continuous"))
 cols.vir=rev(viridis::inferno(7))
 # cols=c("1"="red","2"="orange","3"="darkolivegreen1","4"="lightblue1","5"="deepskyblue","6"="royalblue","7"="black")
@@ -172,6 +174,31 @@ rf.sites.shp2=sf::st_as_sf(rf.sites.shp)
 roads.all=spTransform(readOGR(paste0(GIS.path.gen,"/FDOT"),"FDOT_Roads"),utm17)
 roads=sf::st_as_sf(roads.all)
 
+# wbids=spTransform(readOGR(paste0(GIS.path.gen,"/FDEP"),"WBIDs"),wkt(utm17))
+# wbids2=merge(wbids,
+#              data.frame(PLANNING_U=c("West Caloosahatchee", 'East Caloosahatchee',"Caloosahatchee Estuary","Telegraph Swamp","Orange River"),Region=c("C43","C43","Tidal Basin","Tidal Basin","Tidal Basin")),
+#              "PLANNING_U")
+# plot(subset(wbids2,is.na(Region)==F))
+# plot(subset(wbids,GROUP_NAME=="Caloosahatchee"))
+# 
+# wbids2.dis=gUnaryUnion(wbids2,id=wbids2@data$Region)
+# IDlist <- data.frame(ID=sapply(slot(wbids2.dis, "polygons"), function(x) slot(x, "ID")))
+# rownames(IDlist)  <- IDlist$ID
+# wbids2.dis=SpatialPolygonsDataFrame(wbids2.dis,IDlist)
+# 
+# plot(wbids2.dis)
+# writeOGR(wbids2.dis,GIS.path,"Caloosa_WBIDs_dis",driver="ESRI Shapefile")
+
+wbids.dis=spTransform(readOGR(GIS.path,"Caloosa_WBIDs_dis"),wkt(utm17))
+wbids.dis2=sf::st_as_sf(wbids.dis)
+
+library(tmap)
+tmap_mode("view")
+
+tm_shape(wbids)+tm_polygons(alpha=0.5)
+
+
+
 # http://eriqande.github.io/rep-res-web/lectures/making-maps-with-R.html
 # https://timogrossenbacher.ch/2016/12/beautiful-thematic-maps-with-ggplot2-only/
 theme_map <- function(...) {
@@ -207,8 +234,10 @@ theme_map <- function(...) {
 
 # northSymbols()
 
+bbox.lims3=bbox(gBuffer(wbids.dis,width=2500))
 bbox.lims2=bbox(gBuffer(cre.nnc.segs,width=5000))
 bbox.lims=bbox(gBuffer(rf.sites.shp,width=5000))
+
 
 map=ggplot()+
   # geom_polygon(data=shoreline.f,
@@ -216,12 +245,19 @@ map=ggplot()+
   #              fill="cornsilk",colour="grey")+
   geom_sf(data=shoreline2,fill="cornsilk",colour="grey",size=0.1)+
   geom_sf(data=roads,lty=1,colour="grey",size=0.5,alpha=0.5)+
+  geom_sf(data=wbids.dis2,fill="grey",alpha=0.25)+
   geom_sf(data=rf.sites.shp2,size=2,shape=21,fill="dodgerblue1")+
+  geom_sf_text(data=rf.sites.shp2,aes(label=SITE),
+            nudge_x = c(-4000,-4000,4000,-4000,-4000,4000,-4000,0,-4000),
+            nudge_y = c(0,0,0,0,0,0,0,-3000,0),
+            family="serif",size=3.5)+
   theme_map()+
-  coord_sf(xlim=c(bbox.lims2[1,1],bbox.lims[1,2]),ylim=c(bbox.lims[2,1],bbox.lims[2,2]))+
+  coord_sf(xlim=c(bbox.lims3[1,1],bbox.lims3[1,2]),ylim=c(bbox.lims[2,1],bbox.lims[2,2]))+
+  # coord_sf(xlim=c(bbox.lims2[1,1],bbox.lims[1,2]),ylim=c(bbox.lims[2,1],bbox.lims[2,2]))+
   labs(subtitle = "Rainfall monitoring locations")
 map      
-library(cowplot)
+
+
 
 comboplot=plot_grid(
   rf_POR,map,
@@ -245,4 +281,4 @@ comboplot2=plot_grid(
 )
 comboplot2
 
-ggsave(paste0(plot.path,"rf_POR_map2.png"),comboplot2,device="png",height =8,width=7,units="in")
+# ggsave(paste0(plot.path,"rf_POR_map2.png"),comboplot2,device="png",height =8,width=7,units="in")

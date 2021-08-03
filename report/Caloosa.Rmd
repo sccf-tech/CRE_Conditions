@@ -9,18 +9,228 @@ editor_options:
   chunk_output_type: console
 ---
 
-***
-
 `r paste("Updated",as.POSIXct(Sys.time(),"%Y-%m-%d %H:%M",tz=""))`
 
 ***
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(AnalystHelper);
+library(plyr)
+library(reshape)
+library(zoo)
+library(lubridate)
+
+library(ggplot2)
+library(cowplot)
+
+# GIS libraries 
+library(rgdal)
+library(rgeos)
+library(raster)
+library(tmap)
+library(ggmap)
+library(ggsn)
+
+
+GIS.path="C:/Julian_LaCie/_Github/CRE_Conditions/GIS"
+GIS.path.gen="C:/Julian_LaCie/_GISData"
+
+# Helper variables
+nad83.pro=CRS(SRS_string ="EPSG:4269")
+utm17=CRS(SRS_string ="EPSG:26917")
+
+## Functions
+# ggplot map theme
+theme_map <- function(...) {
+  theme_minimal() +
+    theme(
+      text = element_text(family = "serif", color = "#22211d"),
+      axis.line = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      # panel.grid.minor = element_line(color = "#ebebe5", size = 0.2),
+      # panel.grid.major = element_line(color = "#ebebe5", size = 0.2),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      # plot.background = element_rect(fill = "lightblue", color = NA),
+      panel.background = element_rect(fill = "lightblue", color = NA),
+      # legend.background = element_rect(fill = "#f5f5f2", color = NA),
+      plot.background = element_blank(),
+      # panel.background = element_blank(),
+      legend.background = element_blank(),
+      panel.border = element_blank(),
+      plot.title=element_text(size=12),
+      plot.subtitle = element_text(color = "grey50",size=8),
+      plot.caption = element_text(hjust = 0),
+      ...
+    )
+}
+
+## Rainfall Data
+dates=c(date.fun("1979-05-01"),date.fun(as.Date(Sys.time())-duration(1,"days")))
+
+wx.sites=data.frame(SITE=c('FPWX','SLEE_R','S79_R','CORK_R','CORK_R','CRKSWPS_R',"S78_R","S78_R","DEVILS_R","PALMDALE_R","PALMDALE_R","S77_R","S77_R","S77_R"),
+                    DBKEY=c('FZ598','06081','16414','DO541','VN012','63883',"06243","16625","IV150","06093","15786","05913","KD314","16415"))
+
+rf.dat=data.frame()
+for(i in 1:nrow(wx.sites)){
+  tmp=DBHYDRO_daily(dates[1],dates[2],as.character(wx.sites$DBKEY[i]))
+  tmp$DBKEY=as.character(wx.sites$DBKEY[i])
+  rf.dat=rbind(rf.dat,tmp)
+  print(i)
+}
+
+rf.dat=merge(rf.dat,wx.sites,"DBKEY")
+range(rf.dat$Date,na.rm=T)
+range(rf.dat$Data.Value,na.rm=T)
+rf.dat$Data.Value[rf.dat$Data.Value<0]<-NA;# remove negative values
+rf.dat$Data.Value[rf.dat$Data.Value>40]<-NA; # removed extreme values
+unique(rf.dat$SITE)
+# rf.dat$CY=as.numeric(format(rf.dat$Date,"%Y"))
+# rf.dat$month=as.numeric(format(rf.dat$Date,"%m"))
+
+rf.dat.da=ddply(rf.dat,"Date",summarise,mean.val=mean(Data.Value,na.rm=T),N.val=N.obs(Data.Value))
+rf.dat.da$CY=as.numeric(format(rf.dat.da$Date,"%Y"))
+rf.dat.da$month=as.numeric(format(rf.dat.da$Date,"%m"))
+
+rf.dat.mon=ddply(rf.dat.da,c("CY","month"),summarise,TRF.in=sum(mean.val,na.rm=T))
+rf.dat.mon=merge(rf.dat.mon,expand.grid(CY=1979:2021,month=1:12),c("CY","month"),all.y=T)
+rf.dat.mon$RF.cat=as.factor(findInterval(rf.dat.mon$TRF.in,c(0,1,2.5,5,7.5,10,12.5,100)))
+rf.dat.mon=merge(rf.dat.mon,
+                 data.frame(RF.cat=c(NA,1:7),
+                            RF.cat.txt=c("<NA>","<1","1 - 2.5","2.5 - 5","5 - 7.5","7.5 - 10","10 - 12.5",">12.5"),
+                            txt.cols=c(NA,rep("black",3),rep("white",4))),
+                 "RF.cat")
+
+rf.dat.mon=rf.dat.mon[order(rf.dat.mon$CY,rf.dat.mon$month),]
+mon.mean=ddply(rf.dat.mon,"month",summarise, mean.val=mean(TRF.in,na.rm=T))
+
+
+## GIS Data
+shoreline=spTransform(readOGR(paste0(GIS.path.gen,"/FWC"),"FWC_Shoreline"),utm17)
+shoreline=gSimplify(shoreline,100)
+shoreline2=sf::st_as_sf(shoreline)
+shoreline.f=fortify(shoreline)
+
+est_nnc_seg=spTransform(readOGR(paste0(GIS.path.gen,"/FDEP"),"Estuary_NNC"),wkt(utm17))
+segs=c("Upper Caloosahatchee River Estuary","Middle Caloosahatchee River Estuary","Lower Caloosahatchee River Estuary","San Carlos Bay")
+cre.nnc.segs=subset(est_nnc_seg,SEGMENT_NA%in%segs)
+
+wmd.mon=spTransform(readOGR(paste0(GIS.path.gen,"/SFWMD_Monitoring_20200221"),"Environmental_Monitoring_Stations"),wkt(utm17))
+rf.sites.shp=subset(wmd.mon,STATION%in%wx.sites$SITE&ACTIVITY_S=="Rain")
+rf.sites.shp2=sf::st_as_sf(rf.sites.shp)
+
+roads.all=spTransform(readOGR(paste0(GIS.path.gen,"/FDOT"),"FDOT_Roads"),utm17)
+roads=sf::st_as_sf(roads.all)
+
+wbids.dis=spTransform(readOGR(GIS.path,"Caloosa_WBIDs_dis"),wkt(utm17))
+wbids.dis2=sf::st_as_sf(wbids.dis)
+
+
+### PLOTS
+cols.vir=rev(viridis::inferno(7))
+cols=c("1"=cols.vir[1],"2"=cols.vir[2],"3"=cols.vir[3],"4"=cols.vir[4],"5"=cols.vir[5],"6"=cols.vir[6],"7"=cols.vir[7])
+rf_POR=ggplot(rf.dat.mon, aes(x = month, y = CY, fill = RF.cat)) +
+  geom_tile(aes(group = RF.cat), colour = 'black')+
+  geom_text(aes(label=format(round(TRF.in,1),nsmall=1),fontface = "bold"),size=2,colour=rf.dat.mon$txt.cols,family="serif",)+
+  scale_y_reverse(expand = c(0, 0), breaks = rf.dat.mon$CY) +
+  # scale_x_discrete(expand = c(0, 0), position = 'top') +
+  scale_x_continuous(expand = c(0, 0), breaks = 1:12)+
+  scale_fill_manual(values = cols,
+                    name="Rainfall\nCategories\n(Inches)",
+                    breaks=1:7,
+                    labels=c("<1.0","1.0 - 2.5","2.5 - 5.0","5.0 - 7.5","7.5 - 10.0","10.0 - 12.5",">12.5")) +
+  theme_bw() +
+  theme(
+    #legend.position = 'none',
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(title = "Southwest Florida Rainfall",
+       subtitle = "Total Monthly Rainfall",
+       caption = paste0("Produced: ",format(Sys.Date(),"%d %b %Y")),
+       x="Month",
+       y="Year")
+
+month.POR=ggplot()+
+  geom_col(data=mon.mean,
+           aes(x=month,y=mean.val,fill="POR Mean"),width=1,color='dodgerblue1',alpha=0.25)+
+  scale_fill_manual(name = NULL, values = c("POR Mean" = "dodgerblue1"))+
+  scale_x_continuous(limits = c(0.5,12.5),breaks=seq(1,12,1))+
+  scale_y_continuous(limits = c(0,10), expand = c(0, 0)) +
+  geom_point(data=subset(rf.dat.mon,CY==2021),
+             aes(x=month,y=TRF.in,color="CY 2021"),
+             size=2.5,fill="indianred1",shape=21)+
+  geom_line(data=subset(rf.dat.mon,CY==2021),
+             aes(x=month,y=TRF.in,color="CY 2021"),linetype=2,size=1)+
+  scale_color_manual(name = NULL, values = c("CY 2021" = "indianred1"))+
+  theme_bw() +
+  theme(
+    legend.position="bottom",
+    #legend.position = 'none',
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(x="Month",
+       y="Rainfall (Inches)",
+       subtitle = "Current year relative to POR")+
+  guides(fill=guide_legend(label.position="top"),color=guide_legend(label.position="top"))
+
+
+bbox.lims3=bbox(gBuffer(wbids.dis,width=2500))
+bbox.lims2=bbox(gBuffer(cre.nnc.segs,width=5000))
+bbox.lims=bbox(gBuffer(rf.sites.shp,width=5000))
+
+
+map=ggplot()+
+  # geom_polygon(data=shoreline.f,
+  #              aes(long,lat,group=group),
+  #              fill="cornsilk",colour="grey")+
+  geom_sf(data=shoreline2,fill="cornsilk",colour="grey",size=0.1)+
+  geom_sf(data=roads,lty=1,colour="grey",size=0.5,alpha=0.5)+
+  geom_sf(data=wbids.dis2,fill="grey",alpha=0.25)+
+  geom_sf(data=rf.sites.shp2,size=2,shape=21,fill="dodgerblue1")+
+  geom_sf_text(data=rf.sites.shp2,aes(label=SITE),
+            nudge_x = c(-5000,-5000,5000,-5000,-5000,5000,-5000,0,-5000),
+            nudge_y = c(0,0,0,0,0,0,0,-3000,0),
+            family="serif",size=2)+
+  theme_map()+
+  coord_sf(xlim=c(bbox.lims3[1,1],bbox.lims3[1,2]),ylim=c(bbox.lims[2,1],bbox.lims[2,2]))+
+  # coord_sf(xlim=c(bbox.lims2[1,1],bbox.lims[1,2]),ylim=c(bbox.lims[2,1],bbox.lims[2,2]))+
+  labs(subtitle = "Rainfall monitoring locations")
 ```
+
 
 
 
 ```{r,out.width="50%",echo=FALSE,fig.align="center",fig.cap=paste("Diagram of pre-drainage condition for the Caloosahatchee River and its connections to Lakes Flirt, Bonnet, Hicpochee and Okeechobee. Source: [GoHydrology.org](https://gohydrology.org/water-room/caloosahatchee/){target='_blank'}")}
 knitr::include_graphics("https://i2.wp.com/gohydrology.org/wp-content/uploads/2021/01/Fig_Animate.gif")
+```
+
+
+## Regional Rainfall 
+
+Rainfall summary for the Caloosahatchee River/C-43 watershed and tidal basin. 
+
+```{r,warning=FALSE,fig.height=8.5,fig.width=7,echo=FALSE,fig.align="center",fig.cap="Caloosahatchee and tidal basin monthly rainfall calendar from 1979 to present."}
+map.bar=plot_grid(
+  map,month.POR,
+  ncol=1,
+  rel_heights = c(1,1.5))
+
+plot_grid(
+  rf_POR,map.bar,
+  ncol=2,
+  rel_widths = c(1.5,1)
+)
+
 ```

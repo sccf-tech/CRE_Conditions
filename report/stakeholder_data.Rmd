@@ -212,8 +212,8 @@ sumstats14%>%
 
 ```{r}
 laketotalQ=q.dat.7day[,c("S77","S310","S351","S352","S354","L8","S308")]
-laketotalQ$EAA=rowSums(laketotalQ[,c("S351","S352","S354")],na.rm=T)
 q.from.Lake=sum(laketotalQ[laketotalQ>0])
+laketotalQ$EAA=rowSums(laketotalQ[,c("S351","S352","S354")],na.rm=T)
 S77q=sum(laketotalQ[laketotalQ$S77>0,c("S77")])
 S77q.per=if((S77q/q.from.Lake)*100<1){"< 1"}else{round((S77q/q.from.Lake)*100,0)}
 
@@ -232,7 +232,7 @@ EAAq.per=ifelse(EAAq<0,NA,round((EAAq/q.from.Lake)*100,0))
 
 ```
 
-**Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")` AF**   was discharged from Lake Okeechobee `r  ifelse(length(laketotalQ[laketotalQ<0])>0,paste0("(",format(round(sum(laketotalQ[laketotalQ<0],na.rm=T)*-1,0),big.mark=",")," AF backflowed to the Lake)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r format(round(S308q,0),big.mark=",")` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** to the St. Lucie River through **S-308**, **`r format(round(S310q,0),big.mark=",")` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r format(round(L8q,0),big.mark=",")` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** to the L-8 canal, and **`r format(round(EAAq,0),big.mark=",")` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** to the EAA through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+**Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")` AF** was discharged from Lake Okeechobee `r  ifelse(length(laketotalQ[laketotalQ<0])>0,paste0("(",format(round(sum(laketotalQ[laketotalQ<0],na.rm=T)*-1,0),big.mark=",")," AF return to the Lake via backflow)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r ifelse(S308q<0,format(round(abs(S308q),0),big.mark=","),format(round(S308q,0),big.mark=","))` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** `r ifelse(S308q<0,"to Lake Okeechobee","to the St. Lucie River")` through **S-308**, **`r ifelse(S310q<0,format(round(abs(S310q),0),big.mark=","),format(round(S310q,0),big.mark=","))` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r ifelse(L8q<0,format(round(abs(L8q),0),big.mark=","),format(round(L8q,0),big.mark=","))` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** `r ifelse(L8q<0,"to Lake Okeecobee","to the L-8 canal")`, and **`r ifelse(EAAq<0,format(round(abs(EAAq),0),big.mark=","),format(round(EAAq,0),big.mark=","))` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** `r ifelse(EAAq<0,"to Lake Okeechobee","to the EAA")` through **S-351, S-352, and S-354**. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
 
