@@ -210,8 +210,6 @@ map=ggplot()+
 ```
 
 
-
-
 ```{r,out.width="50%",echo=FALSE,fig.align="center",fig.cap=paste("Diagram of pre-drainage condition for the Caloosahatchee River and its connections to Lakes Flirt, Bonnet, Hicpochee and Okeechobee. Source: [GoHydrology.org](https://gohydrology.org/water-room/caloosahatchee/){target='_blank'}")}
 knitr::include_graphics("https://i2.wp.com/gohydrology.org/wp-content/uploads/2021/01/Fig_Animate.gif")
 ```
@@ -221,7 +219,7 @@ knitr::include_graphics("https://i2.wp.com/gohydrology.org/wp-content/uploads/20
 
 Rainfall summary for the Caloosahatchee River/C-43 watershed and tidal basin. 
 
-```{r,warning=FALSE,fig.height=8.5,fig.width=7,echo=FALSE,fig.align="center",fig.cap="Caloosahatchee and tidal basin monthly rainfall calendar from 1979 to present."}
+```{r,warning=FALSE,fig.height=8.5,fig.width=7,echo=FALSE,fig.align="center",fig.cap="Caloosahatchee and tidal basin monthly rainfall from calendar year 1979 to present."}
 map.bar=plot_grid(
   map,month.POR,
   ncol=1,
@@ -234,3 +232,78 @@ plot_grid(
 )
 
 ```
+
+
+## Discharge
+
+```{r include=F,echo=F}
+
+
+Q.dbkeys=data.frame(SITE=c("S79",rep("S78",3),rep("S77",2)),
+                    DBKEY=c("00865","00857","WN161","DJ236","15635","DJ235"))
+
+q.dat=data.frame()
+for(i in 1:nrow(Q.dbkeys)){
+  tmp=DBHYDRO_daily(dates[1],dates[2],Q.dbkeys$DBKEY[i])
+  tmp$DBKEY=as.character(Q.dbkeys$DBKEY[i])
+  q.dat=rbind(q.dat,tmp)
+  print(i)
+}
+
+q.dat=merge(q.dat,Q.dbkeys,"DBKEY")
+q.dat$Date.EST=date.fun(q.dat$Date)
+q.dat$CY=as.numeric(format(q.dat$Date.EST,"%Y"))
+q.dat$wknum=as.numeric(format(q.dat$Date.EST,"%j"))%/%7L+1L
+unique(q.dat$wknum)
+# q.dat$wknum=as.numeric(format(q.dat$Date.EST,"%V"))
+# q.dat$wknum=as.numeric(lubridate::isoweek(q.dat$Date.EST));# isoweek
+
+range(q.dat$Data.Value,na.rm=T)
+q.dat$Data.Value[q.dat$Data.Value<0]=0
+q.dat$Data.Value[is.na(q.dat$Data.Value)==T]=0
+
+q.dat.damean=ddply(q.dat,c("SITE","Date.EST","CY","wknum"),summarise,flow.cfs=mean(Data.Value,na.rm=T),N.flow=N.obs(Data.Value))
+
+q.dat.wk.mean=ddply(q.dat.damean,c("SITE","CY","wknum"),summarise,mean.flow=mean(flow.cfs))
+range(q.dat.wk.mean$mean.flow,na.rm=T)
+
+q.dat.wk.mean$Q.cat=as.factor(findInterval(q.dat.wk.mean$mean.flow,c(0,457,750,2100,2600,6500,20000)))
+q.dat.wk.mean=merge(q.dat.wk.mean,
+                 data.frame(Q.cat=c(NA,1:6),
+                            Q.cat.txt=c("<NA>","< 457","457 - 750", "750 - 2100","2100 - 2600","2600 - 6500",">6500"),
+                            txt.cols=c(NA,rep("black",3),rep("white",3))),
+                 "Q.cat")
+unique(q.dat.wk.mean$Q.cat)
+ddply(subset(q.dat.wk.mean,SITE=="S79"),"CY",summarise,N.week=N.obs(wknum))
+
+```
+
+Discharge summary for the Caloosahatchee River (S-79) and Lake Okeechobee (S-77). 
+
+```{r,warning=FALSE,fig.height=8.5,fig.width=7,echo=FALSE,fig.align="center",fig.cap="S-79 weekly average discharge volume from calendar year 1979 to present."}
+cols.vir=rev(viridis::inferno(6))
+cols=c("1"=cols.vir[1],"2"=cols.vir[2],"3"=cols.vir[3],"4"=cols.vir[4],"5"=cols.vir[5],"6"=cols.vir[6])
+
+ggplot(subset(q.dat.wk.mean,SITE=='S79'), aes(x = wknum, y = CY, fill = Q.cat)) +
+  geom_tile(aes(group = Q.cat), colour = 'black')+
+  scale_y_reverse(expand = c(0, 0), breaks = q.dat.wk.mean$CY) +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(1,53,4),labels=seq(1,53,4))+
+  scale_fill_manual(values = cols,
+                    name="Weekly Average\nDischarge\nCategories\n(CFS)",
+                    breaks=1:6,
+                    labels=c("< 457","457 - 750", "750 - 2100","2100 - 2600","2600 - 6500",">6500")) +
+  theme_bw() +
+  theme(
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(title = "Caloosahatchee River Estuary (S79)",
+       subtitle = "Average weekly discharge",
+       caption = paste0("Produced: ",format(Sys.Date(),"%d %b %Y")),
+       x="Week",
+       y="Year")
+```
+
+NOTE: **need to add map with watershed and S79 identified**
