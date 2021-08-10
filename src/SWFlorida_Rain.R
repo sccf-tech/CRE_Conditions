@@ -282,3 +282,103 @@ comboplot2=plot_grid(
 comboplot2
 
 # ggsave(paste0(plot.path,"rf_POR_map2.png"),comboplot2,device="png",height =8,width=7,units="in")
+
+
+
+# Discharge ---------------------------------------------------------------
+
+Q.dbkeys=data.frame(SITE=c("S79",rep("S78",3),rep("S77",2)),
+                    DBKEY=c("00865","00857","WN161","DJ236","15635","DJ235"))
+
+q.dat=data.frame()
+for(i in 1:nrow(Q.dbkeys)){
+  tmp=DBHYDRO_daily(dates[1],dates[2],Q.dbkeys$DBKEY[i])
+  tmp$DBKEY=as.character(Q.dbkeys$DBKEY[i])
+  q.dat=rbind(q.dat,tmp)
+  print(i)
+}
+
+q.dat=merge(q.dat,Q.dbkeys,"DBKEY")
+q.dat$Date.EST=date.fun(q.dat$Date)
+q.dat$CY=as.numeric(format(q.dat$Date.EST,"%Y"))
+q.dat$wknum=as.numeric(format(q.dat$Date.EST,"%j"))%/%7L+1L
+unique(q.dat$wknum)
+# q.dat$wknum=as.numeric(format(q.dat$Date.EST,"%V"))
+# q.dat$wknum=as.numeric(lubridate::isoweek(q.dat$Date.EST));# isoweek
+
+range(q.dat$Data.Value,na.rm=T)
+q.dat$Data.Value[q.dat$Data.Value<0]=0
+q.dat$Data.Value[is.na(q.dat$Data.Value)==T]=0
+
+q.dat.damean=ddply(q.dat,c("SITE","Date.EST","CY","wknum"),summarise,flow.cfs=mean(Data.Value,na.rm=T),N.flow=N.obs(Data.Value))
+
+q.dat.wk.mean=ddply(q.dat.damean,c("SITE","CY","wknum"),summarise,mean.flow=mean(flow.cfs))
+range(q.dat.wk.mean$mean.flow,na.rm=T)
+
+q.dat.wk.mean$Q.cat=as.factor(findInterval(q.dat.wk.mean$mean.flow,c(0,457,750,2100,2600,6500,20000)))
+q.dat.wk.mean=merge(q.dat.wk.mean,
+                 data.frame(Q.cat=c(NA,1:6),
+                            Q.cat.txt=c("<NA>","< 457","457 - 750", "750 - 2100","2100 - 2600","2600 - 6500",">6500"),
+                            txt.cols=c(NA,rep("black",3),rep("white",3))),
+                 "Q.cat")
+unique(q.dat.wk.mean$Q.cat)
+ddply(subset(q.dat.wk.mean,SITE=="S79"),"CY",summarise,N.week=N.obs(wknum))
+
+test=subset(q.dat.wk.mean,SITE=='S79')
+test=test[order(test$CY,test$wknum),]
+cols.wes=rev(wesanderson::wes_palette("Zissou1",7,"continuous"))
+cols.vir=rev(viridis::inferno(6))
+# cols=c("1"="red","2"="orange","3"="darkolivegreen1","4"="lightblue1","5"="deepskyblue","6"="royalblue","7"="black")
+# cols=c("1"=cols.wes[1],"2"=cols.wes[2],"3"="darkolivegreen1","4"=cols.wes[5],"5"=cols.wes[6],"6"=cols.wes[7],"7"="black")
+cols=c("1"=cols.vir[1],"2"=cols.vir[2],"3"=cols.vir[3],"4"=cols.vir[4],"5"=cols.vir[5],"6"=cols.vir[6])
+S79_POR=ggplot(subset(q.dat.wk.mean,SITE=='S79'), aes(x = wknum, y = CY, fill = Q.cat)) +
+  geom_tile(aes(group = Q.cat), colour = 'black')+
+  #geom_text(aes(label=format(round(mean.flow,0),nsmall=0),fontface = "bold"),size=2,colour=q.dat.wk.mean$txt.cols,family="serif",)+
+  scale_y_reverse(expand = c(0, 0), breaks = q.dat.wk.mean$CY) +
+  # scale_x_discrete(expand = c(0, 0), position = 'top') +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(1,53,4),labels=seq(1,53,4))+
+  scale_fill_manual(values = cols,
+                    name="Weekly Average\nDischarge\nCategories\n(CFS)",
+                    breaks=1:6,
+                    labels=c("< 457","457 - 750", "750 - 2100","2100 - 2600","2600 - 6500",">6500")) +
+  theme_bw() +
+  theme(
+    #legend.position = 'none',
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(title = "Caloosahatchee River Estuary (S79)",
+       subtitle = "Average weekly discharge",
+       caption = paste0("Produced: ",format(Sys.Date(),"%d %b %Y")),
+       x="Week",
+       y="Year")
+
+# ggsave(paste0(plot.path,"S79_POR.png"),S79_POR,device="png",height =7,width=5,units="in")
+
+S77_POR=ggplot(subset(q.dat.wk.mean,SITE=='S77'), aes(x = wknum, y = CY, fill = Q.cat)) +
+  geom_tile(aes(group = Q.cat), colour = 'black')+
+  #geom_text(aes(label=format(round(mean.flow,0),nsmall=0),fontface = "bold"),size=2,colour=q.dat.wk.mean$txt.cols,family="serif",)+
+  scale_y_reverse(expand = c(0, 0), breaks = q.dat.wk.mean$CY) +
+  # scale_x_discrete(expand = c(0, 0), position = 'top') +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(1,53,4),labels=seq(1,53,4))+
+  scale_fill_manual(values = cols,
+                    name="Weekly Average\nDischarge\nCategories\n(CFS)",
+                    breaks=1:6,
+                    labels=c("< 457","457 - 750", "750 - 2100","2100 - 2600","2600 - 6500",">6500")) +
+  theme_bw() +
+  theme(
+    #legend.position = 'none',
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(title = "Lake Okeechobee (S77 - Moorehaven Lock)",
+       subtitle = "Average weekly discharge",
+       caption = paste0("Produced: ",format(Sys.Date(),"%d %b %Y")),
+       x="Week",
+       y="Year")
+
+S77_POR

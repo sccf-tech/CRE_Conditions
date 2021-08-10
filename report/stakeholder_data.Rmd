@@ -235,41 +235,41 @@ sumstats14%>%
 
 ```{r}
 laketotalQ=q.dat.7day[,c("S77","S310","S351","S352","S354","L8","S308")]
-q.from.Lake=sum(laketotalQ[laketotalQ>0])
+q.from.Lake=sum(laketotalQ[laketotalQ>0],na.rm=T)
 laketotalQ$EAA=rowSums(laketotalQ[,c("S351","S352","S354")],na.rm=T)
-S77q=sum(laketotalQ[laketotalQ$S77>0,c("S77")])
-S77q.per=if((S77q/q.from.Lake)*100<1){"< 1"}else{round((S77q/q.from.Lake)*100,0)}
+S77q=sum(laketotalQ[laketotalQ$S77>0,c("S77")],na.rm=T)
+S77q.per=if(q.from.Lake==0){0}else if((S77q/q.from.Lake)*100<1){"< 1"}else{round((S77q/q.from.Lake)*100,0)}
 
-S308q=sum(laketotalQ[,c("S308")])
-S308q.pos=sum(laketotalQ[laketotalQ$S308>0,c("S308")])
+S308q=sum(laketotalQ[,c("S308")],na.rm=T)
+S308q.pos=sum(laketotalQ[laketotalQ$S308>0,c("S308")],na.rm=T)
 S308q.per=ifelse(S308q<0,NA,round((S308q/q.from.Lake)*100,0))
 
-S310q=sum(laketotalQ[,c("S310")])
-S310q.pos=sum(laketotalQ[laketotalQ$S310>0,c("S310")])
+S310q=sum(laketotalQ[,c("S310")],na.rm=T)
+S310q.pos=sum(laketotalQ[laketotalQ$S310>0,c("S310")],na.rm=T)
 S310q.per=ifelse(S310q<0,NA,round((S310q/q.from.Lake)*100,0))
 
-L8q=sum(laketotalQ[,c("L8")])
+L8q=sum(laketotalQ[,c("L8")],na.rm=T)
 L8q.pos=sum(laketotalQ[laketotalQ$L8>0,c("L8")])
 L8q.per=ifelse(L8q<0,NA,round((L8q/q.from.Lake)*100,0))
 
-EAAq=sum(laketotalQ[,c("EAA")])
-EAAq.pos=sum(laketotalQ[laketotalQ$EAA>0,c("EAA")])
+EAAq=sum(laketotalQ[,c("EAA")],na.rm=T)
+EAAq.pos=sum(laketotalQ[laketotalQ$EAA>0,c("EAA")],na.rm=T)
 EAAq.per=ifelse(EAAq<0,NA,round((EAAq/q.from.Lake)*100,0))
 
 
 laketotalQ2=q.dat.7day[,c("S77","S310","S351","S352","S354","L8","S308")]
-tmp=apply(laketotalQ2,2,min)
+tmp=apply(laketotalQ2,2,min,na.rm=T)
 v=names(tmp[tmp<0])
 v[v=="L8"]="C10A"
 v.val=knitr::combine_words(v)
 
-q.BF.Lake=sum(abs(laketotalQ2[laketotalQ2<0]))
-q.in.Lake=sum(q.dat.7day[,"NthLake"])
+q.BF.Lake=sum(abs(laketotalQ2[laketotalQ2<0]),na.rm=T)
+q.in.Lake=sum(q.dat.7day[,"NthLake"],na.rm=T)
 ```
 
 <!-- **Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")` AF** was discharged from Lake Okeechobee `r  ifelse(length(laketotalQ[laketotalQ<0])>0,paste0("(",format(round(sum(laketotalQ[laketotalQ<0],na.rm=T)*-1,0),big.mark=",")," AF return to the Lake via backflow)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r ifelse(S308q<0,format(round(abs(S308q),0),big.mark=","),format(round(S308q,0),big.mark=","))` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** `r ifelse(S308q<0,"to Lake Okeechobee","to the St. Lucie River")` through **S-308**, **`r ifelse(S310q<0,format(round(abs(S310q),0),big.mark=","),format(round(S310q,0),big.mark=","))` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r ifelse(L8q<0,format(round(abs(L8q),0),big.mark=","),format(round(L8q,0),big.mark=","))` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** `r ifelse(L8q<0,"to Lake Okeecobee","to the L-8 canal")`, and **`r ifelse(EAAq<0,format(round(abs(EAAq),0),big.mark=","),format(round(EAAq,0),big.mark=","))` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** `r ifelse(EAAq<0,"to Lake Okeechobee","to the EAA")` through **S-351, S-352, and S-354**.  -->
 
-**Lake Flows:** In the past 7 days the total outflow from Lake Okeechobee was **`r format(round(q.from.Lake,0),big.mark=",")` AF** with **`r format(round(S77q,0),big.mark=",")` AF** to the Caloosahatchee through **S-77**,`r if(S308q.pos>0){paste("**",format(round(S308q.pos,0),big.mark=",")," AF** to St Lucie through **S-308**,",sep="")}` **`r format(round(S310q.pos,0),big.mark=",")` AF** through **S-310** in Clewiston, and **`r format(round(EAAq.pos,0),big.mark=",")` AF** to the EAA through **S-351**, **S-352**, and **S-354**. The total net inflow to the Lake was **`r format(round(q.in.Lake+q.BF.Lake,0),big.mark=",")` AF** `r if(q.BF.Lake>0){paste(" with a total backflow volume of ","**",format(round(q.BF.Lake,0),big.mark=",")," AF** from **", v.val,"**",sep="")}`. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
+**Lake Flows:** In the past 7 days the total outflow from Lake Okeechobee was **`r format(round(q.from.Lake,0),big.mark=",")` AF** with **`r format(round(S77q,0),big.mark=",")` AF** to the Caloosahatchee through **S-77**,`r if(S308q.pos>0){paste("**",format(round(S308q.pos,0),big.mark=",")," AF** to St Lucie through **S-308**,",sep="")}` **`r format(round(S310q.pos,0),big.mark=",")` AF** through **S-310** in Clewiston, and **`r format(round(EAAq.pos,0),big.mark=",")` AF** to the EAA through **S-351**, **S-352**, and **S-354**. The total net inflow to the Lake was **`r format(round(q.in.Lake+q.BF.Lake,0),big.mark=",")` AF** (`r format(round(q.in.Lake,0),big.mark=",")` from Fisheating Creek, S-71, S-72,S-84s, S-65EX, and S-65EX1) `r if(q.BF.Lake>0){paste(" with a total backflow volume of ","**",format(round(q.BF.Lake,0),big.mark=",")," AF** from **", v.val,"**",sep="")}`. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
 
