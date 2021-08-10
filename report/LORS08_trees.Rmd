@@ -1,16 +1,27 @@
 ---
-output: html_document
+title: "Lake Okeechobee Regulation Schedule - 2008"
+output: 
+  html_document: 
+    toc: no
+    includes:
+      after_body: footer.html
+editor_options: 
+  chunk_output_type: console
 ---
 
 <br>
 <br>
 
-```{r, out.width="80%",echo=FALSE,fig.align="center"}
+### Part C
+
+```{r, out.width="100%",echo=FALSE,fig.align="center"}
 knitr::include_graphics("LORS08_partC.png")
 ```
 
 <br>
 
-```{r, out.width="80%",echo=FALSE,fig.align="center"}
+### Part D
+
+```{r, out.width="100%",echo=FALSE,fig.align="center"}
 knitr::include_graphics("LORS08_partD.png")
 ```
