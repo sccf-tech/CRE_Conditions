@@ -1,0 +1,16 @@
+---
+output: html_document
+---
+
+<br>
+<br>
+
+```{r, out.width="80%",echo=FALSE,fig.align="center"}
+knitr::include_graphics("LORS08_partC.png")
+```
+
+<br>
+
+```{r, out.width="80%",echo=FALSE,fig.align="center"}
+knitr::include_graphics("LORS08_partD.png")
+```
