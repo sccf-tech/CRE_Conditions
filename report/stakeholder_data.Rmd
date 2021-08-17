@@ -578,6 +578,8 @@ sal.dat=merge(sal.dat,bk.dbkeys.bot,"DBKEY")
 sal.dat$Date.EST=date.fun(sal.dat$DATETIME)
 sal.dat$Data.Value[sal.dat$Data.Value==-999]<-NA
 #subset(sal.dat,Data.Value<0)
+da.screen=ddply(sal.dat,c("Date.EST","SITE"),summarise,N.val=N.obs(Data.Value[param=="SPC"]))
+da.screen$screen=with(da.screen,ifelse(N.val<20,0,1))
 
 sal.dat.xtab=data.frame(cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
 fill=data.frame(expand.grid(SITE=unique(bk.dbkeys.bot$SITE),Date.EST=date.fun(seq(Start.Date,End.Date,"1 days"))))
@@ -586,6 +588,8 @@ sal.dat.xtab$Sal=with(sal.dat.xtab,SalinityCalc(SPC,WT))
 Cal.Sal=subset(sal.dat.xtab,SITE%in%c("CCORAL","FORTMYERSM","MARKH","SANIB2"))
 unique(Cal.Sal$SITE)
 
+Cal.Sal=merge(Cal.Sal,da.screen,c("Date.EST","SITE"))
+Cal.Sal$Sal=with(Cal.Sal,ifelse(screen==1,Sal,NA))
 Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7)))
 
 ```
