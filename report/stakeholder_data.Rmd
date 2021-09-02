@@ -159,6 +159,7 @@ totalQ=cbind(data.frame(Statistic="Total"),data.frame(t(apply(q.dat.7day[,2:16],
 colnames(totalQ)<-c("Statistic",vars[2:length(vars)])
 sumstats=rbind(meanQ,totalQ)
 
+mean.7day.cfs=data.frame(t(apply(q.dat.7day[,2:16],2,FUN=function(x)mean(x*0.5041669,na.rm=T))))
 
 meanQ.14=cbind(data.frame(Statistic="Average"),data.frame(t(apply(q.dat[,vars[2:length(vars)]],2,mean,na.rm=T))))
 colnames(meanQ.14)<-c("Statistic",vars[2:length(vars)])
@@ -201,6 +202,19 @@ q.dat%>%
     icon = "fa fa-file-excel"
   )
 ```
+
+```{r}
+mean.7day.cfs%>%
+  download_this(
+    output_name = "Discharge7day",
+    output_extension = ".xlsx",
+    button_label = "7-day Mean Discharge (cfs)",
+    button_type = "danger",
+    has_icon = TRUE,
+    icon = "fa fa-file-excel"
+  )
+```
+
 
 ```{r}
 cap.val="Average and total net discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
