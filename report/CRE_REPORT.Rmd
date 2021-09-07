@@ -844,7 +844,7 @@ sal.dat$Date.EST=date.fun(sal.dat$DATETIME)
 sal.dat$Data.Value[sal.dat$Data.Value==-999]<-NA
 #subset(sal.dat,Data.Value<0)
 unique(sal.dat$Flag)
-sal.dat[sal.dat$param=="SPC"&sal.dat$Data.Value<50,]<-NA
+# sal.dat[sal.dat$param=="SPC"&sal.dat$Data.Value<50,]<-NA
 
 da.screen=ddply(sal.dat,c("Date.EST","SITE"),summarise,N.val=N.obs(Data.Value[param=="SPC"]))
 da.screen$screen=with(da.screen,ifelse(N.val<20,0,1))

@@ -203,18 +203,6 @@ q.dat%>%
   )
 ```
 
-```{r}
-mean.7day.cfs%>%
-  download_this(
-    output_name = "Discharge7day",
-    output_extension = ".xlsx",
-    button_label = "7-day Mean Discharge (cfs)",
-    button_type = "danger",
-    has_icon = TRUE,
-    icon = "fa fa-file-excel"
-  )
-```
-
 
 ```{r}
 cap.val="Average and total net discharge volume in Acre-Feet per day for the last 7-days. Data Source: USACE"
@@ -231,6 +219,18 @@ sumstats%>%
 
 ```
 
+
+```{r}
+mean.7day.cfs%>%
+  download_this(
+    output_name = "Discharge7day",
+    output_extension = ".xlsx",
+    button_label = "7-day Mean Discharge (cfs)",
+    button_type = "danger",
+    has_icon = TRUE,
+    icon = "fa fa-file-excel"
+  )
+```
 
 ```{r}
 cap.val="Average and total net discharge volume in Acre-Feet per day for the last 14-days. Data Source: USACE"
