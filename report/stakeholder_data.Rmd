@@ -370,12 +370,13 @@ library(tmap)
 library(raster)
 
 
-utm17=sf::st_crs(26917)[[2]]
-utm17=sp::CRS(utm17)
+# utm17=sf::st_crs(26917)[[2]]
+# utm17=sp::CRS(utm17)
+utm17=CRS("+init=epsg:26917")
 
-wgs84=sf::st_crs(4326)[[2]]
-wgs84=sp::CRS(wgs84)
-
+# wgs84=sf::st_crs(4326)[[2]]
+# wgs84=sp::CRS(wgs84)
+wgs84=CRS("+init=epsg:4326")
 
 GIS.path.gen="C:/Julian_LaCie/_GISData"
 
