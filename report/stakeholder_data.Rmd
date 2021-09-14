@@ -125,6 +125,9 @@ for(i in 1:length(dates)){
   val=grep("Fisheating Creek",mapdata)
   FEC=strsplit(strsplit(mapdata[val],"\\s+")[[1]][7],"</div>")[[1]][1]
   
+  val=grep("/plots/s79h.pdf",mapdata)
+  S79=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</a>")[[1]][1]
+  
   date.val=dates[i]-ddays(1)
   rslt=data.frame(Date=date.val,
                   FEC=as.numeric(FEC),
@@ -134,7 +137,8 @@ for(i in 1:length(dates)){
                   WCA1=as.numeric(WCA1),
                   WCA2=as.numeric(WCA2),
                   WCA3=as.numeric(WCA3),
-                  ENP=as.numeric(ENP))
+                  ENP=as.numeric(ENP),
+                  S79.map=as.numeric(S79))
     map.q=rbind(map.q,rslt)
   print(i)
 }
@@ -142,6 +146,13 @@ for(i in 1:length(dates)){
 map.q[,2:ncol(map.q)]=cfs.to.acftd(map.q[,2:ncol(map.q)])
 
 q.dat=merge(q.dat,map.q,"Date")
+q.dat$S79=with(q.dat,ifelse(is.na(S79)==T,round(S79.map,0),S79))
+q.dat
+vars=c("Date", "S77", "S308", "L8", "S351", "S352", "S354", "S78", 
+"S79", "S310", "S80", "FEC", "Istok", "S65E", "S65EX1", "WCA1", 
+"WCA2", "WCA3", "ENP")
+q.dat=q.dat[,vars]
+
 # q.dat[q.dat<0]<-NA
 
 q.dat$NthLake=rowSums(q.dat[,c("FEC","Istok","S65E","S65EX1")],na.rm=T)
