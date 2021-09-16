@@ -578,7 +578,7 @@ algae.week%>%
   bg(i=~alge.score=="High Concern",j=~alge.score,part="body",bg="red")%>%
   bg(i=~BG.score=="Min. Concern",j=~BG.score,part="body",bg="green")%>%
   bg(i=~BG.score=="High Concern",j=~BG.score,part="body",bg="red")%>%
-  footnote(j=2:3,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(7),"%m/%d/%Y")," - ",format(End.Date,"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
+  footnote(j=2:3,part="header",value=as_paragraph(paste("Based on data from ",format(End.Date-ddays(7),"%m/%d/%Y")," - ",format(End.Date-ddays(1),"%m/%d/%Y"))),ref_symbols =c(" 1 "))%>%
   footnote(j=4,part="header",value=as_paragraph("Chlorophyll Categories:\nMin. Concern: values < 20 \u03BCg L\u207B\u00B9\nWarning: values \u2265 20\u03BCg L\u207B\u00B9 and <40 \u03BCg L\u207B\u00B9 \nHigh Concern: values \u2265 40 \u03BCg L\u207B\u00B9" ),ref_symbols=c(" 2 "))%>%
   footnote(j=5,part="header",value=as_paragraph("Phycocyanin Categories:\nMin. Concern: values < 40 \u03BCg L\u207B\u00B9\nHigh Concern: values \u2265 40 \u03BCg L\u207B\u00B9" ),ref_symbols=c(" 3 "))%>%
   add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=12,part="header")
