@@ -621,6 +621,10 @@ noaa.HAB.image=subset(noaa.image.inventory,data.product=="CIcyano.LakeOkee.png'"
 knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
 ```
 
+```{r, out.width="50%",echo=FALSE,fig.align="center"}
+knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
+```
+
 ***
 
 ## Caloosahatchee River Estuary
