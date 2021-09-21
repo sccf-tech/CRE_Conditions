@@ -888,9 +888,9 @@ da.screen=ddply(sal.dat,c("Date.EST","SITE"),summarise,N.val=N.obs(Data.Value[pa
 da.screen$screen=with(da.screen,ifelse(N.val<20,0,1))
 
 
-# test=data.frame(cast(subset(sal.dat,SITE=="CCORAL"),SITE+DATETIME+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
+# test=data.frame(cast(subset(sal.dat,SITE=="SANIB2"),SITE+DATETIME+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
 # test$Sal=with(test,SalinityCalc(SPC,WT))
-
+View(test)
 sal.dat.xtab=data.frame(cast(sal.dat,SITE+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T)))
 fill=data.frame(expand.grid(SITE=unique(bk.dbkeys.bot$SITE),Date.EST=date.fun(seq(Start.Date,End.Date,"1 days"))))
 sal.dat.xtab=merge(sal.dat.xtab,fill,c("SITE","Date.EST"),all.y=T)
