@@ -44,7 +44,7 @@ consec.startend=function(var){
 }
 
 # -------------------------------------------------------------------------
-dates=date.fun(c("2005-01-01","2020-12-31"))
+dates=date.fun(c("2005-01-01","2021-12-31"))
 
 # Discharge ---------------------------------------------------------------
 Q.dbkeys=data.frame(SITE=c("S79",rep("S78",3),rep("S77",2)),
@@ -61,6 +61,24 @@ q.dat$CY=as.numeric(format(q.dat$Date,"%Y"))
 q.dat$WY=WY(q.dat$Date)
 q.dat$DOY=as.numeric(format(q.dat$Date,"%j"))
 q.dat$cumQ=with(q.dat,ave(Data.Value,CY,FUN=function(x) cumsum(ifelse(is.na(x),0,cfs.to.acftd(x)/1000))))
+
+Q.dbkeys=data.frame(SITE=c("S79",rep("S78",3),rep("S77",2)),
+                    DBKEY=c("00865","00857","WN161","DJ236","15635","DJ235"))
+Q.dbkeys=subset(Q.dbkeys,DBKEY=="DJ235")
+q.dat2=data.frame()
+for(i in 1:nrow(Q.dbkeys)){
+  tmp=DBHYDRO_daily(dates[1],dates[2],Q.dbkeys$DBKEY[i])
+  tmp$DBKEY=as.character(Q.dbkeys$DBKEY[i])
+  q.dat2=rbind(q.dat2,tmp)
+  print(i)
+}
+q.dat2$CY=as.numeric(format(q.dat2$Date,"%Y"))
+q.dat2$WY=WY(q.dat2$Date)
+q.dat2$DOY=as.numeric(format(q.dat2$Date,"%j"))
+q.dat2$cumQ=with(q.dat2,ave(Data.Value,CY,FUN=function(x) cumsum(ifelse(is.na(x),0,cfs.to.acftd(x)/1000))))
+
+
+
 
 plot(Data.Value~Date,q.dat)
 
@@ -107,6 +125,42 @@ axis_fun(2,ymaj,ymin,ymaj);box(lwd=1)
 mtext(side=1,line=1.5,"Date (Year)")
 mtext(side=2,line=3,"Discharge (ft\u207B\u00B3 s\u207B\u00B9)")
 mtext(side=3,adj=0,"S-79 Daily Discharges")
+dev.off()
+
+
+xlim.val=date.fun(c("2019-01-01","2022-01-01"));xmaj=seq(xlim.val[1],xlim.val[2],"1 years");xmin=seq(xlim.val[1],xlim.val[2],"6 months")
+ylim.val=c(0,15000);by.y=5000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+# png(filename=paste0(plot.path,"CRE_S79Q_2019_.png"),width=7,height=3.5,units="in",res=200,type="windows",bg="white")
+par(family="serif",mar=c(1,3,0.5,0.5),oma=c(2,1,0.5,1),lwd=0.1);
+
+plot(Data.Value~Date,q.dat,xlim=xlim.val,ylim=ylim.val,ann=F,axes=F,type="n",yaxs="i")
+abline(h=ymin,v=xmin,lty=2,col=adjustcolor("grey",0.5))
+abline(h=ymaj,v=xmaj,lty=1,col=adjustcolor("grey",0.5))
+# with(q.dat,shaded.range(Date,rep(0,length(Date)),Data.Value.fill,bg="grey",lty=1))
+with(q.dat,lines(Date,Data.Value,col=adjustcolor("dodgerblue1",0.75),lwd=1.25))
+axis_fun(1,xmaj,xmin,format(xmaj,"%Y"),line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj);box(lwd=1)
+mtext(side=1,line=1.5,"Date (Year)")
+mtext(side=2,line=3,"Discharge (ft\u207B\u00B3 s\u207B\u00B9)")
+mtext(side=3,adj=0,"S-79 Daily Discharges")
+dev.off()
+
+
+xlim.val=date.fun(c("2019-01-01","2022-01-01"));xmaj=seq(xlim.val[1],xlim.val[2],"1 years");xmin=seq(xlim.val[1],xlim.val[2],"6 months")
+ylim.val=c(0,5000);by.y=1000;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+# png(filename=paste0(plot.path,"CRE_S77Q_2019_.png"),width=7,height=3.5,units="in",res=200,type="windows",bg="white")
+par(family="serif",mar=c(1,3,0.5,0.5),oma=c(2,1,0.5,1),lwd=0.1);
+
+plot(Data.Value~Date,q.dat2,xlim=xlim.val,ylim=ylim.val,ann=F,axes=F,type="n",yaxs="i")
+abline(h=ymin,v=xmin,lty=2,col=adjustcolor("grey",0.5))
+abline(h=ymaj,v=xmaj,lty=1,col=adjustcolor("grey",0.5))
+# with(q.dat,shaded.range(Date,rep(0,length(Date)),Data.Value.fill,bg="grey",lty=1))
+with(q.dat2,lines(Date,Data.Value,col=adjustcolor("dodgerblue1",0.75),lwd=1.25))
+axis_fun(1,xmaj,xmin,format(xmaj,"%Y"),line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj);box(lwd=1)
+mtext(side=1,line=1.5,"Date (Year)")
+mtext(side=2,line=3,"Discharge (ft\u207B\u00B3 s\u207B\u00B9)")
+mtext(side=3,adj=0,"S-77 Daily Discharges")
 dev.off()
 
 # Consecutive  -------------------------------------------------------------
