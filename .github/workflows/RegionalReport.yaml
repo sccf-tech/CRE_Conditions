@@ -29,7 +29,7 @@ jobs:
           install.packages("downloadthis",dependencies=TRUE)
           install.packages("dataRetrieval",dependencies=TRUE)
           install.packages("remotes",dependencies=TRUE)
-          install.package("devtools")
+          install.packages("devtools")
           devtools::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
         
