@@ -30,7 +30,7 @@ jobs:
           install.packages("dataRetrieval",dependencies=TRUE)
           install.packages("remotes",dependencies=TRUE)
           install.packages("devtools")
-          devtools::install_github("SwampThingPaul/AnalystHelper")
+          devtools::install_github("SwampThingPaul/AnalystHelper",auth_token=github_pat("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"))
         shell: Rscript {0}
         
       - name: Render Site
