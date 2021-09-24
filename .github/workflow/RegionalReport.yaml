@@ -1,0 +1,41 @@
+## from https://distillery.rbind.io/posts/2021-03-18-use-github-actions-with-r-markdown-and-distill/
+name: Render & Deploy Site
+on: [push]
+# on:
+#  schedule:
+#    - cron: '*/10 * * * *'
+# for reports '30 12 * * 1,2,3,4,5'
+jobs:
+  render:
+    name: Render report
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-pandoc@v1
+      - name: Install rmarkdown
+        run: |
+          install.packages("rmarkdown",dependencies=TRUE)
+          install.packages("knitr",dependencies=TRUE)
+          install.packages("reshape",dependencies=TRUE)
+          install.packages("plyr",dependencies=TRUE)
+          install.packages("zoo",dependencies=TRUE)
+          install.packages("rvest",dependencies=TRUE)
+          install.packages("lubridate",dependencies=TRUE)
+          install.packages("flextable",dependencies=TRUE)
+          install.packages("magrittr",dependencies=TRUE)
+          install.packages("grid",dependencies=TRUE)
+          install.packages("RcppRoll",dependencies=TRUE)
+          install.packages("downloadthis",dependencies=TRUE)
+          install.packages("dataRetrieval",dependencies=TRUE)
+          devtools::install_github("SwmapThingPaul/AnalystHelper")
+        shell: Rscript {0}
+        
+      - name: Render Site
+        run: Rscript -e 'rmarkdown::render("./report/RegionalConditions.Rmd", output_format = "html_document")'
+      - name: Commit results
+        run: |
+          git add -A 
+          git commit -m 'update readme' || echo "No changes to commit"
+          git pull origin
+          git push origin || echo "No changes to commit"

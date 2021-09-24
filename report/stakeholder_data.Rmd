@@ -39,6 +39,7 @@ library(flextable)
 library(magrittr)
 library(grid)
 library(RcppRoll)
+library(downloadthis)
 ##
 
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
@@ -201,8 +202,6 @@ q.dat[,vars]%>%
 
 
 ```{r}
-library(downloadthis)
-
 q.dat%>%
   download_this(
     output_name = "Discharge7day",
