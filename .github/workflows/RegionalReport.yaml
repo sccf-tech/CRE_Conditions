@@ -3,7 +3,7 @@ name: Render & Deploy Site
 # on: [push]
 on:
  schedule:
-   - cron: '30 12 * * 1,2,3,4,5'
+   - cron: '00 12 * * 1,2,3,4,5'
 
 jobs:
   render:
