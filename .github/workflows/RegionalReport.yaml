@@ -35,5 +35,7 @@ jobs:
       
       - name: Commit results
         run: |
-          git commit -m 'new update' || echo "No changes to commit"
-          git push origin master || echo "No changes to commit"
+          git add -A 
+          git commit -m 'update report' || echo "No changes to commit"
+          git pull --ff-only
+          git push origin || echo "No changes to commit"
