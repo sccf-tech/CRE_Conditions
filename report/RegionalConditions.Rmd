@@ -13,6 +13,8 @@ editor_options:
 <!-- font-family: Arial -->
 <!-- </stlye> -->
 
+<!-- if stuck git push -f origin -->
+
 ***
 
 `r paste("Updated:",Sys.time())`
