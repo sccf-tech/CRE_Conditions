@@ -1,5 +1,5 @@
 ---
-title: "Caloosahatchee and Okeechobee Conditions Report <img src='horiz_SCCF_Logo.png' align='right' height = '100'/>""
+title: "Caloosahatchee and Okeechobee Conditions Report <img src='horiz_SCCF_Logo.png' align='right' height = '100'/>"
 output: 
   html_document: 
     toc: yes
