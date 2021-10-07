@@ -3,7 +3,7 @@ name: Render & Deploy Site
 on: [push]
 # on:
 #  schedule:
-#    - cron: '00 11 * * 1,2,3,4,5'
+#    - cron: '55 11 * * 1,2,3,4,5'
 
 jobs:
   render:
@@ -29,5 +29,6 @@ jobs:
         shell: Rscript {0}
       - name: Commit results
         run: |
-          git commit -m 'update readme' || echo "No changes to commit"
-          git push origin || echo "No changes to commit"
+          git add RegionalConditions.html
+          git commit -m 'new update' || echo "No changes to commit"
+          git push origin master || echo "No changes to commit"
