@@ -15,9 +15,7 @@ editor_options:
 
 ***
 
-`r paste("Updated:",as.POSIXct(format(paste(Sys.time(),Sys.timezone()),tz="EST",usetz=T)))`
-
-test
+`r paste("Updated:",as.POSIXct(format(Sys.time(),format="%F %R",tz="EST")),format(as.POSIXct(format(Sys.time(),format="%F %R %Z",tz="EST")),'%Z'))`
 
 ***
 
