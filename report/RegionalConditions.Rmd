@@ -19,6 +19,10 @@ editor_options:
 
 `r paste("Updated:",Sys.time())`
 
+## Purpose
+
+This webpage/report is intended to aggregate information from different agencies (i.e. USACE, SFWMD, FWC, USGS and NOAA) into one spot to help inform local government agencies and stakeholders on conditions within Lake Okeechobee, the Caloosahatchee River and Estuary and Coastal southwest Florida. The data provided here should be considered preliminary and are subject to change. 
+
 ***
 
 ```{r setup, include=FALSE}
@@ -39,141 +43,13 @@ library(grid)
 library(RcppRoll)
 library(downloadthis)
 library(dataRetrieval)
+
+library(rjson)
+library(sp)
+library(tmap)
 ##
-
-## Functions from Analyst Helper
-## Due to github actions not installing package
-# date.fun=function (x, tz = "EST", form = "%F") 
-# {
-#     as.POSIXct(strptime(x, form), tz = tz)
-# }
-# axis_fun=function (side, at, at2, labels, cex.axis = 1, line = -0.25, 
-#     lwd = 1, maj.tcl = -0.6, min.tcl = -0.3, las = 1, axisLine = 0, 
-#     ...) 
-# {
-#     axis(side, line = line, at = at, labels = labels, las = las, 
-#         tcl = maj.tcl, lty = 0, cex.axis = cex.axis, ...)
-#     axis(side, at = at, labels = F, las = las, tcl = maj.tcl, 
-#         lwd = lwd, line = axisLine)
-#     axis(side, at = at2, labels = F, tcl = min.tcl, lwd = lwd, 
-#         line = axisLine)
-# }
-# DBHYDRO_daily=function (SDATE, EDATE, DBK) 
-# {
-#     DBK.val = paste("", DBK, "", collapse = "/", 
-#         sep = "")
-#     SDATE = paste(format(SDATE, "%Y"), toupper(format(SDATE, 
-#         "%m")), format(SDATE, "%d"), sep = "")
-#     EDATE = paste(format(EDATE, "%Y"), toupper(format(EDATE, 
-#         "%m")), format(EDATE, "%d"), sep = "")
-#     link = paste("http://my.sfwmd.gov/dbhydroplsql/web_io.report_process?v_period=uspec&v_start_date=", 
-#         SDATE, "&v_end_date=", EDATE, "&v_report_type=format6&v_target_code=file_csv&v_run_mode=onLine&v_js_flag=Y&v_dbkey=", 
-#         DBK.val, sep = "")
-#     REPORT = read.csv(link, skip = length(DBK) + 2)
-#     REPORT$Date = with(REPORT, as.POSIXct(as.character(Daily.Date), 
-#         format = "%d-%b-%Y", tz = "America/New_York"))
-#     REPORT = subset(REPORT, is.na(Date) == F)
-#     return(REPORT)
-# }
-# DBHYDRO_breakpoint=
-# function (SDATE, EDATE, DBK, col.names = c("DATETIME", 
-#     "Station", "DBKEY", "Data.Value", "Flag", 
-#     "Comment"), timeout = 200) 
-# {
-#     DBK.val = paste("", DBK, "", collapse = "/", 
-#         sep = "")
-#     SDATE = paste(format(SDATE, "%Y"), toupper(format(SDATE, 
-#         "%m")), format(SDATE, "%d"), sep = "")
-#     EDATE = paste(format(EDATE, "%Y"), toupper(format(EDATE, 
-#         "%m")), format(EDATE, "%d"), sep = "")
-#     link = paste("http://my.sfwmd.gov/dbhydroplsql/web_io.report_process?v_period=uspec&v_start_date=", 
-#         SDATE, "&v_end_date=", EDATE, "&v_report_type=format6&v_target_code=file_csv&v_run_mode=onLine&v_js_flag=Y&v_dbkey=", 
-#         DBK.val, sep = "")
-#     tmp = RCurl::getURL(link, timeout = timeout)
-#     REPORT = read.csv(textConnection(tmp), skip = length(DBK) + 
-#         2, col.names = col.names, header = F)
-#     REPORT$DATETIME = as.POSIXct(REPORT$DATETIME, format = "%d-%b-%Y %H:%M", 
-#         tz = "EST")
-#     REPORT$DATE = as.POSIXct(format(REPORT$DATETIME, format = "%Y-%m-%d"), 
-#         tz = "EST")
-#     REPORT = subset(REPORT, is.na(DATETIME) == F)
-#     return(REPORT)
-# }
-# SalinityCalc=function (SpCond, Temp, Ref.Cond = 42914) 
-# {
-#     Cond = SpCond * (1 + 0.0191 * (Temp - 25))
-#     rt = 0.6766097 + 0.0200564 * Temp + 0.0001104259 * Temp^2 + 
-#         (-6.9698 * 10^-7) * Temp^3 + (1.0031 * 10^-9) * Temp^4
-#     Rt = (Cond/Ref.Cond)/rt
-#     dS = ((Temp - 15)/(1 + 0.0162 * (Temp - 15))) * (5e-04 + 
-#         (-0.0056) * Rt^0.5 + (-0.0066) * Rt + (-0.0375) * Rt^1.5 + 
-#         (0.0636) * Rt^2 + (-0.0144) * Rt^2.5)
-#     Sal = 0.008 + (-0.1692) * Rt^0.5 + 25.3851 * Rt + 14.0941 * 
-#         Rt^1.5 + (-7.0261) * Rt^2 + 2.7081 * Rt^2.5 + dS
-#     return(Sal)
-# }
-# cfs.to.acftd=function (x) x * 1.98347
-# WY=function (date, WY.type = "FL") 
-# {
-#     if (WY.type == "FL") {
-#         ifelse(as.numeric(format(date, "%m")) > 4, as.numeric(format(date, 
-#             "%Y")) + 1, as.numeric(format(date, "%Y")))
-#     }
-#     else if (WY.type == "Fed") {
-#         ifelse(as.numeric(format(date, "%m")) > 9, as.numeric(format(date, 
-#             "%Y")) + 1, as.numeric(format(date, "%Y")))
-#     }
-#     else {
-#         NA
-#     }
-# }
-# hydro.day=function (Date, WY.type = "FL") 
-# {
-#     if (WY.type == "Fed") {
-#         start.month = 10
-#     }
-#     if (WY.type == "FL") {
-#         start.month = 5
-#     }
-#     Date = as.Date(Date)
-#     tz.val <- if (is.null(attr(Date, "tzone"))) {
-#         Sys.timezone()
-#     }
-#     else {
-#         attr(Date, "tzone")
-#     }
-#     start.yr = as.numeric(format(Date, "%Y")) - (as.numeric(format(Date, 
-#         "%m")) < start.month)
-#     start.date = as.Date(paste(start.yr, start.month, 1, sep = "-"), 
-#         tz = tz.val)
-#     DOWY = as.integer(Date - as.Date(start.date) + 1L)
-#     return(DOWY)
-# }
-# log.scale.fun=function (val, type) 
-# {
-#     min.val = floor(log10(min(val)))
-#     max.val = ceiling(log10(max(val)))
-#     maj.tck = 10^seq(min.val, max.val, 1)
-#     min.tck = c()
-#     for (i in 2:length(maj.tck)) {
-#         tmp = seq(maj.tck[i - 1], maj.tck[i], maj.tck[i - 1])
-#         min.tck = c(min.tck, tmp)
-#     }
-#     return(switch(type, minor = min.tck, major = maj.tck, stop("type argument must be 'major' or 'minor'")))
-# }
-# pt_line=function (x, y, ln.lty, ln.col, ln.lwd, pch, bg, cex = 1, pt.lwd = 0.25, 
-#     pt.lty = 1, pt.col = "black") 
-# {
-#     lines(x, y, lty = ln.lty, col = ln.col, lwd = ln.lwd)
-#     points(x, y, pch = pch, lty = pt.lty, col = pt.col, lwd = pt.lwd, 
-#         bg = bg, cex = cex)
-# }
-# N.obs=function (x, na.rm = FALSE) 
-# {
-#     ind <- is.na(x) | is.nan(x) | is.infinite(x)
-#     return(length(x[!ind]))
-# }
-
+wgs84=CRS("+init=epsg:4326")
+tmap_mode("view")
 ###
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
 
@@ -1067,6 +943,7 @@ noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index
 vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
 
 noaa.image.inventory=data.frame()
+# for(i in 1:6){
 for(i in 1:length(vals)){
   tmp=noaa.HAB[vals[i]]
   tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
@@ -1606,3 +1483,97 @@ grid.raster(logo,x=0.045,y=0.055,just=c("left","bottom"),width=unit(1.25,"inches
 
 <font size=2><center>Daily average bottom salinity data for the last 14-days from sampling locations within the tidal Caloosahatchee River Estuary relative to oyster health (Sanibel, Shell Point and Cape Coral) and tape grass (<i>Vallisneria americana</i>) health (Ft. Myers only) conditions.</center></font>
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+
+### Red Tide
+<br>
+```{r,echo=F}
+# based on metadata full extent
+# https://atoll.floridamarine.org/arcgis/rest/services/Projects_FWC/HAB_Current/MapServer/
+path="https://atoll.floridamarine.org/arcgis/rest/services/Projects_FWC/HAB_Current/MapServer/0/query?f=json&returnGeometry=true&spatialRel=esriSpatialRelIntersects&geometry=%7B%22xmin%22%3A-9755473.9711%2C%22ymin%22%3A2801646.760499999%2C%22xmax%22%3A9192007.6904%2C%22ymax%22%3A3632857.472099997%2C%22spatialReference%22%3A%7B%22wkid%22%3A102100%7D%7D&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*&returnCentroid=false&returnExceededLimitFeatures=false&outSR=102100&quantizationParameters=%7B%22mode%22%3A%22view%22%2C%22originPosition%22%3A%22upperLeft%22%2C%22tolerance%22%3A1222.992452562501%2C%22extent%22%3A%7B%22xmin%22%3A-10018754.171394993%2C%22ymin%22%3A1878516.4071389847%2C%22xmax%22%3A-9392582.035682991%2C%22ymax%22%3A2504688.542850985%2C%22spatialReference%22%3A%7B%22wkid%22%3A102100%7D%7D%7D"
+
+
+fwc_dat=fromJSON(file=path)
+fwc_dat=fwc_dat$features
+dat=data.frame()
+for(i in 1:length(fwc_dat)){
+  tmp=data.frame(fwc_dat[[i]]$attributes)
+  dat=rbind(dat,tmp)
+}
+#dat
+# unique(dat$Abundance)
+abund=c("not present/background (0-1,000)", "very low (>1,000-10,000)", 
+  "low (>10,000-100,000)", "medium (>100,000-1,000,000)", "high (>1,000,000)"
+)
+dat$Abundance=factor(dat$Abundance,levels=abund)
+dat.shp=SpatialPointsDataFrame(coords=dat[,c("LONGITUDE","LATITUDE")],
+                             data=dat,
+                             proj4string = wgs84)
+
+```
+
+```{r,out.width='100%'}
+tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+tm_shape(dat.shp)+tm_dots(col="Abundance",
+                          size=0.03,
+                          id="SampleDate_t",
+                          popup.vars=c("HAB_ID","SampleDate_t","SAMPLE_DEPTH","Abundance","Source"),
+                          palette =c("white","grey","dodgerblue1","orange","indianred1"),
+                          group="FWC Redtide Data")
+```
+<font size=2><center>Current Red Tide Status of the most recent 8-days of sampling</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+<br>
+
+```{r,echo=F}
+
+noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iWkFHMyttU2kvbDlVMVZtQkM1T1RSZz0=")
+
+vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
+# vals=grep("truecolor_rbd_rhos.swfl",noaa.HAB)
+
+noaa.image.inventory=data.frame()
+# for(i in 1:3){
+for(i in 1:length(vals)){
+  if(nchar(noaa.HAB[vals[i]])<2000){
+    tmp=noaa.HAB[vals[i]]
+    tmp2=strsplit(tmp,"<a|</a>")[[1]][2]
+    fname1=strsplit(tmp,"<a|</a>")[[1]][3]
+    
+    tmp3=strsplit(tmp2,"href=|title=|>")
+  
+    dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=strsplit(fname1,"</")[[1]][1])
+    
+    }else{
+  tmp=noaa.HAB[vals[i]]
+  tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
+  tmp3=strsplit(tmp2,"href=|title=|>")
+  
+  dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp3,"[",3))
+    }
+  fname.vals=strsplit(dat$filename,"_")
+  # dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
+  
+  dat$data.product=substr(dat$filename,51,100)
+  
+  date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
+  yr.val=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+  month.val=as.numeric(substr(sapply(date.vals,"[",3),1,2))
+  day.val=as.numeric(substr(sapply(date.vals,"[",3),3,4))
+  dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
+  
+  noaa.image.inventory=rbind(dat,noaa.image.inventory)
+  
+  
+}
+
+noaa.HAB.image=subset(noaa.image.inventory,data.product=="1_2.truecolor_rbd_rhos.swfl.png'"&date==max(noaa.image.inventory$date))
+```
+
+```{r, out.width="90%",echo=FALSE,fig.align="center",fig.cap=paste("Chlorophyll fluorescence for coastal southwest Florida for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)")}
+knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
+```
+
+```{r, out.width="50%",echo=FALSE,fig.align="center"}
+knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_swfl/legend.png")
+```

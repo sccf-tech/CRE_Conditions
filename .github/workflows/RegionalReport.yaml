@@ -3,7 +3,7 @@ name: Render & Deploy Site
 # on: [push]
 on:
  schedule:
-   - cron: '55 11 * * 1,2,3,4,5'
+   - cron: '50 11 * * 1,2,3,4,5'
 # https://crontab.guru/#5_*_*_*_*
 jobs:
   render:
@@ -20,7 +20,7 @@ jobs:
           install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
                              "rvest","lubridate","flextable","magrittr",
                              "grid","RcppRoll","downloadthis","dataRetrieval",
-                             "RCurl","remotes","png"))
+                             "RCurl","remotes","png","rjson","sp","tmap"))
           remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       - name: Render Site
