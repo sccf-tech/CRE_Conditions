@@ -44,9 +44,11 @@ library(RcppRoll)
 library(downloadthis)
 library(dataRetrieval)
 
-library(rjson)
+library(jsonlite)
 library(sp)
 library(tmap)
+library(httr)
+library(raster)
 ##
 wgs84=CRS("+init=epsg:4326")
 tmap_mode("view")
@@ -974,6 +976,88 @@ knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
 knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
 ```
 
+### Blue-Green Algae Sampling Results
+```{r}
+# Blue-Green Algae --------------------------------------------------------
+sdate.algae=date.fun(TODAY-lubridate::duration(30,"days"))
+path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/VIEW_FL_Algal_Bloom_Site_Visits_1/FeatureServer/0/query?'
+
+request <- GET(
+  url = path,
+  query= list(       
+    where = "County='Lee' OR County='Collier' OR County='Hendry' OR County='Glades'",
+    outFields = '*',
+    f = 'pjson'
+  )
+)
+response <- content(request, as = "text", encoding = "UTF-8")
+results <- jsonlite::fromJSON(response,flatten=T)
+# nrow(results$features)
+
+bgdat=results$features
+
+request <- GET(
+  url = path,
+  query= list(       
+    where = "County='Okeechobee' OR County='PalmBeach' OR County='Broward' OR County='MiamiDade'",
+    outFields = '*',
+    f = 'pjson'
+  )
+)
+response <- content(request, as = "text", encoding = "UTF-8")
+results <- jsonlite::fromJSON(response,flatten=T)
+# nrow(results$features)
+
+bgdat=rbind(bgdat, results$features)
+
+vars=c("attributes.objectid", "attributes.globalid", "attributes.SiteVisitDate", 
+       "attributes.Location", "attributes.County", "attributes.Visitor", 
+       "attributes.AlgaeObserved", "attributes.SampleTaken", "attributes.DepthDesc", 
+       "attributes.SampleDepth", "attributes.AnalyzedBy", "attributes.Otherlab", 
+       "attributes.Comments", "attributes.Latitude", "attributes.Longitude", 
+       "attributes.AlgalID", "attributes.Microcystin", "attributes.OtherToxin", 
+       "attributes.EditDate", "attributes.PicURL", "attributes.ToxinPresent", 
+       "attributes.CyanobacteriaDominant", "geometry.x", "geometry.y"
+)
+vars=strsplit(vars,"\\.")
+vars=sapply(vars,"[",2)
+colnames(bgdat)<-tolower(vars)
+
+bgdat$sitevisitdate=as.numeric(gsub('000$', '',format(bgdat$sitevisitdate,scientific=F)))
+bgdat$datetime=as.POSIXct(bgdat$sitevisitdate,origin = c('1970-01-01'), tz = 'UTC')
+bgdat$datetime=date.fun(bgdat$datetime,form="%F %R")
+bgdat$date=date.fun(bgdat$datetime)
+
+bgdat_30d=subset(bgdat,date<=TODAY&date>=sdate.algae)
+bgdat_30d.shp=SpatialPointsDataFrame(coords=bgdat[,c("longitude","latitude")],
+                                              data=bgdat,
+                                              proj4string = wgs84)
+
+
+
+```
+
+```{r,out.width='100%'}
+tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+tm_shape(bgdat_30d.shp)+tm_dots(col="toxinpresent",
+                                palette =c("green","red"),
+                                colorNA="grey",
+                                size=0.03,
+                                id="date",
+                                popup.vars=c("date","visitor","depthdesc",
+                                             "microcystin",
+                                             "cyanobacteriadominant","toxinpresent",
+                                             "algalid","othertoxin"),
+                                group="FDEP Blue-green Algae Data",
+                                title="Cyanobacteria dominate")
+```
+<font size=2><center>Blue-green Algae sampling results for the last 30-days for the eight county area (Lee, Collier, Hendry, Glades, Okeechobee, Palm Beach, Broward and Miami-Dade). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+Of the samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes")` samples, `r sum(bgdat_30d$toxinpresent=="Yes")` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects or samples between MDL and PQL). 
+
+<br>
+
+
 ***
 
 ## Caloosahatchee River Estuary
@@ -1488,40 +1572,116 @@ grid.raster(logo,x=0.045,y=0.055,just=c("left","bottom"),width=unit(1.25,"inches
 ### Red Tide
 <br>
 ```{r,echo=F}
-# based on metadata full extent
-# https://atoll.floridamarine.org/arcgis/rest/services/Projects_FWC/HAB_Current/MapServer/
-path="https://atoll.floridamarine.org/arcgis/rest/services/Projects_FWC/HAB_Current/MapServer/0/query?f=json&returnGeometry=true&spatialRel=esriSpatialRelIntersects&geometry=%7B%22xmin%22%3A-9755473.9711%2C%22ymin%22%3A2801646.760499999%2C%22xmax%22%3A9192007.6904%2C%22ymax%22%3A3632857.472099997%2C%22spatialReference%22%3A%7B%22wkid%22%3A102100%7D%7D&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*&returnCentroid=false&returnExceededLimitFeatures=false&outSR=102100&quantizationParameters=%7B%22mode%22%3A%22view%22%2C%22originPosition%22%3A%22upperLeft%22%2C%22tolerance%22%3A1222.992452562501%2C%22extent%22%3A%7B%22xmin%22%3A-10018754.171394993%2C%22ymin%22%3A1878516.4071389847%2C%22xmax%22%3A-9392582.035682991%2C%22ymax%22%3A2504688.542850985%2C%22spatialReference%22%3A%7B%22wkid%22%3A102100%7D%7D%7D"
 
+HABext=extent(-82.5,
+              -80.0,
+              24.4,
+              27.4)
+HABext.poly=as(HABext,"SpatialPolygons")
+proj4string(HABext.poly)=wgs84
+# tm_shape(HABext.poly)+tm_polygons(alpha=0.5)
+HABext2=extent(HABext)
 
-fwc_dat=fromJSON(file=path)
-fwc_dat=fwc_dat$features
-dat=data.frame()
-for(i in 1:length(fwc_dat)){
-  tmp=data.frame(fwc_dat[[i]]$attributes)
-  dat=rbind(dat,tmp)
-}
-#dat
-# unique(dat$Abundance)
-abund=c("not present/background (0-1,000)", "very low (>1,000-10,000)", 
-  "low (>10,000-100,000)", "medium (>100,000-1,000,000)", "high (>1,000,000)"
+CRE.ext=extent(-82.3,
+              -81.8,
+              26.3,
+              26.7)
+CRE.ext=as(CRE.ext,"SpatialPolygons")
+proj4string(CRE.ext)=wgs84
+CRE.ext=SpatialPolygonsDataFrame(CRE.ext,data.frame(ID="CRE"))
+# tm_shape(CRE.ext)+tm_polygons(alpha=0.5)
+
+# Red Tide ----------------------------------------------------------------
+## south of Tampa Bay 
+# Based on https://github.com/tbep-tech/piney-point/blob/141824adc082a57d79ba58ff38ac31d41dea4e44/R/dat_proc.R#L1262
+path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/MapServer/0/query?'
+
+request <- GET(
+  url = path,
+  query= list(       
+    where= paste("LATITUDE <",round(HABext2[4],1),"AND LATITUDE >",round(HABext2[3],1),"AND LONGITUDE >",round(HABext2[1],1),"AND LONGITUDE <",round(HABext2[2],1)),
+    outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
+    f = 'pjson'
+  )
 )
-dat$Abundance=factor(dat$Abundance,levels=abund)
-dat.shp=SpatialPointsDataFrame(coords=dat[,c("LONGITUDE","LATITUDE")],
-                             data=dat,
-                             proj4string = wgs84)
+
+response <- content(request, as = "text", encoding = "UTF-8")
+results <- jsonlite::fromJSON(response,flatten=T)
+# results
+
+kbrdat=results$features
+vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
+       "attributes.SAMPLE_DEPTH","attributes.LATITUDE", 
+       "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT", 
+       "attributes.WATER_TEMP", "attributes.WATER_TEMP_UNIT", "attributes.GENUS", 
+       "attributes.SPECIES", "attributes.CATEGORY", "attributes.CELLCOUNT", 
+       "attributes.CELLCOUNT_UNIT", "geometry.x", "geometry.y")
+vars=strsplit(vars,"\\.")
+vars=sapply(vars,"[",2)
+
+colnames(kbrdat)<-tolower(vars)
+
+kbrdat$date=as.POSIXct(as.numeric(gsub('000$', '',format(kbrdat$sample_date,scientific=F))), 
+                         origin = c('1970-01-01'), tz = 'UTC')
+kbrdat$datetime=date.fun(kbrdat$date,form="%F %R")
+kbrdat$date=date.fun(kbrdat$date)
+kbrdat$year=as.numeric(format(kbrdat$date,"%Y"))
+# range(kbrdat$year,na.rm=T)
+kbrdat=subset(kbrdat,is.na(year)==T|year!=153)
+
+## 
+cat.abund.xwalk=data.frame(category=c("not observed","very low","low","medium","high"),
+                           abund=c("not present/background (0-1,000)", "very low (>1,000-10,000)",
+                                   "low (>10,000-100,000)", "medium (>100,000-1,000,000)", 
+                                   "high (>1,000,000)"))
+
+kbrdat=merge(kbrdat,cat.abund.xwalk,"category")
+kbrdat$Abundance=factor(kbrdat$abund,levels=cat.abund.xwalk$abund)
+kbrdat$category=factor(kbrdat$category,levels=cat.abund.xwalk$category)
+
+kbrdat_30d=subset(kbrdat,date<=TODAY&date>=sdate.algae)
+kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude")],
+                                          data=kbrdat_30d,
+                                          proj4string = wgs84)
 
 ```
 
 ```{r,out.width='100%'}
 tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
-tm_shape(dat.shp)+tm_dots(col="Abundance",
-                          size=0.03,
-                          id="SampleDate_t",
-                          popup.vars=c("HAB_ID","SampleDate_t","SAMPLE_DEPTH","Abundance","Source"),
-                          palette =c("white","grey","dodgerblue1","orange","indianred1"),
-                          group="FWC Redtide Data")
+tm_shape(kbrdat_30d.shp)+tm_dots(col="Abundance",
+                                 palette =c("white","grey","dodgerblue1","orange","indianred1"),
+                                 size=0.03,
+                                 id="date",
+                                 popup.vars=c("date","cellcount","cellcount_unit"
+                                              ,"category","genus","species",
+                                              "sample_depth"),
+                                 group="NOAA/FWC Redtide Data")+
+  tm_shape(CRE.ext)+tm_borders(group="Greater Caloosahatchee Estuary",col="white",lwd=2)
 ```
-<font size=2><center>Current Red Tide Status of the most recent 8-days of sampling</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+<font size=2><center>Red tide sampling results for the last 30-days from just south of Tampa Bay to the Florida Keys. Data from NOAA HABSOS Program</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+
+```{r}
+rslt =plyr::ddply(kbrdat_30d.shp[CRE.ext,]@data,"category",summarise,N.val=N.obs(category))  
+
+rslt=merge(cat.abund.xwalk,rslt,"category",all.x=T)
+
+rslt=rslt[match(cat.abund.xwalk$abund,rslt$abund),]
+
+cap.val="Count of samples within each abundance category within the greater Caloosahatchee River Estuary (see grey box on map)"
+rslt[,c("abund","N.val")]%>%
+  flextable()%>%
+  colformat_num(j=2,big.mark = "",digits=0,na_str = "---")%>%
+  set_header_labels("abund"="Cell Abundance (Cells L\u207B\u00B9)",
+                    "N.val"="Number\nof\nSamples")%>%
+  align(j=2,align="center",part="all")%>%
+  width(width=c(2.5,0.5))%>%
+  padding(padding=2,part="all")%>%
+  fontsize(size=10,part="body")%>%
+  fontsize(size=12,part="header")%>%
+  add_header_lines(values=cap.val)%>%
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+```
 
 <br>
 
