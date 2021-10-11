@@ -1053,7 +1053,7 @@ tm_shape(bgdat_30d.shp)+tm_dots(col="toxinpresent",
 ```
 <font size=2><center>Blue-green Algae sampling results for the last 30-days for the eight county area (Lee, Collier, Hendry, Glades, Okeechobee, Palm Beach, Broward and Miami-Dade). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
-Of the samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes")` samples, `r sum(bgdat_30d$toxinpresent=="Yes")` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects or samples between MDL and PQL). 
+Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes")` samples, `r sum(bgdat_30d$toxinpresent=="Yes")` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects or samples between MDL and PQL). 
 
 <br>
 
