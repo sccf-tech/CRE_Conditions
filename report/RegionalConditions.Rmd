@@ -1035,8 +1035,8 @@ vars=strsplit(bgdat$microcystin,"I")
 bgdat$microcystin.val=ifelse(sapply(vars,"[",1)=="not detected",NA,as.numeric(sapply(vars,"[",1)))
 
 bgdat_30d=subset(bgdat,date<=TODAY&date>=sdate.algae)
-bgdat_30d.shp=SpatialPointsDataFrame(coords=bgdat[,c("longitude","latitude")],
-                                              data=bgdat,
+bgdat_30d.shp=SpatialPointsDataFrame(coords=bgdat_30d[,c("longitude","latitude")],
+                                              data=bgdat_30d,
                                               proj4string = wgs84)
 
 bgdat.shp=SpatialPointsDataFrame(coords=bgdat[,c("longitude","latitude")],
@@ -1069,7 +1069,7 @@ tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
 ```
 <font size=2><center>Blue-green Algae sampling results for the last 30-days for the 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
-Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes")` samples, `r sum(bgdat_30d$toxinpresent=="Yes")` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin.halfmdl),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects). 
+Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes",na.rm=T)` samples, `r sum(bgdat_30d$toxinpresent=="Yes",na.rm=T)` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects). 
 
 <br>
 
