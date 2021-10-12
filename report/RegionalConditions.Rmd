@@ -985,7 +985,7 @@ path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/VIEW
 request <- GET(
   url = path,
   query= list(       
-    where = "County='Lee' OR County='Collier' OR County='Hendry' OR County='Glades'",
+    where = "County='Lee' OR County='Collier' OR County='Hendry' OR County='Glades' OR County='Martin'",
     outFields = '*',
     f = 'pjson'
   )
@@ -999,7 +999,7 @@ bgdat=results$features
 request <- GET(
   url = path,
   query= list(       
-    where = "County='Okeechobee' OR County='PalmBeach' OR County='Broward' OR County='MiamiDade'",
+    where = "County='Okeechobee' OR County='PalmBeach' OR County='Broward' OR County='MiamiDade' OR County='Monroe'",
     outFields = '*',
     f = 'pjson'
   )
@@ -1009,6 +1009,7 @@ results <- jsonlite::fromJSON(response,flatten=T)
 # nrow(results$features)
 
 bgdat=rbind(bgdat, results$features)
+# unique(bgdat$attributes.County)
 
 vars=c("attributes.objectid", "attributes.globalid", "attributes.SiteVisitDate", 
        "attributes.Location", "attributes.County", "attributes.Visitor", 
@@ -1028,18 +1029,31 @@ bgdat$datetime=as.POSIXct(bgdat$sitevisitdate,origin = c('1970-01-01'), tz = 'UT
 bgdat$datetime=date.fun(bgdat$datetime,form="%F %R")
 bgdat$date=date.fun(bgdat$datetime)
 
+# Fix microcystin value
+vars=strsplit(bgdat$microcystin,"I")
+# bgdat$microcystin.halfmdl=ifelse(sapply(vars,"[",1)=="not detected",0.5,as.numeric(sapply(vars,"[",1)))
+bgdat$microcystin.val=ifelse(sapply(vars,"[",1)=="not detected",NA,as.numeric(sapply(vars,"[",1)))
+
 bgdat_30d=subset(bgdat,date<=TODAY&date>=sdate.algae)
 bgdat_30d.shp=SpatialPointsDataFrame(coords=bgdat[,c("longitude","latitude")],
                                               data=bgdat,
                                               proj4string = wgs84)
 
+bgdat.shp=SpatialPointsDataFrame(coords=bgdat[,c("longitude","latitude")],
+                                              data=bgdat,
+                                              proj4string = wgs84)
+bgdat.ext=as(extent(bgdat),"SpatialPolygons")
+proj4string(bgdat.ext)=wgs84
+bgdat.ext=SpatialPolygonsDataFrame(bgdat.ext,data.frame(ID="BGdata"))
 
 
 ```
 
 ```{r,out.width='100%'}
 tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
-tm_shape(bgdat_30d.shp)+tm_dots(col="toxinpresent",
+  tm_shape(bgdat_30d.shp)+tm_bubbles(col="white",
+                                     size="microcystin.val", id="date",group="Microcystin conc.")+
+  tm_shape(bgdat_30d.shp)+tm_dots(col="toxinpresent",
                                 palette =c("green","red"),
                                 colorNA="grey",
                                 size=0.03,
@@ -1049,11 +1063,13 @@ tm_shape(bgdat_30d.shp)+tm_dots(col="toxinpresent",
                                              "cyanobacteriadominant","toxinpresent",
                                              "algalid","othertoxin"),
                                 group="FDEP Blue-green Algae Data",
-                                title="Cyanobacteria dominate")
+                                title="Cyanobacteria dominate")+
+  
+  tm_shape(bgdat.ext)+tm_borders(group="Area of Interest",lty="dashed",col="grey",lwd=1)
 ```
-<font size=2><center>Blue-green Algae sampling results for the last 30-days for the eight county area (Lee, Collier, Hendry, Glades, Okeechobee, Palm Beach, Broward and Miami-Dade). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+<font size=2><center>Blue-green Algae sampling results for the last 30-days for the 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
-Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes")` samples, `r sum(bgdat_30d$toxinpresent=="Yes")` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects or samples between MDL and PQL). 
+Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes")` samples, `r sum(bgdat_30d$toxinpresent=="Yes")` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin.halfmdl),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects). 
 
 <br>
 
@@ -1579,6 +1595,7 @@ HABext=extent(-82.5,
               27.4)
 HABext.poly=as(HABext,"SpatialPolygons")
 proj4string(HABext.poly)=wgs84
+HABext.poly=SpatialPolygonsDataFrame(HABext.poly,data.frame(ID="HAB"))
 # tm_shape(HABext.poly)+tm_polygons(alpha=0.5)
 HABext2=extent(HABext)
 
@@ -1656,7 +1673,8 @@ tm_shape(kbrdat_30d.shp)+tm_dots(col="Abundance",
                                               ,"category","genus","species",
                                               "sample_depth"),
                                  group="NOAA/FWC Redtide Data")+
-  tm_shape(CRE.ext)+tm_borders(group="Greater Caloosahatchee Estuary",col="white",lwd=2)
+  tm_shape(CRE.ext)+tm_borders(group="Greater Caloosahatchee Estuary",col="white",lwd=2)+
+  tm_shape(HABext.poly)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
 ```
 <font size=2><center>Red tide sampling results for the last 30-days from just south of Tampa Bay to the Florida Keys. Data from NOAA HABSOS Program</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
