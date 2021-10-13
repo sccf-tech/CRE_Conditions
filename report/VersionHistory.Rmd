@@ -17,6 +17,8 @@ Current GitHub Action Status: ![](https://github.com/sccf-tech/CRE_Conditions/ac
 
 * Modified ENP inflow estimate to include S333, S333N and S356 into daily inflow value.
 
+* Adjusted Lake Okeechobee Inflow and Outflow value source (from USACE Map summary rather than Lake Okeechobee and Vicinity page).
+
 ## 2021-10-12
 
 * Adjusted Red Tide data source from FWC daily sampling map to HABSOS [interactive Map](https://www.ncei.noaa.gov/maps/habsos/maps.htm)
