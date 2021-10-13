@@ -1,0 +1,29 @@
+# 2021-10-13
+
+* Modified ENP inflow estimate to include S333, S333N and S356 into daily inflow value.
+
+# 2021-10-12
+
+* Adjusted Red Tide data source from FWC daily sampling map to HABSOS [interactive Map](https://www.ncei.noaa.gov/maps/habsos/maps.htm)
+
+* Included Area of Interest for Blue-Green Algae and Red Tide Maps
+
+* Added `Microcystin conc.` Layer to Blue-Green Algae sampling map.
+
+# 2021-10-11
+
+* Added [FDEP blue-green algae](https://floridadep.gov/dear/algal-bloom/content/algal-bloom-sampling-results) sampling data from [Florida Algal Bloom Site Visits](https://fdep.maps.arcgis.com/apps/webappviewer/index.html?id=50c82b8b2a6f4d138f40187f616fe27d)
+
+* Added Blue-Green Algae Sampling results " *Of the # samples collected, cyanobacteria was dominate in # samples, # samples had toxins present ranging from ## to ## μg L⁻¹ (does not include non-detects).* "
+
+# 2021-10-08
+
+* Added FWC Red Tide sampling results from [Daily Sampling Map](https://myfwc.maps.arcgis.com/apps/View/index.html?appid=87162eec3eb846218cec711d16462a72)
+
+* Added Chlorophyll fluorescence for coastal southwest Florida data product from [NOAA NCCOS](https://coastalscience.noaa.gov/research/stressor-impacts-mitigation/hab-forecasts/gulf-of-mexico/florida-satellite-imagery/)
+
+# 2021-09-27
+
+* Deployed `RegionalConditions.Rmd` and depreciated [Weekly Caloosahatchee Stakeholder Report](https://sccf-tech.github.io/CRE_Conditions/report/stakeholder_data.html) and [Caloosahatchee/Okeechobee Conditions Report](https://sccf-tech.github.io/CRE_Conditions/report/CRE_REPORT.html)
+
+* Set up GitHub Actions Workflow

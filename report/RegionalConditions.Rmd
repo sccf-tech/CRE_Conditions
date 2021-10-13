@@ -17,7 +17,11 @@ editor_options:
 
 ***
 
-`r paste("Updated:",Sys.time(), Sys.timezone())`
+`r paste("Updated:",format(Sys.time(),"%F %R"), Sys.timezone())`
+
+![](https://github.com/sccf-tech/CRE_Conditions/actions/workflows/RegionalReport.yaml/badge.svg)
+
+***
 
 ## Purpose
 
@@ -124,7 +128,16 @@ for(i in 1:length(dates)){
   WCA3=strsplit(strsplit(mapdata[val],"\\s+")[[1]][13],"</div>")[[1]][1]
   
   val=grep("S12",mapdata)
-  ENP=strsplit(strsplit(mapdata[val],"\\s+")[[1]][8],"</div>")[[1]][1]
+  S12s=as.numeric(strsplit(strsplit(mapdata[val],"\\s+")[[1]][8],"</div>")[[1]][1])
+  
+  val=grep("S333",mapdata)
+  S333=as.numeric(strsplit(mapdata[val],"<br>|\\s+")[[1]][12])
+  S333N=as.numeric(strsplit(strsplit(mapdata[val],"<br>|\\s+")[[1]][14],"</div>")[[1]][1])
+  
+  val=grep("S356",mapdata)
+  S356=as.numeric(strsplit(strsplit(mapdata[val],"\\s+")[[1]][8],"</div>")[[1]][1])
+  
+  ENP=S12s+(S333+S333N)-S356
   
   val=grep("Istokpoga</a>",mapdata)
   Istok=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</div>")[[1]][1]
@@ -141,6 +154,10 @@ for(i in 1:length(dates)){
   val=grep("/plots/s79h.pdf",mapdata)
   S79=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</a>")[[1]][1]
   
+  val=grep("/plots/s78h.pdf",mapdata)
+  S78=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</a>")[[1]][1]
+  
+  
   date.val=dates[i]-ddays(1)
   rslt=data.frame(Date=date.val,
                   FEC=as.numeric(FEC),
@@ -151,7 +168,8 @@ for(i in 1:length(dates)){
                   WCA2=as.numeric(WCA2),
                   WCA3=as.numeric(WCA3),
                   ENP=as.numeric(ENP),
-                  S79.map=as.numeric(S79))
+                  S79.map=as.numeric(S79),
+                  S78.map=as.numeric(S78))
     map.q=rbind(map.q,rslt)
   print(i)
 }
@@ -160,6 +178,7 @@ map.q[,2:ncol(map.q)]=cfs.to.acftd(map.q[,2:ncol(map.q)])
 
 q.dat=merge(q.dat,map.q,"Date")
 q.dat$S79=with(q.dat,ifelse(is.na(S79)==T,round(S79.map,0),S79))
+q.dat$S78=with(q.dat,ifelse(is.na(S78)==T,round(S78.map,0),S78))
 q.dat
 vars=c("Date", "S77", "S308", "L8", "S351", "S352", "S354", "S78", 
 "S79", "S310", "S80", "FEC", "Istok", "S65E", "S65EX1", "WCA1", 
@@ -208,7 +227,8 @@ q.dat[,vars]%>%
   fontsize(size=12,part="header")%>%
   add_header_lines(values=cap.val)%>%
   align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")%>%
-  footnote(j=~NthLake,value=as_paragraph("Includes discharges from Fisheating Creek, S71, S72, S84, S84X, S65E, and S65EX1"),ref_symbols =c(" 1"),part="header")
+  footnote(j=~NthLake,value=as_paragraph(" Includes discharges from Fisheating Creek, S71, S72, S84, S84X, S65E, and S65EX1"),ref_symbols =c(" 1"),part="header")%>%
+footnote(j=~ENP,value=as_paragraph(" Estimated as S12s+(S333+S333N)-S356. If no data is present (i.e. -NR-) either S12s, S333s or S356 data is not available."),ref_symbols =c(" 2"),part="header")
   # footnote(i=1,j=1,value=as_paragraph("Negative flow values omitted from this table and statistical summaries below."),ref_symbols =c(" "),part="header")
 ```
 
@@ -310,19 +330,31 @@ q.in.Lake=sum(q.dat.7day[,"NthLake"],na.rm=T)
 **Lake Flows:** In the past 7 days the total outflow from Lake Okeechobee was **`r format(round(q.from.Lake,0),big.mark=",")` AF** with **`r format(round(S77q,0),big.mark=",")` AF** to the Caloosahatchee through **S-77**,`r if(S308q.pos>0){paste("**",format(round(S308q.pos,0),big.mark=",")," AF** to St Lucie through **S-308**,",sep="")}` **`r format(round(S310q.pos,0),big.mark=",")` AF** through **S-310** in Clewiston, and **`r format(round(EAAq.pos,0),big.mark=",")` AF** to the EAA through **S-351**, **S-352**, and **S-354**. The total net inflow to the Lake was **`r format(round(q.in.Lake+q.BF.Lake,0),big.mark=",")` AF** (`r format(round(q.in.Lake,0),big.mark=",")` AF from Fisheating Creek, S-71, S-72,S-84s, S-65EX, and S-65EX1) `r if(q.BF.Lake>0){paste(" with a total backflow volume of ","**",format(round(q.BF.Lake,0),big.mark=",")," AF** from **", v.val,"**",sep="")}`. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
+```{r,echo=F}
+# Lake Inflow and Outflow based on map
+  map.url=paste0("https://w3.saj.usace.army.mil/h2o/reports/StatusDaily/archive/",format(dates[13],"%m%d"),"/StatusDaily.htm")
+  mapdata=readLines(map.url)
+  
+val=grep("Total Structure Outflow",mapdata)
+# mapdata[val]
+LakeIn=strsplit(mapdata[val],"\\s+")[[1]][4]
+LakeOut=strsplit(mapdata[val],"\\s+")[[1]][9]
+  
+```
 
 <div class="row">
 <div class="col-md-6">
 **Lake Okeechobee Level: `r paste0(strsplit(LO.report[[1]][11],"\\s+")[[1]][5]," ft"," (",strsplit(LO.report[[1]][13],"  Currently in ")[[1]][2],")")`**
 
-**Lake Okeechobee Inflow: `r paste(strsplit(LO.report[[1]][45],"\\s+")[[1]][3],"cfs")`**
+**Lake Okeechobee Inflow: `r paste(LakeIn,"cfs")# paste(strsplit(LO.report[[1]][45],"\\s+")[[1]][3],"cfs")`**
 
 </div>
 
 <div class="col-md-6">
+
 **Last Week: `r paste(strsplit(LO.report[[1]][200],"\\s+")[[1]][9],"ft")`**
 
-**Lake Okeechobee Outflow: `r paste(strsplit(LO.report[[1]][52],"\\s+")[[1]][3],"cfs")`**
+**Lake Okeechobee Outflow: `r paste(LakeOut,"cfs")# paste(strsplit(LO.report[[1]][52],"\\s+")[[1]][3],"cfs")`**
 </div>
 </div>
 
@@ -1755,3 +1787,9 @@ knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
 ```{r, out.width="50%",echo=FALSE,fig.align="center"}
 knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_swfl/legend.png")
 ```
+
+
+***
+Version information: [NEWS](https://sccf-tech.github.io/CRE_Conditions/report/NEWS.md)
+
+

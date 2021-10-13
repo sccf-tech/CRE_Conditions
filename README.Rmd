@@ -16,8 +16,12 @@ This repository is intended for data analysis specific to retrieving information
 knitr::include_graphics('./Plots/Surf_bot_da_GAM.gif')
 ```
 
-* Conditions Report 
-    * [Link](https://sccf-tech.github.io/CRE_Conditions/report/CRE_REPORT.html)
+* **Depreciated** - Conditions Report (Report not updated)
+    * ~~[Link](https://sccf-tech.github.io/CRE_Conditions/report/CRE_REPORT.html)~~
 
-* Stakeholder Report Information
-    * [Link](https://sccf-tech.github.io/CRE_Conditions/report/stakeholder_data.html)
+* **Depreciated** - Stakeholder Report Information (Report not updated)
+    * ~~[Link](https://sccf-tech.github.io/CRE_Conditions/report/stakeholder_data.html)~~
+    
+* Regional Conditions Report 
+  * ![GitHub Actions](https://github.com/sccf-tech/CRE_Conditions/actions/workflows/RegionalReport.yaml/badge.svg)
+  * [Link](https://sccf-tech.github.io/CRE_Conditions/report/RegionalConditions)
