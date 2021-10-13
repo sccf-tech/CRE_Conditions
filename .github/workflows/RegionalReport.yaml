@@ -3,7 +3,7 @@ name: Render & Deploy Site
 on: [push]
 # on:
 #   schedule:
-#     - cron: '45 11 * * 1,2,3,4,5'
+#     - cron: '40 11 * * 1,2,3,4,5'
 # https://crontab.guru/#5_*_*_*_*
 jobs:
   render:

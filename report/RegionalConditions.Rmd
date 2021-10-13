@@ -1787,9 +1787,3 @@ knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
 ```{r, out.width="50%",echo=FALSE,fig.align="center"}
 knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_swfl/legend.png")
 ```
-
-
-***
-Version information: [NEWS](https://sccf-tech.github.io/CRE_Conditions/report/NEWS.md)
-
-
