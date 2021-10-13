@@ -8,15 +8,29 @@ library(raster)
 wgs84=CRS("+init=epsg:4326")
 utm17=CRS("+init=epsg:26917")
 
-
 HABext=extent(-82.5,
               -80.0,
               24.4,
               27.4)
+# HABext=extent(-83.1,
+#               -79.95,
+#               24.4,
+#               28.1)
 HABext.poly=as(HABext,"SpatialPolygons")
 proj4string(HABext.poly)=wgs84
 tm_shape(HABext.poly)+tm_polygons(alpha=0.5)
 HABext2=extent(HABext)
+
+TBEP.ext=extent(-83.4,
+                -82.08,
+                27.0,
+                28.2)
+TBEP.ext.poly=as(TBEP.ext,"SpatialPolygons")
+proj4string(TBEP.ext.poly)=wgs84
+tm_shape(TBEP.ext.poly)+tm_polygons(alpha=0.5)
+
+tm_shape(TBEP.ext.poly)+tm_polygons(alpha=0.5)+
+  tm_shape(HABext.poly)+tm_polygons(alpha=0.5)
 
 CRE.ext=extent(-82.3,
               -81.8,
@@ -26,6 +40,8 @@ CRE.ext=as(CRE.ext,"SpatialPolygons")
 proj4string(CRE.ext)=wgs84
 CRE.ext=SpatialPolygonsDataFrame(CRE.ext,data.frame(ID="CRE"))
 tm_shape(CRE.ext)+tm_polygons(alpha=0.5)
+
+
 
 # Red Tide ----------------------------------------------------------------
 ## south of Tampa Bay 

@@ -1328,7 +1328,7 @@ ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ym
 xlim.val=date.fun(c(TODAY-ddays(30),TODAY+ddays(3)));xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
 
 layout(matrix(1:2,2,1,byrow=F),widths=c(2,1),heights=c(1,0.5))
-par(family="serif",cex.axis=1.2,mar=c(2,2,1,1),oma=c(0.5,3,1,2));
+par(family="serif",cex.axis=1.2,mar=c(2,2,1,2),oma=c(0.5,3,1,2));
 plot(S79~Date,cal.flow.dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
 xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
 yy3=c(2600,ylim.max,ylim.max,2600);polygon(x=xx,y=yy3,col=adjustcolor("red",0.5))
@@ -1341,9 +1341,12 @@ with(cal.flow.dat.xtab,lines(Date,Q.14,lwd=3,col=adjustcolor("dodgerblue3",0.5))
 with(cal.flow.dat.xtab,lines(Date,Q.30,lwd=3,col=adjustcolor("black",0.5),lty=2))
 axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)
 axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+axis_fun(4,ymaj,ymin,round(cfs.to.acftd(ymaj)/1000,1),cex.axis=1)
+
 box(lwd=lwd.val)
 mtext("Date\n(MM/DD/YYYY)",side=1,line=2.75,cex=1.25)
 mtext("Discharge (cfs)",side=2,line=3.5,cex=1.25)
+mtext("Discharge (kAc-Ft D\u207B\u00B9)",side=4,line=2.5,cex=1.25)
 
 plot(0:1,0:1,type="n",yaxt="n",xaxt="n",bty="n")
 legend(0.25,0.75,
@@ -1625,6 +1628,10 @@ HABext=extent(-82.5,
               -80.0,
               24.4,
               27.4)
+# HABext=extent(-83.1,
+#               -80.0,
+#               24.4,
+#               28.1)
 HABext.poly=as(HABext,"SpatialPolygons")
 proj4string(HABext.poly)=wgs84
 HABext.poly=SpatialPolygonsDataFrame(HABext.poly,data.frame(ID="HAB"))
@@ -1640,6 +1647,15 @@ proj4string(CRE.ext)=wgs84
 CRE.ext=SpatialPolygonsDataFrame(CRE.ext,data.frame(ID="CRE"))
 # tm_shape(CRE.ext)+tm_polygons(alpha=0.5)
 
+TBEP.ext=extent(-83.4,
+                -82.08,
+                27.0,
+                28.2)
+TBEP.ext.poly=as(TBEP.ext,"SpatialPolygons")
+proj4string(TBEP.ext.poly)=wgs84
+
+kbr.AOI=extent(bind(HABext.poly,TBEP.ext.poly))
+kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 # Red Tide ----------------------------------------------------------------
 ## south of Tampa Bay 
 # Based on https://github.com/tbep-tech/piney-point/blob/141824adc082a57d79ba58ff38ac31d41dea4e44/R/dat_proc.R#L1262
@@ -1657,8 +1673,24 @@ request <- GET(
 response <- content(request, as = "text", encoding = "UTF-8")
 results <- jsonlite::fromJSON(response,flatten=T)
 # results
-
 kbrdat=results$features
+
+# Tampa Bay Results
+request <- GET(
+  url = path,
+  query= list(       
+    where= paste("LATITUDE <",round(TBEP.ext[4],1),"AND LATITUDE >",round(TBEP.ext[3],1),"AND LONGITUDE >",round(TBEP.ext[1],1),"AND LONGITUDE <",round(TBEP.ext[2],1)),
+    outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
+    f = 'pjson'
+  )
+)
+
+response <- content(request, as = "text", encoding = "UTF-8")
+results <- jsonlite::fromJSON(response,flatten=T)
+
+kbrdat=rbind(kbrdat,results$features)
+# kbrdat=kbrdat[duplicated(kbrdat)==F,]
+
 vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
        "attributes.SAMPLE_DEPTH","attributes.LATITUDE", 
        "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT", 
@@ -1706,7 +1738,9 @@ tm_shape(kbrdat_30d.shp)+tm_dots(col="Abundance",
                                               "sample_depth"),
                                  group="NOAA/FWC Redtide Data")+
   tm_shape(CRE.ext)+tm_borders(group="Greater Caloosahatchee Estuary",col="white",lwd=2)+
-  tm_shape(HABext.poly)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
+  tm_shape(HABext.poly)+tm_borders(group="Area of Interest - South Florida",lwd=1,lty="dashed",col="grey")+
+  tm_shape(TBEP.ext.poly)+tm_borders(group="Area of Interest- Tampa Bay Area",lwd=1,lty="dashed",col="grey")
+  # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
 ```
 <font size=2><center>Red tide sampling results for the last 30-days from just south of Tampa Bay to the Florida Keys. Data from NOAA HABSOS Program</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
@@ -1787,3 +1821,109 @@ knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
 ```{r, out.width="50%",echo=FALSE,fig.align="center"}
 knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_swfl/legend.png")
 ```
+
+## Charlotte Harbor
+
+### Discharge
+
+```{r,echo=F}
+charhar.sites=data.frame(SITE=c("02298202","02296750","02298880","02297100","02299472"),
+                         SiteName.abbr=c("Shell","Peace","Myakka","Joshua","BigSlough"),
+                         Site.Lab=c("Shell Creek","Peace River","Myakka River","Joshua Creek","Big Slough"))
+charhar.sites=charhar.sites[match(c("Myakka","BigSlough","Peace","Joshua","Shell"),charhar.sites$SiteName.abbr),]
+
+q.dat=readNWISdv(charhar.sites$SITE,c("00060"),format(Start.Date,"%Y-%m-%d"),format(End.Date,"%Y-%m-%d"))
+q.dat=renameNWISColumns(q.dat)
+q.dat$Date=date.fun(q.dat$Date)
+q.dat=merge(q.dat,charhar.sites,by.x="site_no",by.y="SITE")
+q.dat$Flow.acft=cfs.to.acftd(q.dat$Flow)
+
+fill=expand.grid(Date=seq(date.fun(Start.Date),max(q.dat$Date),"1 days"),
+                 SITE=charhar.sites$SITE)
+fill=merge(fill,charhar.sites,"SITE")
+q.dat=merge(q.dat,fill,by.x=c("site_no","Date","SiteName.abbr"),by.y=c("SITE","Date","SiteName.abbr"),all.y=T)
+
+q.dat$flow.fill=with(q.dat,ave(Flow.acft,site_no,FUN=function(x) zoo::na.approx(x)))
+
+# range(q.dat$Flow)
+#q.dat.xtab=cast(q.dat,Date~SiteName.abbr,value="Flow",fun.aggregate=function(x) sum(cfs.to.acftd(x),na.rm=T))
+# q.dat.xtab=cast(q.dat,Date~SiteName.abbr,value="Flow",sum,na.rm=T)
+q.dat.xtab=cast(q.dat,Date~SiteName.abbr,value="flow.fill",sum, na.rm=T)
+charhar.sites2=readNWISsite(charhar.sites$SITE)
+q.dat.xtab$Tflow=rowSums(q.dat.xtab[,2:ncol(q.dat.xtab)])
+
+
+NWIS.siteinfo=readNWISsite(charhar.sites$SITE)
+NWIS.siteinfo.shp=SpatialPointsDataFrame(coords=NWIS.siteinfo[,c("dec_long_va","dec_lat_va")],
+                                          data=NWIS.siteinfo,
+                                          proj4string = wgs84)
+
+
+```
+
+
+
+
+```{r,out.width='100%'}
+tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+  tm_shape(NWIS.siteinfo.shp)+tm_dots(col="red",
+                                 size=0.05,
+                                 id="site_no",
+                                 popup.vars=c("agency_cd","site_no","station_nm"
+                                              ,"huc_cd","drain_area_va"),
+                                 group="USGS Sites")
+  
+```
+
+<font size=2><center>USGS discharge monitoring locations for rivers and creeks entering Charlotte Harbor</center></font>
+
+```{r CharHar,echo=FALSE,fig.width=5,fig.height=6,fig.align='center'}
+
+xlim.val=date.fun(c(TODAY-ddays(30),TODAY+ddays(3)));xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+cols=c("#3B9AB2", "#78B7C5", "#EBCC2A", "#E1AF00", "#F21A00")
+
+layout(matrix(1:6,6,1,byrow=F))
+par(family="serif",cex.axis=1.2,mar=c(1.5,2,0.5,1),oma=c(2.5,3,1,1));
+for(i in 1:5){
+  tmp=subset(q.dat,site_no==charhar.sites$SITE[i])
+  n.mt=sum(is.na(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft))
+  
+  max.q=max(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft,na.rm=T)
+  ylim.max=round(max.q+max.q*0.25,-3)
+  
+  ylim.val=c(0,ylim.max);by.y=ylim.max/2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+  plot(Flow.acft~Date,tmp,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+  abline(h=ymaj,v=xmaj,lty=3,col="grey")
+  if(n.mt>0){with(tmp,lines(Date,flow.fill,col="grey",lwd=1,lty=2))}
+  with(tmp,pt_line(Date,Flow.acft,2,cols[i],1.5,21,cols[i]))
+  
+  # if(i==4){axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)}else{axis_fun(1,xmaj,xmin,NA,line=-0.5)}
+  axis_fun(1,xmaj,xmin,NA,line=-0.5)
+  axis_fun(2,ymaj,ymin,format(ymaj/1000,nsmall=1),cex.axis=1)
+  box(lwd=1)
+  with(charhar.sites[i,],mtext(side=3,adj=0,paste(Site.Lab," (USGS Site: ",SITE,")",sep="")),cex=0.75)
+  
+}
+
+max.q=max(subset(q.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Tflow,na.rm=T)
+ylim.max=round(max.q+max.q*0.25,-3)
+
+ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+
+plot(Tflow~Date,q.dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+with(q.dat.xtab,shaded.range(Date,rep(0,length(Date)),Myakka,lty=1,bg=cols[1]))
+with(q.dat.xtab,shaded.range(Date,Myakka,Myakka+BigSlough,lty=1,bg=cols[2]))
+with(q.dat.xtab,shaded.range(Date,Myakka+BigSlough,Myakka+BigSlough+Peace,lty=1,bg=cols[3]))
+with(q.dat.xtab,shaded.range(Date,Myakka+BigSlough+Peace,Myakka+BigSlough+Peace+Joshua,lty=1,bg=cols[4]))
+with(q.dat.xtab,shaded.range(Date,Myakka+BigSlough+Peace+Joshua,Myakka+BigSlough+Peace+Joshua+Shell,lty=1,bg=cols[5]))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)
+axis_fun(2,ymaj,ymin,format(ymaj/1000,nsmall=1),cex.axis=1)
+box(lwd=1)
+mtext(side=3,adj=0,"Daily Total")
+mtext(side=2,line=1.25,outer=T,"Discharge (kAc-Ft D\u207B \u00B9)")
+mtext(side=1,line=2,"Date (MM/DD/YYYY)")
+```
+
+<font size=3><center>Daily discharge into Charlotte Harbor from major rivers and creeks. Data source: USGS. Grey dashed lines between points indicate a potential data gap with values linearly interpolated.</center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>

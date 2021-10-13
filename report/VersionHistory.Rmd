@@ -19,6 +19,10 @@ Current GitHub Action Status: ![](https://github.com/sccf-tech/CRE_Conditions/ac
 
 * Adjusted Lake Okeechobee Inflow and Outflow value source (from USACE Map summary rather than Lake Okeechobee and Vicinity page).
 
+* Adjusted Red Tide Data *Area of Interest*. 
+
+* Added Discharges to Charlotte Harbor. 
+
 ## 2021-10-12
 
 * Adjusted Red Tide data source from FWC daily sampling map to HABSOS [interactive Map](https://www.ncei.noaa.gov/maps/habsos/maps.htm)
