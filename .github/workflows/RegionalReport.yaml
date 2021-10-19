@@ -23,7 +23,7 @@ jobs:
                              "grid","RcppRoll","downloadthis","dataRetrieval",
                              "RCurl","remotes","png","jsonlite","httr","sp",
                              "raster","tmap"))
-          remotes::install_github("SwampThingPaul/AnalystHelper")
+          # remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       - name: Render Site
         run: |
