@@ -447,7 +447,8 @@ lwd.val=1
 
 ```{r LakeO Data, warnings=FALSE,echo=FALSE,include=FALSE}
 #LORS
-load("./LORS.Rdata")
+# load("LORS.RData")
+LORS=read.csv("LORS.csv")
 LORS$Year=CurWY-1
 LORS$Date2=with(LORS,date.fun(paste(Year,Month,Day,sep="-")))
 
