@@ -17,7 +17,6 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v1
       - name: Install rmarkdown
         run: |
-<<<<<<< HEAD
           install.packages("renv")
 # install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
 #                    "rvest","lubridate","flextable","magrittr",
@@ -25,14 +24,6 @@ jobs:
 #                    "RCurl","remotes","png","jsonlite","httr","sp",
 #                    "raster","tmap"))
 # remotes::install_github("SwampThingPaul/AnalystHelper")
-=======
-          install.packages(c("remotes","rmarkdown","knitr","reshape","plyr","zoo",
-                             "rvest","lubridate","flextable","magrittr",
-                             "grid","RcppRoll","downloadthis","dataRetrieval",
-                             "RCurl","png","jsonlite","httr","sp",
-                             "raster","tmap"))
-          remotes::install_github("SwampThingPaul/AnalystHelper")
->>>>>>> 4d736bc83c2392ad8ef38c4d2708b7c02d78b44d
         shell: Rscript {0}
       
       - name: Restore environment
