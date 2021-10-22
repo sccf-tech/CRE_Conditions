@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 `r paste("Updated:",format(Sys.time(),"%F %R"), Sys.timezone())`
 
-Current GitHub Action Status: ![](https://github.com/sccf-tech/CRE_Conditions/actions/workflows/RegionalReport.yaml/badge.svg)
+<!-- Current GitHub Action Status: ![](https://github.com/sccf-tech/CRE_Conditions/actions/workflows/RegionalReport.yaml/badge.svg) -->
 
 ***
 
