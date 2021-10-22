@@ -9,6 +9,8 @@ jobs:
   render:
     name: Render report
     runs-on: windows-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
       - uses: r-lib/actions/setup-r@master
@@ -21,8 +23,8 @@ jobs:
                   "rvest","lubridate","flextable","magrittr",
                   "grid","RcppRoll","downloadthis","dataRetrieval",
                   "RCurl","png","jsonlite","httr","sp",
-                  "raster","tmap","devtools"))
-           devtools::install_github("SwampThingPaul/AnalystHelper")
+                  "raster","tmap","remotes"))
+           remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       
       - name: Render Site
@@ -32,7 +34,7 @@ jobs:
       - name: setup git config
         run: |
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
-          git config user.name "GitHub Actions Bot"
+          git config user.name "SwampThingPaul"
           git config user.email "<>"
       
       - name: Commit results
