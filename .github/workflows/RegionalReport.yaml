@@ -17,19 +17,12 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v1
       - name: Install rmarkdown
         run: |
-          install.packages("renv")
-# install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
-#                    "rvest","lubridate","flextable","magrittr",
-#                    "grid","RcppRoll","downloadthis","dataRetrieval",
-#                    "RCurl","remotes","png","jsonlite","httr","sp",
-#                    "raster","tmap"))
-# remotes::install_github("SwampThingPaul/AnalystHelper")
-        shell: Rscript {0}
-      
-      - name: Restore environment
-        run: |
-          renv::consent(TRUE)
-          renv::restore()
+          install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
+                  "rvest","lubridate","flextable","magrittr",
+                  "grid","RcppRoll","downloadthis","dataRetrieval",
+                  "RCurl","png","jsonlite","httr","sp",
+                  "raster","tmap","devtools"))
+           devtools::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       
       - name: Render Site
