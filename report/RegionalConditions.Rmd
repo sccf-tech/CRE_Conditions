@@ -17,7 +17,15 @@ editor_options:
 
 ***
 
-`r paste("Updated:",format(Sys.time(),"%F %R"), Sys.timezone())`
+```{r date,echo=FALSE,message=FALSE,warning=FALSE}
+up.date=format(Sys.time(),tz="America/New_York",usetz=T,"%F %R")
+up.date=as.POSIXct(up.date,tz="America/New_York")
+
+dst.check=lubridate::dst(as.POSIXct(up.date))
+
+```
+
+`r paste("Updated:",up.date, ifelse(dst.check==T,"EDT","EST"))`
 
 <!-- ![](https://github.com/sccf-tech/CRE_Conditions/actions/workflows/RegionalReport.yaml/badge.svg) -->
 
@@ -115,7 +123,8 @@ q.dat[,c("Date","S78","S79","S310","S80")],"Date")
 
 ## Maps and Archived data
 map.q=data.frame()
-for(i in 1:length(dates)){
+map.stg=data.frame()
+for(i in 1:(length(dates)-1)){
   map.url=paste0("https://w3.saj.usace.army.mil/h2o/reports/StatusDaily/archive/",format(dates[i],"%m%d"),"/StatusDaily.htm")
   mapdata=readLines(map.url)
   val=grep("CA1IN",mapdata)
@@ -157,8 +166,11 @@ for(i in 1:length(dates)){
   val=grep("/plots/s78h.pdf",mapdata)
   S78=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</a>")[[1]][1]
   
+  val=grep("../plots/ok8hhp.pdf",mapdata)
+  LakeStage=as.numeric(strsplit(mapdata[val[1]],"\\s+")[[1]][6])
   
-  date.val=dates[i]-ddays(1)
+  # date.val=dates[i]-ddays(1)
+  date.val=dates[i]
   rslt=data.frame(Date=date.val,
                   FEC=as.numeric(FEC),
                   Istok=as.numeric(Istok),
@@ -170,7 +182,9 @@ for(i in 1:length(dates)){
                   ENP=as.numeric(ENP),
                   S79.map=as.numeric(S79),
                   S78.map=as.numeric(S78))
-    map.q=rbind(map.q,rslt)
+  map.q=rbind(map.q,rslt)
+  rslt.stg=data.frame(Date=date.val,Stg=as.numeric(LakeStage))
+  map.stg=rbind(map.stg,rslt.stg)
   print(i)
 }
 
@@ -340,8 +354,8 @@ val=grep("Total Structure Outflow",mapdata)
 LakeIn=strsplit(mapdata[val],"\\s+")[[1]][4]
 LakeOut=strsplit(mapdata[val],"\\s+")[[1]][9]
 
-val=grep("../plots/ok8hhp.pdf",mapdata)
-LakeStage=as.numeric(strsplit(mapdata[val[1]],"\\s+")[[1]][6])
+# val=grep("../plots/ok8hhp.pdf",mapdata)
+# LakeStage=as.numeric(strsplit(mapdata[val[1]],"\\s+")[[1]][6])
 ```
 
 <div class="row">
@@ -426,7 +440,7 @@ CurWY=as.numeric(ifelse(as.numeric(format(as.Date(Sys.time()),"%m"))>4,as.numeri
 
 ## Stage Data
 TODAY=as.POSIXct(strptime(Sys.time(),"%F"),tz="EST") # -duration(1,"days")
-YEST=TODAY-duration(1,"days")
+YEST=date.fun(TODAY-duration(1,"days"))
 End.Date=as.Date(Sys.time())+duration(1,"days")
 
 Start.Date=as.Date(paste(CurWY-2,05,01,sep="-"))
@@ -486,15 +500,15 @@ tail(LakeO.xtab)
 # 
 # LO.text.vals=html_text(node.val)
 # LO.report=strsplit(as.character(LO.text.vals),"\n")
-
+# 
 # Stg.day_CYR=data.frame(day=NA,Jan=NA,Feb=NA,Mar=NA,Apr=NA,May=NA,Jun=NA,Jul=NA,Aug=NA,Sep=NA,Oct=NA,Nov=NA,Dec=NA)
 # stg.dat=gsub("\\s[|]\\s",",",LO.report[[1]][10:40])
 # for(i in 1:31){
-# day.lne=strsplit(as.character(stg.dat[i]),",")
-# day.lne=unlist(day.lne)
-# day.lne2=unlist(lapply(day.lne,trimws))
+#  day.lne=strsplit(as.character(stg.dat[i]),",")
+#  day.lne=unlist(day.lne)
+#  day.lne2=unlist(lapply(day.lne,trimws))
 # 
-# Stg.day_CYR=rbind(Stg.day_CYR,day.lne2)
+#  Stg.day_CYR=rbind(Stg.day_CYR,day.lne2)
 # }
 # Stg.day_CYR[2:13]=sapply(Stg.day_CYR[2:13],as.numeric)
 # Stg.day_CYR
@@ -504,18 +518,23 @@ tail(LakeO.xtab)
 # Stg.day_CYR=subset(Stg.day_CYR,is.na(value)==F)
 # 
 # tail(Stg.day_CYR)
-# 
+# #
 # Stg.day_CYR2=data.frame(DATE=Stg.day_CYR$date,P1=Stg.day_CYR$value,P2=NA,Mean=Stg.day_CYR$value)
 # 
 # if(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)!=YEST){
-#   LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
-#                    subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
+#    LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
+#                     subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
 # }
 
 # if(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)!=YEST){
-#   LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
-#                    subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
-# }
+#    LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
+#                     subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
+
+Stg.day_CYR2=data.frame(DATE=map.stg$Date,P1=map.stg$Stg,P2=NA,Mean=map.stg$Stg)
+if(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)!=YEST){
+  LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
+                   subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
+}
 
 
 # if(max(LakeO.xtab$DATE)!=YEST|sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
@@ -593,10 +612,10 @@ text(LowLab.x,14.5,"Low",font=2,cex=0.75)
 with(subset(LakeO.xtab,WY==CurWY-2),lines(plot.dat,Mean,lwd=4,col=adjustcolor("forestgreen",0.5),lty=1))
 with(subset(LakeO.xtab,WY==CurWY-1),lines(plot.dat,Mean,lwd=4,col=adjustcolor("blue",0.5),lty=1))
 with(LakeO.xtab,lines(DATE,Mean,lwd=4,col="red",lty=1))
-if(is.na(subset(LakeO.xtab,DATE==date.fun(TODAY-ddays(1)))$Mean)==F){
-with(subset(LakeO.xtab,DATE==date.fun(TODAY-ddays(1))),points(DATE,Mean,pch=21,bg=adjustcolor("red",0.5),col="red",lwd=0.1,cex=1.25))
-with(subset(LakeO.xtab,DATE==date.fun(TODAY-ddays(1))),segments(DATE,Mean,DATE,10.1,lty=2))
-with(subset(LakeO.xtab,DATE==date.fun(TODAY-ddays(1))),text(DATE,10,paste(format(round(Mean,2),nsmall=2),"Ft"),cex=0.8,xpd=NA))}
+if(is.na(subset(LakeO.xtab,DATE==YEST)$Mean)==T|nrow(subset(LakeO.xtab,DATE==YEST))==0){NA}else{
+with(subset(LakeO.xtab,DATE==YEST),points(DATE,Mean,pch=21,bg=adjustcolor("red",0.5),col="red",lwd=0.1,cex=1.25))
+with(subset(LakeO.xtab,DATE==YEST),segments(DATE,Mean,DATE,10.1,lty=2))
+with(subset(LakeO.xtab,DATE==YEST),text(DATE,10,paste(format(round(Mean,2),nsmall=2),"Ft"),cex=0.8,xpd=NA))}
 
 axis_fun(1,xmaj,xmin,format(xmaj,"%b"),line=-0.5)
 axis_fun(2,ymaj,ymin,ymaj)
@@ -1853,7 +1872,7 @@ fill=merge(fill,charhar.sites,"SITE")
 q.dat=merge(q.dat,fill,by.x=c("site_no","Date","SiteName.abbr"),by.y=c("SITE","Date","SiteName.abbr"),all.y=T)
 
 q.dat$flow.fill=with(q.dat,ave(Flow.acft,site_no,FUN=function(x) zoo::na.approx(x)))
-
+q.dat$Q.7d=with(q.dat,ave(flow.fill,SiteName.abbr,FUN=function(x) roll_meanr(x,n=7)))
 # range(q.dat$Flow)
 #q.dat.xtab=cast(q.dat,Date~SiteName.abbr,value="Flow",fun.aggregate=function(x) sum(cfs.to.acftd(x),na.rm=T))
 # q.dat.xtab=cast(q.dat,Date~SiteName.abbr,value="Flow",sum,na.rm=T)
@@ -1868,9 +1887,12 @@ NWIS.siteinfo.shp=SpatialPointsDataFrame(coords=NWIS.siteinfo[,c("dec_long_va","
                                           proj4string = wgs84)
 
 
+
+
+
+
+
 ```
-
-
 
 
 ```{r,out.width='100%'}
@@ -1936,3 +1958,31 @@ mtext(side=1,line=2,"Date (MM/DD/YYYY)")
 
 <font size=3><center>Daily discharge into Charlotte Harbor from major rivers and creeks. Data source: USGS. Grey dashed lines between points indicate a potential data gap with values linearly interpolated.</center></font>
 <font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+
+```{r}
+q.dat$flow.fill=round(q.dat$flow.fill,1)
+q.dat$Q.7d=round(q.dat$Q.7d,1)
+
+vars=c("Date","site_no","Site.Lab.x","flow.fill","Q.7d")
+cap.val="Daily and 7-day moving mean discharge to Charlotte Harbor"
+
+subset(q.dat,Date==YEST)[,vars]%>%
+  flextable()%>%
+  width(width=c(1,1.25,1.25,1,1))%>%
+  align(align="center",part="all")%>%
+  colformat_datetime(j=1,fmt_date="%m-%d")%>%
+  colformat_num(j=4:5,big.mark="",digits=1)%>%
+  merge_v(1)%>%
+  fix_border_issues()%>%
+  padding(padding=1,part="all")%>%
+  font(fontname="Times New Roman",part="all")%>%
+  fontsize(size=12,part="body")%>%
+  fontsize(size=13,part="header")%>%
+  bold(part="header")%>%
+  set_header_labels("DATE"="Date\n(Month-Day)",
+                    "site_no"="USGS Site ID",
+                    "Site.Lab.x"="Site Name",
+                    "flow.fill"="Daily Discharge (Ac-Ft d\u207B\u00B9)",
+                    "Q.7d"="Mean 7-d Discharge (Ac-Ft d\u207B\u00B9)")%>%
+  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
+```

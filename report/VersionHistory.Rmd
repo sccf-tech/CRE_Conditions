@@ -12,6 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 <!-- Current GitHub Action Status: ![](https://github.com/sccf-tech/CRE_Conditions/actions/workflows/RegionalReport.yaml/badge.svg) -->
 
 ***
+## 2021-10-22
+
+* Minor adjustments to data sources and figure code. 
+
+* Added flow table for Charlotte Harbor Discharges
 
 ## 2021-10-13
 
