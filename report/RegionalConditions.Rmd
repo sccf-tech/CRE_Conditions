@@ -512,6 +512,11 @@ tail(LakeO.xtab)
 #                    subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
 # }
 
+# if(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)!=YEST){
+#   LakeO.xtab=rbind(subset(LakeO.xtab,DATE<=max(subset(LakeO.xtab,is.na(P1)==F)$DATE)),
+#                    subset(Stg.day_CYR2,DATE%in%seq(date.fun(max(subset(LakeO.xtab,is.na(P1)==F)$DATE)+ddays(1)),date.fun(YEST),"1 days")))
+# }
+
 
 # if(max(LakeO.xtab$DATE)!=YEST|sum(is.na(subset(LakeO.xtab,DATE%in%seq(YEST-ddays(1),YEST,"1 days"))$Mean))==1){
 #   da.dbks=data.frame(SITE=c("L001","L005","L006","LZ40","S133TW","S352HW","S4TW"),DBKEY=c("16022","12509","12519","16265","15826","FF579","15732"),type="Daily")
@@ -667,10 +672,10 @@ with(LakeO.xtab,lines(DATE,recess_30day,col="dodgerblue1",lty=1,lwd=1.5))
 with(LakeO.xtab,lines(DATE,recess_7day,col="indianred1",lty=2,lwd=1.5))
 points(YEST,subset(LakeO.xtab,DATE==YEST)$recess_30day,pch=21,bg="dodgerblue1",cex=1.25)
 text.x=if(YEST>date.fun(paste0(CurWY,"-04-01"))){YEST-ddays(15)}else{YEST+ddays(15)}
-if(subset(LakeO.xtab,DATE==YEST)$recess_7day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_30day,round(subset(LakeO.xtab,DATE==YEST)$recess_30day,2),cex=0.8)}
+if(subset(LakeO.xtab,DATE==YEST)$recess_30day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_30day,round(subset(LakeO.xtab,DATE==YEST)$recess_30day,2),cex=0.8)}else{NA}
 points(YEST,subset(LakeO.xtab,DATE==YEST)$recess_7day,pch=21,bg="indianred1",cex=1.25)
 text.x=if(YEST>date.fun(paste0(CurWY,"-04-01"))){YEST-ddays(15)}else{YEST+ddays(15)}
-if(subset(LakeO.xtab,DATE==YEST)$recess_7day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_7day,round(subset(LakeO.xtab,DATE==YEST)$recess_7day,2),cex=0.8)}
+if(subset(LakeO.xtab,DATE==YEST)$recess_7day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_7day,round(subset(LakeO.xtab,DATE==YEST)$recess_7day,2),cex=0.8)}else{NA}
 # abline(h=-0.5,lty=2,col="black",lwd=2); #max 30d recession - HAB deviation
 axis_fun(1,xmaj,xmin,format(xmaj,"%b"),cex.axis=1)
 axis_fun(2,ymaj,ymin,format(ymaj),cex.axis=1)
