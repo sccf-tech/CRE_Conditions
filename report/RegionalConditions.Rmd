@@ -672,10 +672,12 @@ with(LakeO.xtab,lines(DATE,recess_30day,col="dodgerblue1",lty=1,lwd=1.5))
 with(LakeO.xtab,lines(DATE,recess_7day,col="indianred1",lty=2,lwd=1.5))
 points(YEST,subset(LakeO.xtab,DATE==YEST)$recess_30day,pch=21,bg="dodgerblue1",cex=1.25)
 text.x=if(YEST>date.fun(paste0(CurWY,"-04-01"))){YEST-ddays(15)}else{YEST+ddays(15)}
-if(subset(LakeO.xtab,DATE==YEST)$recess_30day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_30day,round(subset(LakeO.xtab,DATE==YEST)$recess_30day,2),cex=0.8)}else{NA}
+# if(subset(LakeO.xtab,DATE==YEST)$recess_30day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_30day,round(subset(LakeO.xtab,DATE==YEST)$recess_30day,2),cex=0.8)}
+text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_30day,round(subset(LakeO.xtab,DATE==YEST)$recess_30day,2),cex=0.8)
 points(YEST,subset(LakeO.xtab,DATE==YEST)$recess_7day,pch=21,bg="indianred1",cex=1.25)
 text.x=if(YEST>date.fun(paste0(CurWY,"-04-01"))){YEST-ddays(15)}else{YEST+ddays(15)}
-if(subset(LakeO.xtab,DATE==YEST)$recess_7day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_7day,round(subset(LakeO.xtab,DATE==YEST)$recess_7day,2),cex=0.8)}else{NA}
+# if(subset(LakeO.xtab,DATE==YEST)$recess_7day!=0){text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_7day,round(subset(LakeO.xtab,DATE==YEST)$recess_7day,2),cex=0.8)}
+text(text.x,subset(LakeO.xtab,DATE==YEST)$recess_7day,round(subset(LakeO.xtab,DATE==YEST)$recess_7day,2),cex=0.8)
 # abline(h=-0.5,lty=2,col="black",lwd=2); #max 30d recession - HAB deviation
 axis_fun(1,xmaj,xmin,format(xmaj,"%b"),cex.axis=1)
 axis_fun(2,ymaj,ymin,format(ymaj),cex.axis=1)
