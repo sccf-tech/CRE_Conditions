@@ -354,8 +354,8 @@ val=grep("Total Structure Outflow",mapdata)
 LakeIn=strsplit(mapdata[val],"\\s+")[[1]][4]
 LakeOut=strsplit(mapdata[val],"\\s+")[[1]][9]
 
-# val=grep("../plots/ok8hhp.pdf",mapdata)
-# LakeStage=as.numeric(strsplit(mapdata[val[1]],"\\s+")[[1]][6])
+val=grep("../plots/ok8hhp.pdf",mapdata)
+LakeStage=as.numeric(strsplit(mapdata[val[1]],"\\s+")[[1]][6])
 ```
 
 <div class="row">
@@ -1648,7 +1648,7 @@ grid.raster(logo,x=0.045,y=0.055,just=c("left","bottom"),width=unit(1.25,"inches
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 
-### Red Tide
+### Red Tide Abundance
 <br>
 ```{r,echo=F}
 
@@ -1848,6 +1848,20 @@ knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
 
 ```{r, out.width="50%",echo=FALSE,fig.align="center"}
 knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_swfl/legend.png")
+```
+
+### Red Tide Forecast
+
+Red Tide Prediction and Tracking for coastal Southwest Florida from FWC and USF [link](http://ocgweb.marine.usf.edu/hab_tracking/wfcom_hab.html){target="_blank"}
+
+
+```{r out.width=c('50%', '50%'), fig.show='hold',fig.cap="Upper and lower water column HAB (Red Tide) forecasted trajectories from Ocean Circulation Group at USF."}
+knitr::include_graphics("http://ocgweb.marine.usf.edu/hab_tracking/upper_water_column_R4.png")
+knitr::include_graphics("http://ocgweb.marine.usf.edu/hab_tracking/lower_water_column_R4.png")
+```
+
+```{r, out.width="50%",echo=FALSE,fig.align="center",fig.cap="Statewide Gulf of Mexico coastal Red Tide forecast from FWC and USF."}
+knitr::include_graphics("http://ocgweb.marine.usf.edu/hab_tracking/hab_fcst.jpeg")
 ```
 
 ## Charlotte Harbor
