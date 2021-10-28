@@ -12,6 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 <!-- Current GitHub Action Status: ![](https://github.com/sccf-tech/CRE_Conditions/actions/workflows/RegionalReport.yaml/badge.svg) -->
 
 ***
+## 2021-10-26
+
+* Added USF and FWC HAB forecast
+
 ## 2021-10-22
 
 * Minor adjustments to data sources and figure code. 
