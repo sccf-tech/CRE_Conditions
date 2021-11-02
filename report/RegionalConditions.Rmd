@@ -1839,7 +1839,11 @@ for(i in 1:length(vals)){
   
 }
 
-noaa.HAB.image=subset(noaa.image.inventory,data.product=="1_2.truecolor_rbd_rhos.swfl.png'"&date==max(noaa.image.inventory$date))
+# noaa.HAB.image=subset(noaa.image.inventory,data.product=="1_2.truecolor_rbd_rhos.swfl.png'"&date==max(noaa.image.inventory$date))
+noaa.HAB.image=subset(noaa.image.inventory,date==max(noaa.image.inventory$date))
+noaa.HAB.image$data.product=substr(noaa.HAB.image$data.product,nchar(noaa.HAB.image$data.product)-27,nchar(noaa.HAB.image$data.product)-1)
+noaa.HAB.image=subset(noaa.HAB.image,data.product=="truecolor_rbd_rhos.swfl.png")
+
 ```
 
 ```{r, out.width="90%",echo=FALSE,fig.align="center",fig.cap=paste("Chlorophyll fluorescence for coastal southwest Florida for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)")}
@@ -1883,6 +1887,7 @@ q.dat$Date=date.fun(q.dat$Date)
 q.dat=merge(q.dat,charhar.sites,by.x="site_no",by.y="SITE")
 q.dat$Flow.acft=cfs.to.acftd(q.dat$Flow)
 
+# tail(subset(q.dat,site_no=="02296750"))
 fill=expand.grid(Date=seq(date.fun(Start.Date),max(q.dat$Date),"1 days"),
                  SITE=charhar.sites$SITE)
 fill=merge(fill,charhar.sites,"SITE")
@@ -1890,6 +1895,7 @@ q.dat=merge(q.dat,fill,by.x=c("site_no","Date","SiteName.abbr"),by.y=c("SITE","D
 
 q.dat$flow.fill=with(q.dat,ave(Flow.acft,site_no,FUN=function(x) zoo::na.approx(x)))
 q.dat$Q.7d=with(q.dat,ave(flow.fill,SiteName.abbr,FUN=function(x) roll_meanr(x,n=7)))
+q.dat$N.Q.7d=with(q.dat,ave(Flow.acft,SiteName.abbr,FUN=function(x) rollapply(x,width=7,fill=NA,align="right",FUN=function(x)N.obs(x))))
 # range(q.dat$Flow)
 #q.dat.xtab=cast(q.dat,Date~SiteName.abbr,value="Flow",fun.aggregate=function(x) sum(cfs.to.acftd(x),na.rm=T))
 # q.dat.xtab=cast(q.dat,Date~SiteName.abbr,value="Flow",sum,na.rm=T)
@@ -1934,10 +1940,10 @@ layout(matrix(1:6,6,1,byrow=F))
 par(family="serif",cex.axis=1.2,mar=c(1.5,2,0.5,1),oma=c(2.5,3,1,1));
 for(i in 1:5){
   tmp=subset(q.dat,site_no==charhar.sites$SITE[i])
-  n.mt=sum(is.na(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft))
+  n.mt=sum(is.na(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft),na.rm=T)
   
   max.q=max(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft,na.rm=T)
-  ylim.max=round(max.q+max.q*0.25,-3)
+  ylim.max=round(max.q+max.q*0.25,-2)
   
   ylim.val=c(0,ylim.max);by.y=ylim.max/2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
   plot(Flow.acft~Date,tmp,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
@@ -1979,27 +1985,29 @@ mtext(side=1,line=2,"Date (MM/DD/YYYY)")
 ```{r}
 q.dat$flow.fill=round(q.dat$flow.fill,1)
 q.dat$Q.7d=round(q.dat$Q.7d,1)
+q.dat$Q.7d2=with(q.dat,ifelse(N.Q.7d<7,NA,Q.7d))
 
-vars=c("Date","site_no","Site.Lab.x","flow.fill","Q.7d")
-cap.val="Daily and 7-day moving mean discharge to Charlotte Harbor"
+vars=c("Date","site_no","Site.Lab.y","Flow.acft","Q.7d2")
+cap.val="Daily and 7-day moving mean discharge to Charlotte Harbor."
 
 subset(q.dat,Date==YEST)[,vars]%>%
   flextable()%>%
   width(width=c(1,1.25,1.25,1,1))%>%
   align(align="center",part="all")%>%
   colformat_datetime(j=1,fmt_date="%m-%d")%>%
-  colformat_num(j=4:5,big.mark="",digits=1)%>%
+  colformat_double(j=4:5,big.mark="",digits=1,na_str="---")%>%
   merge_v(1)%>%
   fix_border_issues()%>%
   padding(padding=1,part="all")%>%
-  font(fontname="Times New Roman",part="all")%>%
   fontsize(size=12,part="body")%>%
   fontsize(size=13,part="header")%>%
   bold(part="header")%>%
   set_header_labels("DATE"="Date\n(Month-Day)",
                     "site_no"="USGS Site ID",
-                    "Site.Lab.x"="Site Name",
-                    "flow.fill"="Daily Discharge (Ac-Ft d\u207B\u00B9)",
-                    "Q.7d"="Mean 7-d Discharge (Ac-Ft d\u207B\u00B9)")%>%
-  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")
+                    "Site.Lab.y"="Site Name",
+                    "Flow.acft"="Daily Discharge (Ac-Ft d\u207B\u00B9)",
+                    "Q.7d2"="Mean 7-d Discharge (Ac-Ft d\u207B\u00B9)")%>%
+  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")%>%
+  footnote(j=1,part="header",ref_symbols = " ",value=as_paragraph(" '---' values indicate missing data either in the current day or past 7-days."))%>%
+  font(fontname="Times New Roman",part="all")
 ```
