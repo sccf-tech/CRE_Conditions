@@ -382,3 +382,113 @@ S77_POR=ggplot(subset(q.dat.wk.mean,SITE=='S77'), aes(x = wknum, y = CY, fill = 
        y="Year")
 
 S77_POR
+
+
+
+
+# Lake Stage --------------------------------------------------------------
+dates=date.fun(c("1978-01-01","2021-12-03"))
+
+stg.dat=DBHYDRO_daily(dates[1],dates[2],c("00268","06832"))
+subset(stg.dat,is.na(Data.Value))
+range(stg.dat$Data.Value)
+
+stg.dat=ddply(stg.dat,c("Date"),summarise,Data.Value=mean(Data.Value,na.rm=T))
+stg.dat$stgchange_7day=with(stg.dat,c(rep(NA,7),diff(Data.Value,lag=7)))
+
+stg.dat$DoY=as.numeric(format(stg.dat$Date,"%j"))
+stg.dat$CY=as.numeric(format(stg.dat$Date,"%Y"))
+max(stg.dat$Date)
+
+subset(stg.dat,Data.Value==max(stg.dat$Data.Value,na.rm=T))
+subset(stg.dat,Data.Value==min(stg.dat$Data.Value,na.rm=T))
+
+plot(Data.Value~DoY,subset(stg.dat,CY==1995),ylim=c(8,19))
+with(subset(stg.dat,CY==2007),lines(Data.Value~DoY))
+with(subset(stg.dat,CY==2019),lines(Data.Value~DoY,col="darkgreen"))
+with(subset(stg.dat,CY==2020),lines(Data.Value~DoY,col="red"))
+with(subset(stg.dat,CY==2021),lines(Data.Value~DoY,col="blue"))
+
+
+date.fill=data.frame(expand.grid(CY=seq(min(stg.dat$CY),max(stg.dat$CY),1),
+            DoY=1:366))
+
+recess.dat=stg.dat[,c("CY","DoY","Data.Value","stgchange_7day")]
+recess.dat$recess_7day=with(recess.dat,ifelse(stgchange_7day<=0,abs(stgchange_7day),NA))
+
+bks=c(0,0.05,0.16)
+recess.dat$cat=as.factor(findInterval(recess.dat$recess_7day,bks,rightmost.closed = T,left.open = T))
+range(stg.dat$stgchange_7day,na.rm=T)
+bks=c(min(stg.dat$stgchange_7day,na.rm=T),-0.16,-0.05,0.05,0.25,max(stg.dat$stgchange_7day,na.rm=T))
+recess.dat$cat2=as.factor(findInterval(recess.dat$stgchange_7day,bks,rightmost.closed = T,left.open = T))
+recess.dat$cat2=with(recess.dat,ifelse(stgchange_7day>=-0.05&stgchange_7day<=0.05,1,
+                                       ifelse(stgchange_7day<(-0.05)&stgchange_7day>(-0.16),2,
+                                              ifelse(stgchange_7day<=(-0.16),3,
+                                                     ifelse(stgchange_7day>0.05&stgchange_7day<=0.25,4,
+                                                            ifelse(stgchange_7day>0.25,5,NA))))))
+recess.dat$cat2=as.factor(recess.dat$cat2)
+ddply(recess.dat,"cat2",summarise,min.val=min(stgchange_7day,na.rm=T),max.val=max(stgchange_7day,na.rm=T))
+
+
+recess.dat=merge(recess.dat,date.fill,by=c("CY",'DoY'),all.y=T)
+
+recess.dat=recess.dat[order(recess.dat$CY,recess.dat$DoY),]
+
+library(ggplot2)
+cols=c("1"="green","2"="yellow","3"="red","NA"="white")
+rec.plot=ggplot(recess.dat, aes(x = DoY, y = CY, fill = cat)) +
+  geom_tile(aes(group = cat), colour = "black",size=0.05)+
+  #geom_text(aes(label=format(round(mean.flow,0),nsmall=0),fontface = "bold"),size=2,colour=q.dat.wk.mean$txt.cols,family="serif",)+
+  scale_y_reverse(expand = c(0, 0), breaks = recess.dat$CY) +
+  # scale_x_discrete(expand = c(0, 0), position = 'top') +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(1,366,30),labels= seq(1,366,30))+
+  scale_fill_manual(values = cols,
+                    name="Weekly Recession\nRate (ft/wk)",
+                    breaks=c(1:3),
+                    labels=c("< 0.05","\u2265 0.05 & < 0.16","\u2265 0.16"),
+                    na.value="white") +
+  theme_bw() +
+  theme(
+    #legend.position = 'none',
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(title = "Lake Okeechobee Recession Rate",
+       subtitle = "Weekly Recession Rate for Snail Kite",
+       caption = paste0("Produced: ",format(Sys.Date(),"%d %b %Y")),
+       x="Day of Year",
+       y="Year")
+# ggsave(paste0(plot.path,"Lake_recess.png"),rec.plot,device="png",height =7,width=6,units="in")
+
+unique(recess.dat$cat2)
+cols=c("1"="red","2"="yellow","3"="green","4"="goldenrod2","5"="darkred")
+#  cols=c("1"="green","2"="yellow","3"="red","4"="goldenrod2","5"="darkred")
+rec.plot2=ggplot(recess.dat, aes(x = DoY, y = CY, fill = cat2)) +
+  geom_tile(aes(group = cat2), colour = "black",size=0.05)+
+  #geom_text(aes(label=format(round(mean.flow,0),nsmall=0),fontface = "bold"),size=2,colour=q.dat.wk.mean$txt.cols,family="serif",)+
+  scale_y_reverse(expand = c(0, 0), breaks = recess.dat$CY) +
+  # scale_x_discrete(expand = c(0, 0), position = 'top') +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(1,366,30),labels= seq(1,366,30))+
+  scale_fill_manual(values = cols,
+                    name="Weekly Recession\nRate (ft/wk)",
+                    breaks=c(1:5),
+                    # labels=c("\u2265 0.05 & \u2264 -0.05","< -0.05 & > -0.16","\u2264 -0.16", "> 0.05 & \u2264 0.25", "> 0.25"),
+                    labels=c("\u2264 -0.16","> -0.16 & < -0.05","> -0.05 & \u2264 0.05","> 0.05 & \u2264 0.25","> 0.25"),
+                    na.value="white") +
+  theme_bw() +
+  theme(
+    #legend.position = 'none',
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(title = "Lake Okeechobee Recession/Accession Rate",
+       subtitle = "Observed Weekly Recession/Accession Rates",
+       caption = paste0("Produced: ",format(Sys.Date(),"%d %b %Y")),
+       x="Day of Year",
+       y="Year")
+rec.plot2
+# ggsave(paste0(plot.path,"Lake_recess2.png"),rec.plot2,device="png",height =7,width=6,units="in")

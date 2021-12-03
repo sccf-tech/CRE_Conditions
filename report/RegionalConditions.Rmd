@@ -275,21 +275,6 @@ sumstats%>%
 
 ```
 
-
-```{r}
-mean.7day.cfs%>%
-  download_this(
-    output_name = "Discharge7day",
-    output_extension = ".xlsx",
-    button_label = "7-day Mean Discharge (cfs)",
-    button_type = "danger",
-    has_icon = TRUE,
-    icon = "fa fa-file-excel"
-  )
-```
-
-
-
 ```{r}
 cap.val="Average and total net discharge volume in Acre-Feet per day for the last 14-days. Data Source: USACE"
 sumstats14%>%
@@ -341,6 +326,139 @@ q.in.Lake=sum(q.dat.7day[,"NthLake"],na.rm=T)
 
 <!-- **Lake Flows:** In the past 7 days **`r format(round(q.from.Lake,0),big.mark=",")` AF** was discharged from Lake Okeechobee `r  ifelse(length(laketotalQ[laketotalQ<0])>0,paste0("(",format(round(sum(laketotalQ[laketotalQ<0],na.rm=T)*-1,0),big.mark=",")," AF return to the Lake via backflow)"),"")`, with **`r format(round(S77q,0),big.mark=",")` AF (`r S77q.per`%)** to the Caloosahatchee through **S-77**, **`r ifelse(S308q<0,format(round(abs(S308q),0),big.mark=","),format(round(S308q,0),big.mark=","))` AF `r if(is.na(S308q.per)==F){paste0("(", S308q.per,"%)")}`** `r ifelse(S308q<0,"to Lake Okeechobee","to the St. Lucie River")` through **S-308**, **`r ifelse(S310q<0,format(round(abs(S310q),0),big.mark=","),format(round(S310q,0),big.mark=","))` AF `r if(is.na(S310q.per)==F){paste0("(", S310q.per,"%)")}`** through **S-310** in Clewiston, **`r ifelse(L8q<0,format(round(abs(L8q),0),big.mark=","),format(round(L8q,0),big.mark=","))` AF `r if(is.na(L8q.per)==F){paste0("(", L8q.per,"%)")}`** through **C-10A** `r ifelse(L8q<0,"to Lake Okeecobee","to the L-8 canal")`, and **`r ifelse(EAAq<0,format(round(abs(EAAq),0),big.mark=","),format(round(EAAq,0),big.mark=","))` AF `r if(is.na(EAAq.per)==F){paste0("(", EAAq.per,"%)")}`** `r ifelse(EAAq<0,"to Lake Okeechobee","to the EAA")` through **S-351, S-352, and S-354**.  -->
 
+```{r}
+S77.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s77m.html")
+S77.dat=data.frame(t(sapply(strsplit(S77.dat[11:17],"\\s+"),c)))
+colnames(S77.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Evap","Man.Prec")
+S77.dat$Date=date.fun(S77.dat$Date,form="%d%B%y")
+S77.dat[,2:12]=sapply(S77.dat[,2:12],as.numeric)
+S77.dat$SITE="Moore Haven (S77)"
+S77.dat$SITE2="S77"
+
+S78.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s78m.html")
+S78.dat=data.frame(t(sapply(strsplit(S78.dat[11:17],"\\s+"),c)))
+colnames(S78.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Man.Prec")
+S78.dat$Date=date.fun(S78.dat$Date,form="%d%B%y")
+S78.dat[,2:11]=sapply(S78.dat[,2:11],as.numeric)
+S78.dat$SITE="Ortona (S78)"
+S78.dat$SITE2="S78"
+
+S79.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s79m.html")
+S79.dat=data.frame(t(sapply(strsplit(S79.dat[11:17],"\\s+"),c)))
+colnames(S79.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Cl","Man.Prec")
+S79.dat$Date=date.fun(S79.dat$Date,form="%d%B%y")
+S79.dat[,2:12]=sapply(S79.dat[,2:12],as.numeric)
+S79.dat$SITE="WP Franklin (S79)"
+S79.dat$SITE2="S79"
+
+vars=c("Date","SITE","Man.Prec")
+RF.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
+
+## 
+
+vars=c("Date","SITE2","Q")
+Q.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
+
+Q.dat.xtab=cast(Q.dat,Date~SITE2,value="Q",mean)[,c("Date","S79","S78","S77")]
+Q7d.sum.tmp=round(apply(Q.dat.xtab[,2:4],2,mean))
+
+Q.dat.xtab2=Q.dat.xtab
+Q.dat.xtab2$Date=as.character(format(Q.dat.xtab2$Date,"%m/%d/%y"))
+Q.dat.xtab2=rbind(Q.dat.xtab2,data.frame(Date="7-day avg",S79=mean(Q.dat.xtab$S79),S78=mean(Q.dat.xtab$S78),S77=mean(Q.dat.xtab$S77)))
+Q.dat.xtab2[2:4]=round(Q.dat.xtab2[2:4],0)
+# export Q.dat.xtab2 as excel - ACOE Daily Reports
+
+dates2=c(date.fun(min(Q.dat.xtab$Date)-duration(90,'days')),date.fun(min(Q.dat.xtab$Date)-duration(1,'days')))
+S79dat2=DBHYDRO_daily(dates2[1],dates2[2],"DJ237")
+S79dat2$Q=S79dat2$Data.Value
+
+S79dat2=rbind(S79dat2[,c("Date","Q")],subset(Q.dat,SITE2=="S79")[,c("Date","Q")])
+S79dat2$Q.14=with(S79dat2,roll_meanr(Q,n=14))
+S79dat2$Q.7=with(S79dat2,roll_meanr(Q,n=7))
+
+S79dat2$Low=with(S79dat2,ifelse(Q.14<750,1,0))
+S79dat2$Opt=with(S79dat2,ifelse(Q.14>=750&Q.14<2100,1,0))
+S79dat2$Stress=with(S79dat2,ifelse(Q.14>=2100&Q.14<2600,1,0))
+S79dat2$Dam=with(S79dat2,ifelse(Q.14>=2600,1,0))
+
+consec.startend=function(var){
+  runs=rle(var)
+  myruns = which(runs$values == TRUE)
+  runs.lengths.cumsum = cumsum(runs$lengths)
+  ends = runs.lengths.cumsum[myruns]
+  newindex = ifelse(myruns>1, myruns-1, 0)
+  starts = runs.lengths.cumsum[newindex] + 1
+  if (0 %in% newindex) starts = c(1,starts)
+  rslt=list(starts=starts,ends=ends)
+  return(rslt)
+}
+
+S79dat2$Low.consec=0
+for(i in 2:nrow(S79dat2)){
+  S79dat2$Low.consec[i]=with(S79dat2,ifelse(Low[i-1]==0&Low[i]>0,1,
+                                            ifelse(Low[i-1]>0&Low[i]>0,1,0)))
+}
+Low.consec.val=consec.startend(S79dat2$Low.consec)
+S79dat2$sum.Low.consec=0
+if(length(Low.consec.val$ends)!=0){
+for(i in 1:length(Low.consec.val$ends)){
+  S79dat2[Low.consec.val$ends[i],]$sum.Low.consec=with(S79dat2[c(Low.consec.val$starts[i]:Low.consec.val$ends[i]),],sum(Low.consec,na.rm=T))
+}
+}
+#
+S79dat2$Opt.consec=0
+for(i in 2:nrow(S79dat2)){
+  S79dat2$Opt.consec[i]=with(S79dat2,ifelse(Opt[i-1]==0&Opt[i]>0,1,
+                                      ifelse(Opt[i-1]>0&Opt[i]>0,1,0)))
+}
+Opt.consec.val=consec.startend(S79dat2$Opt.consec)
+#
+S79dat2$sum.Opt.consec=0
+if(length(Opt.consec.val$ends)!=0){
+for(i in 1:length(Opt.consec.val$ends)){
+  S79dat2[Opt.consec.val$ends[i],]$sum.Opt.consec=with(S79dat2[c(Opt.consec.val$starts[i]:Opt.consec.val$ends[i]),],sum(Opt.consec,na.rm=T))
+}
+}
+# 
+S79dat2$Stress.consec=0
+for(i in 2:nrow(S79dat2)){
+  S79dat2$Stress.consec[i]=with(S79dat2,ifelse(Stress[i-1]==0&Stress[i]>0,1,
+                                            ifelse(Stress[i-1]>0&Stress[i]>0,1,0)))
+}
+Stress.consec.val=consec.startend(S79dat2$Stress.consec)
+S79dat2$sum.Stress.consec=0
+if(length(Stress.consec.val$ends)!=0){
+for(i in 1:length(Stress.consec.val$ends)){
+  S79dat2[Stress.consec.val$ends[i],]$sum.Stress.consec=with(S79dat2[c(Stress.consec.val$starts[i]:Stress.consec.val$ends[i]),],sum(Stress.consec,na.rm=T))
+}
+}
+#
+S79dat2$Dam.consec=0
+for(i in 2:nrow(S79dat2)){
+  S79dat2$Dam.consec[i]=with(S79dat2,ifelse(Dam[i-1]==0&Dam[i]>0,1,
+                                               ifelse(Dam[i-1]>0&Dam[i]>0,1,0)))
+}
+Dam.consec.val=consec.startend(S79dat2$Dam.consec)
+S79dat2$sum.Dam.consec=0
+if(length(Dam.consec.val$ends)!=0){
+for(i in 1:length(Dam.consec.val$ends)){
+  S79dat2[Dam.consec.val$ends[i],]$sum.Dam.consec=with(S79dat2[c(Dam.consec.val$starts[i]:Dam.consec.val$ends[i]),],sum(Dam.consec,na.rm=T))
+}
+}
+
+salenv.vals=subset(S79dat2,Date==max(S79dat2$Date))
+
+salenv.vals1=salenv.vals[,paste("sum",c("Low","Opt","Stress","Dam"),"consec",sep=".")]
+colnames(salenv.vals1)=c("low","optimal","stress","damaging")
+# as.numeric(salenv.vals1[which(salenv.vals1>0)])
+# names(salenv.vals1)[which(salenv.vals1>0)]
+
+flow.envs=c("< 750","750 - 2100", "2100 - 2600","> 2600")
+cols=c("red","green","yellow","red")
+```
+
+**Caloosahatchee Conditions Summary:** Flow to the Caloosahatchee Estuary had a 7-day average of **`r format(Q7d.sum.tmp[1],big.mark=",")` cfs** at **S-79** with a 7-day average of **`r format(Q7d.sum.tmp[3],big.mark=",")` cfs (`r round((Q7d.sum.tmp[3]/Q7d.sum.tmp[1])*100)`%)** coming from the lake at **S-77**. **The 14-day moving average flow at S-79 is `r format(round(salenv.vals$Q.14),big.mark=",")` cfs and has been in the `r paste0("<span style='color:",cols[which(salenv.vals1>0)],"'>")` `r names(salenv.vals1)[which(salenv.vals1>0)]`</span> flow envelope (`r flow.envs[which(salenv.vals1>0)]` cfs; RECOVER 2020) for `r as.numeric(salenv.vals1[which(salenv.vals1>0)])` days.**
+
 **Lake Flows:** In the past 7 days the total outflow from Lake Okeechobee was **`r format(round(q.from.Lake,0),big.mark=",")` AF** with **`r format(round(S77q,0),big.mark=",")` AF** to the Caloosahatchee through **S-77**,`r if(S308q.pos>0){paste("**",format(round(S308q.pos,0),big.mark=",")," AF** to St Lucie through **S-308**,",sep="")}` **`r format(round(S310q.pos,0),big.mark=",")` AF** through **S-310** in Clewiston, and **`r format(round(EAAq.pos,0),big.mark=",")` AF** to the EAA through **S-351**, **S-352**, and **S-354**. The total net inflow to the Lake was **`r format(round(q.in.Lake+q.BF.Lake,0),big.mark=",")` AF** (`r format(round(q.in.Lake,0),big.mark=",")` AF from Fisheating Creek, S-71, S-72,S-84s, S-65EX, and S-65EX1) `r if(q.BF.Lake>0){paste(" with a total backflow volume of ","**",format(round(q.BF.Lake,0),big.mark=",")," AF** from **", v.val,"**",sep="")}`. Water conservation areas received flows of **`r format(round(sum(totalQ[,c("WCA1")]),0),big.mark=",")` AF**, **`r format(round(sum(totalQ[,c("WCA2")]),0),big.mark=",")` AF**, and **`r format(round(sum(totalQ[,c("WCA3")]),0),big.mark=",")` AF** at **WCA1, WCA2, and WCA3**, respectively. Everglades National Park received **`r format(round(sum(totalQ[,c("ENP")]),0),big.mark=",")` AF**.
 
 <br>
@@ -374,32 +492,7 @@ LakeStage=as.numeric(strsplit(mapdata[val[1]],"\\s+")[[1]][6])
 </div>
 </div>
 
-```{r}
-S77.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s77m.html")
-S77.dat=data.frame(t(sapply(strsplit(S77.dat[11:17],"\\s+"),c)))
-colnames(S77.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Evap","Man.Prec")
-S77.dat$Date=date.fun(S77.dat$Date,form="%d%B%y")
-S77.dat[,2:12]=sapply(S77.dat[,2:12],as.numeric)
-S77.dat$SITE="Moore Haven (S77)"
 
-S78.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s78m.html")
-S78.dat=data.frame(t(sapply(strsplit(S78.dat[11:17],"\\s+"),c)))
-colnames(S78.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Man.Prec")
-S78.dat$Date=date.fun(S78.dat$Date,form="%d%B%y")
-S78.dat[,2:11]=sapply(S78.dat[,2:11],as.numeric)
-S78.dat$SITE="Ortona (S78)"
-
-S79.dat=readLines("https://w3.saj.usace.army.mil/h2o/reports/r-s79m.html")
-S79.dat=data.frame(t(sapply(strsplit(S79.dat[11:17],"\\s+"),c)))
-colnames(S79.dat)=c("Date","HW","TW","Q","Precip","WndDir","WndSp","Locks","Bar.Hg","Bar.mBar","Cl","Man.Prec")
-S79.dat$Date=date.fun(S79.dat$Date,form="%d%B%y")
-S79.dat[,2:12]=sapply(S79.dat[,2:12],as.numeric)
-S79.dat$SITE="WP Franklin (S79)"
-
-vars=c("Date","SITE","Man.Prec")
-RF.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
-
-```
 
 <!-- https://holtzy.github.io/Pimp-my-rmd/#several_columns -->
 <div class="row">
@@ -424,6 +517,18 @@ RF.dat%>%
     output_extension = ".xlsx",
     button_label = "Download Rainfall as .xlsx",
     button_type = "primary",
+    has_icon = TRUE,
+    icon = "fa fa-file-excel"
+  )
+```
+
+```{r}
+Q.dat.xtab2%>%
+  download_this(
+    output_name = "Discharge7day",
+    output_extension = ".xlsx",
+    button_label = "ACOE Daily Report ",
+    button_type = "danger",
     has_icon = TRUE,
     icon = "fa fa-file-excel"
   )
@@ -571,6 +676,23 @@ LakeO.xtab$day=as.numeric(format(LakeO.xtab$DATE,"%d"))
 LakeO.xtab$plot.dat=with(LakeO.xtab,date.fun(ifelse(month>4,paste(CurWY-1,month,day,sep="-"),paste(CurWY,month,day,sep="-"))))
 LakeO.xtab$hydro.day=hydro.day(LakeO.xtab$DATE)
 
+LakeO.xtab$DoY=as.numeric(format(LakeO.xtab$DATE,"%j"))
+LakeO.xtab$CY=as.numeric(format(LakeO.xtab$DATE,"%Y"))
+bks=c(min(LakeO.xtab$recess_7day,na.rm=T),-0.16,-0.05,0.05,0.25,max(LakeO.xtab$recess_7day,na.rm=T))
+LakeO.xtab$cat=as.factor(findInterval(LakeO.xtab$recess_7day,bks,rightmost.closed = T,left.open = T))
+date.fill=data.frame(expand.grid(CY=seq(min(LakeO.xtab$CY),max(LakeO.xtab$CY),1),
+            DoY=1:366))
+
+LakeO.xtab.rec=LakeO.xtab[,c("CY","DoY","WY","recess_7day","cat")]
+LakeO.xtab.rec=merge(LakeO.xtab.rec,date.fill,by=c("CY",'DoY'),all.y=T)
+
+cols=c("1"="red","2"="yellow","3"="green","4"="goldenrod2","5"="darkred")
+cols=c("red","yellow","green","goldenrod2","darkred")
+LakeO.xtab.rec$cols=cols[LakeO.xtab.rec$cat]
+LakeO.xtab.rec$cols[is.na(LakeO.xtab.rec$cols)==T]="white"
+LakeO.xtab.rec2=subset(LakeO.xtab.rec,WY%in%seq(CurWY-3,CurWY,1))
+
+
 ```
 
 ```{r LORS plot,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
@@ -716,6 +838,49 @@ legend("topright",
 <font size=2><center>Lake Okeechobee 7-day and 30-day water level recession/ascension rates during `r paste0("WY",CurWY)`. Negative values indicate falling water levels (recession) and positive values indicate raising water level (ascension) during this 7-day period .</center></font>
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
+
+```{r,echo=FALSE,fig.width=8,fig.height=3.5,fig.align='center'}
+ylim.val=c(CurWY-3,CurWY-1);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
+ylim.val2=ylim.val
+ylim.val=c(ylim.val[1]-0.5,ylim.val[2]+0.5)
+xlim.val=c(1,366);by.x=60;xmaj=c(1,60,120,180,240,300,360);xmin=seq(0,xlim.val[2],by.x/2)#seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/2)
+xlim.val=c(1-0.5,xlim.val[2]+0.5)
+
+par(family="serif",mar=c(2,1,1,1),oma=c(1,3,2,1));
+  layout(matrix(1:2,1,2,byrow=T),widths=c(1,0.3))
+
+plot(CY~DoY,LakeO.xtab.rec,xlim=xlim.val,ylim=rev(ylim.val),type="n",xaxs="i",yaxs="i",axes=F,ann=F)
+for(i in seq(ylim.val2[1],ylim.val2[2],1)){
+tmp=subset(LakeO.xtab.rec,CY==i)
+rect(seq(0.5,365.5,1),i+0.5,366.5,i-0.5,col=tmp$cols,border=adjustcolor("grey",0.3),lwd=0.1)
+}
+axis_fun(1,xmaj,xmin,xmaj,line=-0.5)
+axis_fun(2,rev(ymaj),ymin,rev(ymaj))
+box(lwd=1)
+mtext(side=1,line=1.75,"Day of Year")
+mtext(side=2,line=3,"Year")
+mtext(side=3,adj=0,line=1.25,"Lake Okeechobee Recession/Accession Rate")
+mtext(side=3,adj=0,"Observed Weekly Recession/Accession Rates",cex=0.75,col="grey50")
+
+par(mar=c(2,0.5,1,0.5))
+plot(0:1,0:1,ann=F,axes=F,type="n")
+pal=cols
+labs=c("\u2264 -0.16","> -0.16 & < -0.05","> -0.05 & \u2264 0.05","> 0.05 & \u2264 0.25","> 0.25")
+n.bks=length(labs)
+top.val=0.65
+bot.val=0.35
+x.max=0.20
+x.min=0.10
+bx.val= seq(bot.val,top.val,(top.val-bot.val)/n.bks)
+rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(pal),lty=0)
+text(x=x.max, y = bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), labels = rev(labs),cex=0.75,adj=0,pos=4)
+text(x=x.min+((x.max-x.min)/2),y=top.val,"Weekly Recession\nRate (ft/wk)",adj=0,cex=0.75,pos=3,xpd=NA)
+
+
+```
+
+<font size=2><center>Lake Okeechobee 7-day water level recession/ascension rates stop-light metric relative to the draft Snail Kite Performance Measure.</center></font>
+<font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 ***
 
