@@ -361,11 +361,13 @@ RF.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
 
 Q.dat.xtab=q.dat.7day[,c("Date","S79","S78","S77")]
 Q.dat.xtab[,2:4]=Q.dat.xtab[,2:4]*0.5041669
+Q.dat.xtab=Q.dat.xtab[order(Q.dat.xtab$Date),]
 
 ## 
 # vars=c("Date","SITE2","Q")
 # Q.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
-
+Q.dat=Q.dat.xtab[,c("Date","S79")]
+Q.dat$Q=Q.dat$S79
 # Q.dat.xtab=cast(Q.dat,Date~SITE2,value="Q",mean)[,c("Date","S79","S78","S77")]
 Q7d.sum.tmp=round(apply(Q.dat.xtab[,2:4],2,mean))
 
@@ -379,7 +381,7 @@ dates2=c(date.fun(min(Q.dat.xtab$Date)-duration(90,'days')),date.fun(min(Q.dat.x
 S79dat2=DBHYDRO_daily(dates2[1],dates2[2],"DJ237")
 S79dat2$Q=S79dat2$Data.Value
 
-S79dat2=rbind(S79dat2[,c("Date","Q")],subset(Q.dat,SITE2=="S79")[,c("Date","Q")])
+S79dat2=rbind(S79dat2[,c("Date","Q")],Q.dat[,c("Date","Q")])
 S79dat2$Q.14=with(S79dat2,roll_meanr(Q,n=14))
 S79dat2$Q.7=with(S79dat2,roll_meanr(Q,n=7))
 
