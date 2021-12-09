@@ -359,10 +359,14 @@ RF.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
 
 ## 
 
-vars=c("Date","SITE2","Q")
-Q.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
+Q.dat.xtab=q.dat.7day[,c("Date","S79","S78","S77")]
+Q.dat.xtab[,2:4]=Q.dat.xtab[,2:4]*0.5041669
 
-Q.dat.xtab=cast(Q.dat,Date~SITE2,value="Q",mean)[,c("Date","S79","S78","S77")]
+## 
+# vars=c("Date","SITE2","Q")
+# Q.dat=rbind(S77.dat[,vars],S78.dat[,vars],S79.dat[,vars])
+
+# Q.dat.xtab=cast(Q.dat,Date~SITE2,value="Q",mean)[,c("Date","S79","S78","S77")]
 Q7d.sum.tmp=round(apply(Q.dat.xtab[,2:4],2,mean))
 
 Q.dat.xtab2=Q.dat.xtab
