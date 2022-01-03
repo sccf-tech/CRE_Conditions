@@ -1891,9 +1891,14 @@ request <- GET(
 )
 
 response <- content(request, as = "text", encoding = "UTF-8")
+if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){
+  results=NA;
+  kbrdat=NA
+  }else{
 results <- jsonlite::fromJSON(response,flatten=T)
 # results
 kbrdat=results$features
+}
 
 # Tampa Bay Results
 request <- GET(
@@ -1906,11 +1911,14 @@ request <- GET(
 )
 
 response <- content(request, as = "text", encoding = "UTF-8")
+if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){results=NA}else{
 results <- jsonlite::fromJSON(response,flatten=T)
+# results
 
 kbrdat=rbind(kbrdat,results$features)
 # kbrdat=kbrdat[duplicated(kbrdat)==F,]
-
+}
+if(is.na(kbrdat)==F){
 vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
        "attributes.SAMPLE_DEPTH","attributes.LATITUDE", 
        "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT", 
@@ -1944,11 +1952,12 @@ kbrdat_30d=subset(kbrdat,date<=TODAY&date>=sdate.algae)
 kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude")],
                                           data=kbrdat_30d,
                                           proj4string = wgs84)
-
+}
 ```
 
 ```{r,out.width='100%'}
-tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+if(is.na(kbrdat)==F){
+  tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
 tm_shape(kbrdat_30d.shp)+tm_dots(col="Abundance",
                                  palette =c("white","grey","dodgerblue1","orange","indianred1"),
                                  size=0.03,
@@ -1961,11 +1970,18 @@ tm_shape(kbrdat_30d.shp)+tm_dots(col="Abundance",
   tm_shape(HABext.poly)+tm_borders(group="Area of Interest - South Florida",lwd=1,lty="dashed",col="grey")+
   tm_shape(TBEP.ext.poly)+tm_borders(group="Area of Interest- Tampa Bay Area",lwd=1,lty="dashed",col="grey")
   # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
+}else{
+tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+  tm_shape(HABext.poly)+tm_borders(group="Area of Interest - South Florida",lwd=1,lty="dashed",col="grey")+
+  tm_shape(TBEP.ext.poly)+tm_borders(group="Area of Interest- Tampa Bay Area",lwd=1,lty="dashed",col="grey")
+  # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
+}
 ```
 <font size=2><center>Red tide sampling results for the last 30-days from just south of Tampa Bay to the Florida Keys. Data from NOAA HABSOS Program</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 
 ```{r}
+if(is.na(kbrdat)==F){
 rslt =plyr::ddply(kbrdat_30d.shp[CRE.ext,]@data,"category",summarise,N.val=N.obs(category))  
 
 rslt=merge(cat.abund.xwalk,rslt,"category",all.x=T)
@@ -1985,6 +2001,7 @@ rslt[,c("abund","N.val")]%>%
   fontsize(size=12,part="header")%>%
   add_header_lines(values=cap.val)%>%
   align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+}
 ```
 
 <br>
