@@ -1891,14 +1891,14 @@ request <- GET(
 )
 
 response <- content(request, as = "text", encoding = "UTF-8")
-if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){
-  results=NA;
-  kbrdat=NA
-  }else{
+# if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){
+#  results=NA;
+#  kbrdat=NA
+#  }else{
 results <- jsonlite::fromJSON(response,flatten=T)
 # results
 kbrdat=results$features
-}
+#}
 
 # Tampa Bay Results
 request <- GET(
@@ -1911,13 +1911,13 @@ request <- GET(
 )
 
 response <- content(request, as = "text", encoding = "UTF-8")
-if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){results=NA}else{
+# if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){results=NA}else{
 results <- jsonlite::fromJSON(response,flatten=T)
 # results
 
 kbrdat=rbind(kbrdat,results$features)
 # kbrdat=kbrdat[duplicated(kbrdat)==F,]
-}
+#}
 if(is.na(kbrdat)==F){
 vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
        "attributes.SAMPLE_DEPTH","attributes.LATITUDE", 
