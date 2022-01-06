@@ -860,8 +860,8 @@ legend("topright",
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 
-```{r,echo=FALSE,fig.width=8,fig.height=3.5,fig.align='center'}
-ylim.val=c(CurWY-3,CurWY-1);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
+```{r,echo=FALSE,fig.width=8,fig.height=3.75,fig.align='center'}
+ylim.val=c(CurWY-3,CurWY);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
 ylim.val2=ylim.val
 ylim.val=c(ylim.val[1]-0.5,ylim.val[2]+0.5)
 xlim.val=c(1,366);by.x=60;xmaj=c(1,60,120,180,240,300,360);xmin=seq(0,xlim.val[2],by.x/2)#seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/2)
