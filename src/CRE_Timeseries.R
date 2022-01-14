@@ -49,7 +49,8 @@ dates=date.fun(c("2005-01-01","2021-12-31"))
 # Discharge ---------------------------------------------------------------
 Q.dbkeys=data.frame(SITE=c("S79",rep("S78",3),rep("S77",2)),
                     DBKEY=c("00865","00857","WN161","DJ236","15635","DJ235"))
-Q.dbkeys=subset(Q.dbkeys,DBKEY=="00865")
+# Q.dbkeys=subset(Q.dbkeys,DBKEY%in%c("00865","DJ235"))
+Q.dbkeys=subset(Q.dbkeys,DBKEY%in%c("00865"))
 q.dat=data.frame()
 for(i in 1:nrow(Q.dbkeys)){
   tmp=DBHYDRO_daily(dates[1],dates[2],Q.dbkeys$DBKEY[i])
@@ -61,6 +62,7 @@ q.dat$CY=as.numeric(format(q.dat$Date,"%Y"))
 q.dat$WY=WY(q.dat$Date)
 q.dat$DOY=as.numeric(format(q.dat$Date,"%j"))
 q.dat$cumQ=with(q.dat,ave(Data.Value,CY,FUN=function(x) cumsum(ifelse(is.na(x),0,cfs.to.acftd(x)/1000))))
+
 
 Q.dbkeys=data.frame(SITE=c("S79",rep("S78",3),rep("S77",2)),
                     DBKEY=c("00865","00857","WN161","DJ236","15635","DJ235"))

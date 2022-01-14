@@ -17,6 +17,7 @@ library(AnalystHelper);
 library(plyr)
 library(reshape)
 library(zoo)
+library(lubridate)
 
 ## Paths
 wd="C:/Julian_LaCie/_Github/CRE_Conditions"
@@ -33,7 +34,7 @@ CurWY
 # -------------------------------------------------------------------------
 TODAY=date.fun(Sys.time())
 YEST=TODAY-duration(1,"days")
-dates=c(date.fun(paste(CurWY-5,"05-01",sep="-")),date.fun(as.Date(Sys.time())+duration(1,"days")))
+dates=date.fun(c("2017-05-01","2020-04-30"))# c(date.fun(paste(CurWY-5,"05-01",sep="-")),date.fun(as.Date(Sys.time())+duration(1,"days")))
 
 #LORS
 load("C:/Julian_LaCie/_GitHub/CRE_Conditions/Data/LORS.Rdata")
@@ -119,7 +120,7 @@ ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 # cols=wesanderson::wes_palette("Zissou1",4,"continuous")
 cols=c("red","blue","forestgreen","thistle1")
-# png(filename=paste0(plot.path,"okeechobee_Stage.png"),width=7,height=5,units="in",res=200,type="windows",bg="white")
+# png(filename=paste0(plot.path,"okeechobee_Stage_20182020.png"),width=7,height=5,units="in",res=200,type="windows",bg="white")
 par(family="serif",mar=c(0.5,2,0.5,1),oma=c(0.5,3,0.5,1));
 layout(matrix(1:2,2,1,byrow=T),heights=c(1,0.25))
 plot(High~Date2,LORS.gaph2Yrs,ylim=ylim.val,xlim=xlim.vals,type="n",lwd=2,ylab=NA,xlab=NA,yaxs="i",xaxs="i",xaxt="n",yaxt="n")
@@ -155,10 +156,10 @@ text(LowLab.x,14.5,"Low",font=2)
 # low.band.date=date.fun(LowLab.x)
 # low.band=subset(LORS.gaph2Yrs,Date2==low.band.date)
 # with(low.band,arrows(low.band.date,BaseFlow,low.band.date,Low,code=3,length=0.1,lwd=2))     
-with(subset(LakeO.xtab,WY==CurWY-3),lines(plot.dat,Mean,lwd=4,col=adjustcolor(cols[4],1),lty=1))
-with(subset(LakeO.xtab,WY==CurWY-2),lines(plot.dat,Mean,lwd=4,col=adjustcolor(cols[3],1),lty=1))
-with(subset(LakeO.xtab,WY==CurWY-1),lines(plot.dat,Mean,lwd=4,col=adjustcolor(cols[2],1),lty=1))
-with(LakeO.xtab,lines(DATE,Mean,lwd=4,col=cols[1],lty=1))
+with(subset(LakeO.xtab,WY==2018),lines(plot.dat,Mean,lwd=4,col=adjustcolor(cols[3],1),lty=1))
+with(subset(LakeO.xtab,WY==2019),lines(plot.dat,Mean,lwd=4,col=adjustcolor(cols[2],1),lty=1))
+with(subset(LakeO.xtab,WY==2020),lines(plot.dat,Mean,lwd=4,col=adjustcolor(cols[1],1),lty=1))
+# with(LakeO.xtab,lines(DATE,Mean,lwd=4,col=cols[1],lty=1))
 axis_fun(1,xmaj,xmin,format(xmaj,"%b"),line=-0.5)
 axis_fun(2,ymaj,ymin,ymaj)
 box(lwd=lwd.val)
@@ -168,8 +169,8 @@ mtext(side=2,"Stage Elevation (Feet, NGVD29)",line=2.5,cex=1.25)
 
 plot(0:1,0:1,type = 'n', axes = F,xlab=NA, ylab=NA)
 legend(0.5,0.5,
-       legend=c(paste0("WY",CurWY:(CurWY-3))),
-       col=c(cols),lty=c(1),lwd=c(4),ncol=4,cex=0.8,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
+       legend=c(paste0("WY",2018:2020)),
+       col=c(cols[3:1]),lty=c(1),lwd=c(4),ncol=4,cex=0.8,bty="n",y.intersp=1,x.intersp=0.5,xpd=NA,xjust=0.5)
 dev.off()
 
 

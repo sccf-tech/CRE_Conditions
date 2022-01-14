@@ -38,8 +38,9 @@ GIS.path="C:/Julian_LaCie/_Github/CRE_Conditions/GIS"
 GIS.path.gen="C:/Julian_LaCie/_GISData"
 
 # Helper variables
-nad83.pro=CRS(SRS_string ="EPSG:4269")
-utm17=CRS(SRS_string ="EPSG:26917")
+
+nad83.pro=CRS("+init=epsg:4269")
+utm17=CRS("+init=epsg:26917")
 
 ## Functions
 # ggplot map theme
