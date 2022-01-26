@@ -14,7 +14,7 @@ editor_options:
 ***
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,warning=FALSE,message=FALSE)
 
 library(AnalystHelper);
 library(plyr)
@@ -74,7 +74,7 @@ theme_map <- function(...) {
 
 ## Rainfall Data
 dates=c(date.fun("1979-05-01"),date.fun(as.Date(Sys.time())-duration(1,"days")))
-
+curYr=as.numeric(format(Sys.time(),"%Y"))
 wx.sites=data.frame(SITE=c('FPWX','SLEE_R','S79_R','CORK_R','CORK_R','CRKSWPS_R',"S78_R","S78_R","DEVILS_R","PALMDALE_R","PALMDALE_R","S77_R","S77_R","S77_R"),
                     DBKEY=c('FZ598','06081','16414','DO541','VN012','63883',"06243","16625","IV150","06093","15786","05913","KD314","16415"))
 
@@ -100,7 +100,9 @@ rf.dat.da$CY=as.numeric(format(rf.dat.da$Date,"%Y"))
 rf.dat.da$month=as.numeric(format(rf.dat.da$Date,"%m"))
 
 rf.dat.mon=ddply(rf.dat.da,c("CY","month"),summarise,TRF.in=sum(mean.val,na.rm=T))
-rf.dat.mon=merge(rf.dat.mon,expand.grid(CY=1979:2021,month=1:12),c("CY","month"),all.y=T)
+
+Yr.seq=seq(as.numeric(format(dates[1],"%Y")),as.numeric(format(dates[2],"%Y")),1)
+rf.dat.mon=merge(rf.dat.mon,expand.grid(CY=Yr.seq,month=1:12),c("CY","month"),all.y=T)
 rf.dat.mon$RF.cat=as.factor(findInterval(rf.dat.mon$TRF.in,c(0,1,2.5,5,7.5,10,12.5,100)))
 rf.dat.mon=merge(rf.dat.mon,
                  data.frame(RF.cat=c(NA,1:7),
@@ -166,12 +168,12 @@ month.POR=ggplot()+
   scale_fill_manual(name = NULL, values = c("POR Mean" = "dodgerblue1"))+
   scale_x_continuous(limits = c(0.5,12.5),breaks=seq(1,12,1))+
   scale_y_continuous(limits = c(0,10), expand = c(0, 0)) +
-  geom_point(data=subset(rf.dat.mon,CY==2021),
-             aes(x=month,y=TRF.in,color="CY 2021"),
+  geom_point(data=subset(rf.dat.mon,CY==curYr),
+             aes(x=month,y=TRF.in,color="Current Year"),
              size=2.5,fill="indianred1",shape=21)+
-  geom_line(data=subset(rf.dat.mon,CY==2021),
-             aes(x=month,y=TRF.in,color="CY 2021"),linetype=2,size=1)+
-  scale_color_manual(name = NULL, values = c("CY 2021" = "indianred1"))+
+  geom_line(data=subset(rf.dat.mon,CY==curYr),
+             aes(x=month,y=TRF.in,color="Current Year"),linetype=2,size=1)+
+  scale_color_manual(name = NULL, values = c("Current Year" = "indianred1"))+
   theme_bw() +
   theme(
     legend.position="bottom",
@@ -307,4 +309,25 @@ ggplot(subset(q.dat.wk.mean,SITE=='S79'), aes(x = wknum, y = CY, fill = Q.cat)) 
        y="Year")
 ```
 
-NOTE: **need to add map with watershed and S79 identified**
+```{r,warning=FALSE,fig.height=8.5,fig.width=7,echo=FALSE,fig.align="center",fig.cap="S-77 weekly average discharge volume from calendar year 1979 to present."}
+ggplot(subset(q.dat.wk.mean,SITE=='S77'), aes(x = wknum, y = CY, fill = Q.cat)) +
+  geom_tile(aes(group = Q.cat), colour = 'black')+
+  scale_y_reverse(expand = c(0, 0), breaks = q.dat.wk.mean$CY) +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(1,53,4),labels=seq(1,53,4))+
+  scale_fill_manual(values = cols,
+                    name="Weekly Average\nDischarge\nCategories\n(CFS)",
+                    breaks=1:6,
+                    labels=c("< 457","457 - 750", "750 - 2100","2100 - 2600","2600 - 6500",">6500")) +
+  theme_bw() +
+  theme(
+    text=element_text(family="serif"),
+    plot.title=element_text(size=12),
+    plot.subtitle = element_text(color = "grey50",size=8),
+    plot.caption = element_text(hjust = 0)
+  )+
+  labs(title = "Lake Okeechobee (S-77)",
+       subtitle = "Average weekly discharge",
+       caption = paste0("Produced: ",format(Sys.Date(),"%d %b %Y")),
+       x="Week",
+       y="Year")
+```
