@@ -1,0 +1,275 @@
+/* Basic Blue and White SCCF ppt */
+
+/* div.my-footer {
+  background-color: #005D8E;
+    position: absolute;
+  bottom: 0px;
+  left: 0px;
+  height: 15px;
+  width: 100%;
+}
+*/
+
+/* https://www.w3schools.com/css/css3_gradients.asp */
+div.my-footer {
+  /*background-image: linear-gradient(to right, #005D8E,#7BA9BE ,#FFFFFF,#FFFFFF,	#0c7000, #ffc20f);*/
+  background-image: linear-gradient(to right, #005D8E,#ffc20f);
+    position: absolute;
+  bottom: 0px;
+  left: 0px;
+  height: 20px;
+  width: 100%;
+}
+
+div.my-footer span {
+  font-size: 10pt;
+  color: #FFFFFF;
+    position: absolute;
+  left: 15px;
+  bottom: 2px;
+}
+
+  a,
+a:visited {
+  color: #1a1917;
+  border-bottom: 1px solid  #61acf0;
+  box-shadow: inset 0 -2px 0  #61acf0;
+}
+
+a:hover,
+a:focus {
+  color: #1a1917;
+  background: rgba(97, 172, 240, .5);
+  border-bottom: none;
+}
+
+a > code {
+  color: #61acf0;
+  text-decoration: none;
+}
+
+/* Fonts */
+
+@import url(https://fonts.googleapis.com/css?family=Lato);
+@import url(https://fonts.googleapis.com/css?family=Muli:600,700,800);
+@import url('https://fonts.googleapis.com/css?family=Inconsolata:400');
+@import url('https://fonts.googleapis.com/css?family=Cormorant+Upright:700');
+
+body {
+  font-family: serif;
+}
+
+h1, h2, h3 {
+  font-family: serif;
+  font-weight: 600;
+  color: #005D8E;
+}
+
+.inverse h1 {
+  font-family: 'Muli';
+  font-weight: 800;
+  font-size: 2.5em; 
+}
+
+.remark-code, .remark-inline-code {
+  font-family: 'Inconsolata', 'Lucida Console', Monaco, monospace;
+  font-size: 75%;
+}
+
+.fancy{
+  font-family: 'Cormorant Upright', serif;
+  font-weight: 700;
+}
+
+.remark-slide-number {
+  bottom: 18px;
+  opacity: 0.5;
+  position: absolute;
+  right: 20px;
+}
+
+.title-slide .remark-slide-number { 
+    display: none; 
+}
+
+
+.small { 
+  font-size: 70%;
+}
+
+.large{
+  font-size: 150%;
+}
+.LARGE{
+  font-size: 200%;
+}
+.boldtxt{
+  font-weight: bold;
+}
+
+.left-code{
+  color: #777;
+  width: 35%;
+  height: 92%;
+  float: left;
+}
+
+.right-plot{
+  width: 62%;
+  float: right;
+  padding-left: 1%;
+}
+
+/* https://stackoverflow.com/questions/50919104/horizontally-scrollable-output-on-xaringan-slides */
+  
+  pre {
+    background: #f8f8f8; /* match github highlightjs */
+      max-width: 100%;
+    overflow-x: auto;
+  }
+
+img.lil {
+  width: 15%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.red{
+  color: #E8412C;
+}
+
+/* From https://github.com/garthtarr/sydney_xaringan .../assests/sydney.css */
+/* USYD blockquote */
+blockquote, .blockquote {
+  display: block;
+  margin-top: 0.1em;
+  margin-bottom: 0.2em;
+  margin-left: 5px;
+  margin-right: 5px;
+  border-left: solid 10px #0148A4;
+  border-top: solid 2px #0148A4;
+  border-bottom: solid 2px #0148A4;
+  border-right: solid 2px #0148A4;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+  /* background-color: #e64626; */
+  color: #e64626  /* #000000;*/;
+  padding: 0.5em;
+  opacity:0.5;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+.blockquote p {
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+.blockquote > h1:first-of-type {
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+.blockquote > h2:first-of-type {
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+.blockquote > h3:first-of-type {
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+.blockquote > h4:first-of-type {
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+
+.box2 {
+    background-color: rgba(68,114,196,.5);
+    color: #fff;
+    padding: 0.8em;
+    font-weight: bold;
+}
+
+/******************
+ * 
+ * Coloured content boxes
+ *
+ ****************/
+
+
+.content-box { 
+    box-sizing: content-box;
+    	background-color: #e2e2e2;
+  /* Total width: 160px + (2 * 20px) + (2 * 8px) = 216px
+     Total height: 80px + (2 * 20px) + (2 * 8px) = 136px
+     Content box width: 160px
+     Content box height: 80px */
+}
+
+
+.content-box-blue,
+.content-box-gray,
+.content-box-grey,
+.content-box-army,
+.content-box-green,
+.content-box-purple,
+.content-box-red,
+.content-box-yellow {
+    border-radius: 10px;
+    margin: 0 0 20px;
+    overflow: hidden;
+    padding: 10px;
+    width: 90%;
+}
+
+.content-box-blue {
+    background-color: #3f72c4;
+
+}
+
+.content-box-gray {
+    background-color: #e2e2e2;
+}
+
+.content-box-grey {
+	background-color: #F5F5F5;
+}
+
+.content-box-army {
+	background-color: #737a36;
+}
+
+.content-box-green {
+	background-color: #d9edc2;
+}
+
+.content-box-purple {
+	background-color: #e2e2f9;
+}
+
+.content-box-red {
+	background-color: #f9dbdb;
+}
+
+.content-box-yellow {
+	background-color: #fef5c4;
+}
+
+.content-box-blue-tran {
+    opacity:0.5;
+    background-color: #3f72c4;
+
+}
+
+
+.full-width {
+    display: flex;
+    width: 100%;
+    flex: 1 1 auto;
+}
+
+
+.right {
+  float: right;
+  width: 300px;
+  /* border: 3px solid #73AD21;*/
+  padding: 10px;
+}

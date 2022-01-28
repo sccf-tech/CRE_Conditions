@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>TBEP OpenSci</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Paul Julian" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
+    <script src="libs/tile-view/tile-view.js"></script>
+    <link rel="stylesheet" href="libs/WhiteBlue.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+
+
+layout: true
+
+&lt;div class="my-footer"&gt;
+&lt;span&gt;  &lt;/span&gt;
+&lt;/div&gt;
+
+---
+name: title
+class: left, middle
+
+### Data, data everywhere ... information distillation for Lake Okeechobee and Caloosahatchee River condition assessment
+
+.pull-left[
+#### TBEP Open Science Subcommittee
+
+
+*Sanibel-Captiva Conservation Foundation*
+
+*Conservancy of Southwest Florida*
+
+February 01, 2022
+
+]
+&lt;!-- this ends up being the title slide since seal = FALSE--&gt;
+
+.pull-right[
+&lt;img src="./Plots/SCCF Logo knockout_c.png" width="40%" style="display: block; margin: auto;" /&gt;
+
+&lt;img src="./Plots/ConSWFL.jpeg" width="40%" style="display: block; margin: auto;" /&gt;
+
+]
+
+
+
+.footnote[
+Paul Julian PhD&lt;br&gt;[<svg aria-hidden="true" role="img" viewBox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M502.3 190.8c3.9-3.1 9.7-.2 9.7 4.7V400c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V195.6c0-5 5.7-7.8 9.7-4.7 22.4 17.4 52.1 39.5 154.1 113.6 21.1 15.4 56.7 47.8 92.2 47.6 35.7.3 72-32.8 92.3-47.6 102-74.1 131.6-96.3 154-113.7zM256 320c23.2.4 56.6-29.2 73.4-41.4 132.7-96.3 142.8-104.7 173.4-128.7 5.8-4.5 9.2-11.5 9.2-18.9v-19c0-26.5-21.5-48-48-48H48C21.5 64 0 85.5 0 112v19c0 7.4 3.4 14.3 9.2 18.9 30.6 23.9 40.7 32.4 173.4 128.7 16.8 12.2 50.2 41.8 73.4 41.4z"/></svg>](mailto: pjulian@sccf.org) .small[pjulian@sccf.org]
+
+.small[Use cursor keys for navigation, press .red["O"] for a slide .red[O]verview]
+
+<a href="https://sccf-tech.github.io/slides/OpenSci/20220201_TBEPOpenSci.pdf">
+<button class="btn btn-primary btn-sm">Download PDF Version</button>
+</a>
+]
+
+---
+name: land acknowledge
+background-image: url("plots/cre_mural.jpg")
+background-position: center
+background-size: contain
+class: center, middle
+
+&lt;div class="box box2"&gt;
+.large[The land on which we sit have been cared for by innumerable generations of original peoples of the past, whose memory we honor. The 2009 US apology to native peoples inaugurated an American context of reconciliation, which is an opportunity for healing, collaboration, and environmental conservation.]
+&lt;/div&gt;
+
+
+---
+name: caloosa
+
+### Caloosahatchee River
+
+&lt;img src="https://res.cloudinary.com/sanibel-captiva-conservation-foundation-recon/image/upload/f_auto,q_auto/v1492528911/ykycqy8te1jzihaue7se.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+* Historically the river was not connected to Lake Okeechobee
+
+--
+
+* Channelized river and estuary are challenged by extremes of too much or too little water
+
+--
+
+* In 2011, SCCF policy staff developed a weekly report of Caloosahatchee, estuary and coastal conditions to provide real time conditions to water managers at USACE and SFWMD
+
+.footnote[
+.small[
+[SCCFs Weekly Conditions](https://www.sccf.org/water-quality/caloosahatchee-condition-reports)
+]
+]
+
+
+---
+name: caloosa2
+
+### Caloosahatchee River
+
+* Great reports that consolidated a lot of information into 1 - 2 pages
+  * [Jan 18th report](https://www.sccf.org/downloadable-files/61e880e516a93c8e4a96456c.pdf)
+
+--
+
+&lt;img src="https://releasedatetv.com/wp-content/uploads/2017/07/howitsmade.jpg" width="75%" style="display: block; margin: auto;" /&gt;
+
+
+
+.right[
+.large[
+pre 2021
+]
+]
+
+---
+name: how
+
+### How It's Made (pre-2021)
+
+1. visit [USACE](https://w3.saj.usace.army.mil/h2o/reports.htm) Daily Reports webpage
+  * Check Lake Okeechobee Net Inflows - [link](https://w3.saj.usace.army.mil/h2o/reports/r-lonin.html)
+  * Check Lake Okeechobee Net Outflows - [link](https://w3.saj.usace.army.mil/h2o/reports/r-lonf.html)
+  * Check Lake Okeechobee &amp; Vicinity - [Link](https://w3.saj.usace.army.mil/h2o/reports/r-oke.html)
+  * Verify spillway volumes (S77, S78, S79, etc.) &amp; Check rainfall values 
+
+--
+
+2. Copy all data into spreadsheet to summarize and convert data
+
+--
+
+3. Check HAB update - 
+  * Red Tide (*Karina brevis*) Check FWC Red tide update - [link](https://myfwc.com/research/redtide/statewide/)
+      * If in bloom period (Sept to December) check bloom map/remote sensing info
+  * Freshwater Blue-Green Algae - Lee County Environmental Lab/FDEP information
+
+--
+
+4. Receive various other data from SCCF Marine Lab and other Stakeholders
+
+--
+
+5. ...other valuable information .small[ (i.e. Shellfish advisory, Beach Conditions, Wildlife Impacts, USACE water management, etc.)]
+
+--
+
+6. Consolidate info into word document, pdf and post
+  
+
+---
+name: how2
+
+### ...and now
+
+Steps 1 -3 and 6 can all be done via webscraping, API access to data, consistent calculations and consolidation via Open Science applications. 
+
+A rudimentary example in `R`: 
+
+
+```r
+library(rvest)
+
+LO.url="https://w3.saj.usace.army.mil/h2o/reports/r-oke.html"
+webpage &lt;- read_html(LO.url)
+node.val &lt;- html_nodes(webpage,"pre")
+
+LO.text.vals &lt;- html_text(node.val)
+
+strsplit(as.character(LO.text.vals),"\n")[[1]][2:11]
+```
+
+```
+##  [1] "               U. S. Army Corps of Engineers, Jacksonville District"          
+##  [2] "                       Lake Okeechobee and Vicinity Report"                   
+##  [3] "                   ** Preliminary Data - Subject to Revision **"              
+##  [4] " "                                                                            
+##  [5] "Data Ending 2400 hours   27 JAN 2022"                                         
+##  [6] "_____________________________________________________________________________"
+##  [7] " "                                                                            
+##  [8] "Okeechobee Lake Regulation      Elevation   Last Year  2YRS Ago"              
+##  [9] "                                (ft-NGVD)   (ft-NGVD)  (ft-NGVD)"             
+## [10] "  *Okeechobee Lake Elevation       15.07       15.57    12.80 (Official Elv)"
+```
+
+
+---
+name: how2
+
+### ...and now
+
+* Using reproducible open science information gathering can be stream-lined
+
+* Removing time-constraint, more information can be also be included
+
+* Short term trends, weekly water budgets, etc. 
+
+* One stop shop for information - [link](https://sccf-tech.github.io/CRE_Conditions/report/RegionalConditions)
+
+* If hosted through github (or other platforms) you can automate to auto-update (to some extent)
+
+&lt;img src="./Plots/ConditionsReport.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+---
+name: how3
+
+### ... confession
+
+&lt;img src="https://media3.giphy.com/media/xT5LMRU6L8ccSgjKeY/giphy.gif" width="30%" style="display: block; margin: auto;" /&gt;
+
+--
+
+The final conditions report is not 100% reproducible but is constructed using the daily [Regional Conditions](https://sccf-tech.github.io/CRE_Conditions/report/RegionalConditions) report
+
+The [Regional Conditions](https://sccf-tech.github.io/CRE_Conditions/report/RegionalConditions) report is also used to propagate the [Weekly Water Conditions Tracker](https://www.sccf.org/water-quality/weekly-water-conditions-tracker).
+
+--
+
+.bold[Slowly evolving our process]
+
+- External sources of data (light attenuation, salinity, etc.)
+
+- As available or if suitable information is added such as drone images ([SCCF Drone](https://aerialwq.sccf.org/lighthouse/virtualtour/)), Wildlife, Algae conditions, etc.
+
+---
+name: other
+
+### Other tools/reports
+
+* Caloosahatchee Water Quality Dashboard - [link](https://sccf-tech.github.io/CREWQ_tracking/)
+
+* Lake Okeechobee WBID Evaluation - [link](https://sccf-tech.github.io/LakeO_WQ/WBIDEval/index.html)
+
+* Caloosahatchee River Rainfall and Discharge - [link](https://sccf-tech.github.io/CRE_Conditions/report/Caloosa)
+
+---
+name: lake
+
+&lt;img src="./plots/Lake_recess2.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+name: sharing
+
+### Sharing is caring
+
+* Open science is a continuum (not open vs closed)
+
+--
+
+  * As code and tools are tested and put through its paces they can be shared (via GitHub, etc.)
+  
+  * Its not all or nothing
+  
+--
+
+* How do I share my reports, cool data visualizations or tools?
+
+--
+  * [GitHub Pages](https://pages.github.com/)
+      * Build your own website hosted through Github (simple to fancy)
+      * Here is our [https://sccf-tech.github.io/](https://sccf-tech.github.io/)... looks familiar? Because its based on [https://tbep-tech.github.io/](https://tbep-tech.github.io/)
+--
+  * [RStudio Connect](https://www.rstudio.com/products/connect/)
+      * Server product from RStudio for secure sharing of applications, reports and plots. 
+--
+  * Social Media
+      * <svg aria-hidden="true" role="img" viewBox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:steelblue;overflow:visible;position:relative;"><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>: Strong [#rstat](https://twitter.com/search?q=%23rstat&amp;src=typed_query) community
+      * [Example](https://twitter.com/SwampThingPaul/status/1462772974935846923?s=20&amp;t=d2vCwaw1aiHweKcAUrG6qw)
+      * [Example](https://twitter.com/SwampThingPaul/status/1460349310177054731?s=20&amp;t=d2vCwaw1aiHweKcAUrG6qw)
+
+---
+name: concl
+
+### Conclusion
+
+* Gone is the dark times of spreadsheets and countless folders of maps, graphs, etc.
+
+* Data aggregation across multiple agencies provides a clearer look at conditions
+  * National Oceanic and Atmospheric Administration
+  * United States Geological Survey
+  * United States Army Corps of Engineers
+  * South Florida Water Management District 
+  * Florida Fish and Wildlife Conservation Commission
+  * Florida Department of Environmental Protection
+  * Lee County Environmental Lab
+  * Sanibel-Captiva Conservation Foundation Marine Lab
+  * ...
+
+* Integrating spatial data and data visualizations has also improved  how information is evaluated and conveyed 
+
+* ...also occasionally we get to put together interesting ways to looks at large datasets to get a historical perspective on the system. 
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
