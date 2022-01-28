@@ -44,7 +44,6 @@ class: left, middle
 
 
 *Sanibel-Captiva Conservation Foundation*
-
 *Conservancy of Southwest Florida*
 
 `r paste(format(as.Date("2022-02-01"),"%B %d, %Y"))#  ,"<br>(Updated:", format(as.Date(Sys.Date()),"%B %d, %Y"),")")`
@@ -78,8 +77,8 @@ Paul Julian PhD<br>[`r fontawesome::fa("fas fa-envelope")`](mailto: pjulian@sccf
 ```{r} 
 bsplus::bs_button(
     label = "Download PDF Version",
-    button_type = "primary",
-    button_size = "small") %>%
+    button_type = "default",
+    button_size = "extra-small") %>%
     htmltools::a(
       href = "https://sccf-tech.github.io/slides/OpenSci/20220201_TBEPOpenSci.pdf"
       )
