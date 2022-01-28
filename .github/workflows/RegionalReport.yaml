@@ -2,7 +2,7 @@
 name: Render & Deploy Site
 # on: [push]
 on:
-  push:
+#  push:
   schedule:
     - cron: '40 11,15 * * 1,2,3,4,5'
 #    - cron: '40 11,12,15 * * 1,2,3,4,5'

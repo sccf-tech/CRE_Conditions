@@ -217,7 +217,7 @@ name: how2
 * If hosted through github (or other platforms) you can automate to auto-update (to some extent)
 
 ```{r ,fig.align="center",out.width="60%"}
-knitr::include_graphics('./Plots/ConditionsReport.png')
+knitr::include_graphics('./plots/ConditionsReport.png')
 ```
 
 ---
