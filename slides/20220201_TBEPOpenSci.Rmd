@@ -46,32 +46,25 @@ class: left, middle
 *Sanibel-Captiva Conservation Foundation*
 *Conservancy of Southwest Florida*
 
+Paul Julian PhD<br>.small[[`r fontawesome::fa("fas fa-envelope")`](mailto: pjulian@sccf.org) pjulian@sccf.org]
+.small[
 `r paste(format(as.Date("2022-02-01"),"%B %d, %Y"))#  ,"<br>(Updated:", format(as.Date(Sys.Date()),"%B %d, %Y"),")")`
-
+]
 ]
 <!-- this ends up being the title slide since seal = FALSE-->
 
 .pull-right[
-```{r ,fig.align="center",out.width="40%"}
+```{r ,fig.align="center",out.width="35%"}
 knitr::include_graphics('./Plots/SCCF Logo knockout_c.png')
 ```
 
-```{r ,fig.align="center",out.width="40%"}
+```{r ,fig.align="center",out.width="35%"}
 knitr::include_graphics('./Plots/ConSWFL.jpeg')
 ```
 
 ]
 
-
-```{r xaringanExtra, include=FALSE, warning=FALSE}
-# devtools::install_github("gadenbuie/xaringanExtra")
-# xaringanExtra::use_webcam()
-xaringanExtra::use_tile_view()
-# xaringanExtra::use_scribble()
-```
 .footnote[
-Paul Julian PhD<br>[`r fontawesome::fa("fas fa-envelope")`](mailto: pjulian@sccf.org) .small[pjulian@sccf.org]
-
 .small[Use cursor keys for navigation, press .red["O"] for a slide .red[O]verview]
 
 ```{r} 
@@ -84,6 +77,12 @@ bsplus::bs_button(
       )
 ```
 ]
+```{r xaringanExtra, include=FALSE, warning=FALSE}
+# devtools::install_github("gadenbuie/xaringanExtra")
+# xaringanExtra::use_webcam()
+xaringanExtra::use_tile_view()
+# xaringanExtra::use_scribble()
+```
 
 ---
 name: land acknowledge
