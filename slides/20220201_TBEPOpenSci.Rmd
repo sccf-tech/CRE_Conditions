@@ -54,12 +54,12 @@ Paul Julian PhD<br>.small[[`r fontawesome::fa("fas fa-envelope")`](mailto: pjuli
 <!-- this ends up being the title slide since seal = FALSE-->
 
 .pull-right[
-```{r ,fig.align="center",out.width="35%"}
-knitr::include_graphics('./Plots/SCCF Logo knockout_c.png')
+```{r ,fig.align="center",out.width="40%"}
+knitr::include_graphics('./plots/SCCF Logo knockout_c.png')
 ```
 
-```{r ,fig.align="center",out.width="35%"}
-knitr::include_graphics('./Plots/ConSWFL.jpeg')
+```{r ,fig.align="center",out.width="40%"}
+knitr::include_graphics('./plots/ConSWFL.jpeg')
 ```
 
 ]
