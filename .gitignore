@@ -45,3 +45,7 @@ rsconnect/
 /SalinityModels/
 
 /_presentations/
+
+/Plots/GAM_SalMod/
+/Plots/tmp/
+/slides/plots/*.pptx

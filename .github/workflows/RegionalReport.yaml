@@ -4,7 +4,7 @@ name: Render & Deploy Site
 on:
   push:
   schedule:
-    - cron: '40 11,15 * * 1,2,3,4,5'
+    - cron: '55 11,15 * * *'
 #    - cron: '40 11,12,15 * * 1,2,3,4,5'
 # https://crontab.guru/#5_*_*_*_*
 jobs:
