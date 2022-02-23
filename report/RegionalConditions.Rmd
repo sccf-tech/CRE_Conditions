@@ -76,7 +76,9 @@ dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days"
 ```{r data, include=F}
 ## Lake Okeechobee Report
 LO.url="https://w3.saj.usace.army.mil/h2o/reports/r-oke.html"
-webpage=read_html(LO.url)
+download.file(LO.url, destfile = "LOK_scrapedpage.html", quiet=TRUE)
+
+webpage=read_html("LOK_scrapedpage.html")
 node.val=html_nodes(webpage,"pre")
 
 LO.text.vals=html_text(node.val)
@@ -105,7 +107,9 @@ q.dat=cbind(tmp1[,c(8,4:7)],tmp2[,c(4:8)],tmp3[,c(4:6)])
 
 ## Preferred Structures
 str.url="https://w3.saj.usace.army.mil/h2o/reports/r-lonin.html"
-webpage=read_html(str.url)
+download.file(str.url, destfile = "struct_scrapedpage.html", quiet=TRUE)
+
+webpage=read_html("struct_scrapedpage.html")
 node.val=html_nodes(webpage,"pre")
 
 str.text.vals=html_text(node.val)
@@ -128,7 +132,8 @@ map.q=data.frame()
 map.stg=data.frame()
 for(i in 1:(length(dates)-1)){
   map.url=paste0("https://w3.saj.usace.army.mil/h2o/reports/StatusDaily/archive/",format(dates[i],"%m%d"),"/StatusDaily.htm")
-  mapdata=readLines(map.url)
+  download.file(map.url, destfile = "map_dat.html", quiet=TRUE)
+  mapdata=readLines("map_dat.html")
   val=grep("CA1IN",mapdata)
   WCA1=strsplit(strsplit(mapdata[val],"\\s+")[[1]][13],"</div>")[[1]][1]
   
