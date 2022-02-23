@@ -379,7 +379,7 @@ Q.dat.xtab2=rbind(Q.dat.xtab2,data.frame(Date="7-day avg",S79=mean(Q.dat.xtab$S7
 Q.dat.xtab2[2:4]=round(Q.dat.xtab2[2:4],0)
 # export Q.dat.xtab2 as excel - ACOE Daily Reports
 
-dates2=c(date.fun(min(Q.dat.xtab$Date)-duration(90,'days')),date.fun(min(Q.dat.xtab$Date)-duration(1,'days')))
+dates2=c(date.fun(min(Q.dat.xtab$Date)-duration(150,'days')),date.fun(min(Q.dat.xtab$Date)-duration(1,'days')))
 S79dat2=DBHYDRO_daily(dates2[1],dates2[2],"DJ237")
 S79dat2$Q=S79dat2$Data.Value
 
