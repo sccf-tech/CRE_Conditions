@@ -23,7 +23,7 @@ jobs:
         run: |
           install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
                   "rvest","lubridate","flextable","magrittr",
-                  "grid","RcppRoll","downloadthis","dataRetrieval",
+                  "RcppRoll","downloadthis","dataRetrieval",
                   "RCurl","png","jsonlite","httr","sp",
                   "raster","remotes"))
           pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
