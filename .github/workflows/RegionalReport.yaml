@@ -25,7 +25,9 @@ jobs:
                   "rvest","lubridate","flextable","magrittr",
                   "grid","RcppRoll","downloadthis","dataRetrieval",
                   "RCurl","png","jsonlite","httr","sp",
-                  "raster","tmaptools","tmap","remotes"))
+                  "raster","remotes"))
+          pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
+          install.packages(url,repos=NULL,type="source")
           remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       
