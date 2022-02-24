@@ -25,7 +25,7 @@ jobs:
                   "rvest","lubridate","flextable","magrittr",
                   "grid","RcppRoll","downloadthis","dataRetrieval",
                   "RCurl","png","jsonlite","httr","sp",
-                  "raster","tmap","XML","remotes"))
+                  "raster","XML","tmap","tmaptools","remotes"))
            remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       
