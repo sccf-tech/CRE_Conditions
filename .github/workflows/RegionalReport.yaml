@@ -10,7 +10,7 @@ on:
 jobs:
   render:
     name: Render report
-    runs-on: windows-latest
+    runs-on: windows-2019
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -25,7 +25,7 @@ jobs:
                   "rvest","lubridate","flextable","magrittr",
                   "grid","RcppRoll","downloadthis","dataRetrieval",
                   "RCurl","png","jsonlite","httr","sp",
-                  "raster","tmap","remotes"))
+                  "raster","tmap","XML","remotes"))
            remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       
