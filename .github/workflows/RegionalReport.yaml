@@ -24,10 +24,10 @@ jobs:
           install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
                   "rvest","lubridate","flextable","magrittr",
                   "RcppRoll","downloadthis","dataRetrieval",
-                  "RCurl","png","jsonlite","httr","sp",
+                  "RCurl","png","jsonlite","httr","sp","tmap",
                   "raster","remotes"))
-          pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
-          install.packages(pack.url,repos=NULL,type="source")
+          # pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
+          # install.packages(pack.url,repos=NULL,type="source")
           remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
       
