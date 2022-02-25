@@ -10,8 +10,8 @@ on:
 jobs:
   render:
     name: Render report
-    runs-on: macos-latest
-    # runs-on: windows-2019
+    # runs-on: macos-latest
+    runs-on: windows-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
