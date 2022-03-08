@@ -2014,7 +2014,7 @@ box(lwd=1)
 mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
 
 plot(0:1,0:1,ann=F,axes=F,type="n")
-date.rng=range(bgdat_30d.shp$date,na.rm=T)
+date.rng=range(kbrdat_30d.shp$date,na.rm=T)
 legend("center",legend=c(cat.abund.xwalk$abund,"Caloosahatchee River Estuary"),
        pch=c(rep(21,length(cat.abund.xwalk$abund)),22),lty=c(NA),
              lwd=c(rep(0.01,length(cat.abund.xwalk$abund)),2),
