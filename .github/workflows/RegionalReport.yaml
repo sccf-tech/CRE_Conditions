@@ -10,8 +10,8 @@ on:
 jobs:
   render:
     name: Render report
-    runs-on: macos-latest
-    # runs-on: windows-latest
+    # runs-on: macos-latest
+    runs-on: windows-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -25,7 +25,7 @@ jobs:
           install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
                   "rvest","lubridate","flextable","magrittr",
                   "RcppRoll","downloadthis","dataRetrieval",
-                  "RCurl","png","jsonlite","httr","sp","tmap",
+                  "RCurl","png","jsonlite","httr","sp","mapmisc","rgdal",
                   "raster","remotes"))
           # pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
           # install.packages(pack.url,repos=NULL,type="source")

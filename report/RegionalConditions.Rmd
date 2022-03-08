@@ -60,15 +60,20 @@ library(dataRetrieval)
 
 library(jsonlite)
 library(sp)
-library(tmap)
+library(rgdal)
+# library(tmap)
 library(httr)
 library(raster)
 ##
 wgs84=CRS("+init=epsg:4326")
-tmap_mode("view")
+# tmap_mode("view")
 ###
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
 
+#### GIS data
+shore=readOGR("./GISData","FWC_Shoreline_simp") 
+shore=spTransform(shore,wgs84)
+# shore=spTransform(readOGR("C:/Julian_LaCie/_GISData/FWC","FWC_Shoreline_simp"),wgs84)
 ```
 
 ## USACE Data Summary
@@ -1306,23 +1311,50 @@ bgdat.ext=SpatialPolygonsDataFrame(bgdat.ext,data.frame(ID="BGdata"))
 
 ```
 
+
+```{r,fig.width=7,fig.height=5,fig.align='center'}
+par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
+# layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
+# par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
+layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
+bbox.lims=bbox(bgdat.ext)
+
+plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
+plot(subset(bgdat_30d.shp,is.na(toxinpresent)==T),add=T,pch=21,bg="grey",cex=1)
+plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="NO"),add=T,pch=21,bg="green",cex=2,lwd=0.1)
+plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",cex=2,lwd=0.1)
+box(lwd=1)
+mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+date.rng=range(bgdat_30d.shp$date,na.rm=T)
+legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
+       pch=c(21),lty=c(NA),lwd=c(0.1),
+       col=c("black"),pt.bg=c("red","green","grey"),
+       pt.cex=1.25,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
+       title.adj = 0,title=paste0("Blue-green Algae Toxin status\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),"\n(Presence/Absence)"))
+
+```
+
+
+
 ```{r,out.width='100%'}
-tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
-  tm_shape(bgdat_30d.shp)+tm_bubbles(col="white",
-                                     size="microcystin.val", id="date",group="Microcystin conc.")+
-  tm_shape(bgdat_30d.shp)+tm_dots(col="toxinpresent",
-                                palette =c("green","red"),
-                                colorNA="grey",
-                                size=0.03,
-                                id="date",
-                                popup.vars=c("date","visitor","depthdesc",
-                                             "microcystin",
-                                             "cyanobacteriadominant","toxinpresent",
-                                             "algalid","othertoxin"),
-                                group="FDEP Blue-green Algae Data",
-                                title="Cyanobacteria dominate")+
-  
-  tm_shape(bgdat.ext)+tm_borders(group="Area of Interest",lty="dashed",col="grey",lwd=1)
+# tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+#   tm_shape(bgdat_30d.shp)+tm_bubbles(col="white",
+#                                      size="microcystin.val", id="date",group="Microcystin conc.")+
+#   tm_shape(bgdat_30d.shp)+tm_dots(col="toxinpresent",
+#                                 palette =c("green","red"),
+#                                 colorNA="grey",
+#                                 size=0.03,
+#                                 id="date",
+#                                 popup.vars=c("date","visitor","depthdesc",
+#                                              "microcystin",
+#                                              "cyanobacteriadominant","toxinpresent",
+#                                              "algalid","othertoxin"),
+#                                 group="FDEP Blue-green Algae Data",
+#                                 title="Cyanobacteria dominate")+
+#   
+#   tm_shape(bgdat.ext)+tm_borders(group="Area of Interest",lty="dashed",col="grey",lwd=1)
 ```
 <font size=2><center>Blue-green Algae sampling results for the last 30-days for the 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
@@ -1958,29 +1990,64 @@ kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude
                                           data=kbrdat_30d,
                                           proj4string = wgs84)
 }
+
+
+
 ```
 
+
+```{r,fig.width=7,fig.height=6,fig.align='center'}
+par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
+# layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
+# par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
+layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
+bbox.lims=bbox(bind(HABext.poly,TBEP.ext.poly))
+
+plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
+abund.cols=c("white","grey","dodgerblue1","orange","indianred1")
+plot(kbrdat_30d.shp,add=T,pch=21,lwd=0.01,
+     bg=abund.cols[kbrdat_30d.shp$Abundance])
+plot(TBEP.ext.poly,add=T,border="black",lty=2,col=NA)
+plot(HABext.poly,add=T,border="black",lty=2,col=NA)
+plot(CRE.ext,add=T,border="red",lwd=2)
+box(lwd=1)
+mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+date.rng=range(bgdat_30d.shp$date,na.rm=T)
+legend("center",legend=c(cat.abund.xwalk$abund,"Caloosahatchee River Estuary"),
+       pch=c(rep(21,length(cat.abund.xwalk$abund)),22),lty=c(NA),
+             lwd=c(rep(0.01,length(cat.abund.xwalk$abund)),2),
+       col=c(rep("black",length(cat.abund.xwalk$abund)),"red"),
+       pt.bg=c(abund.cols,NA),
+       pt.cex=2,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1.25,
+       title.adj = 0,title=paste0("Red Tide Abundance\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),""))
+
+```
+
+
+
 ```{r,out.width='100%'}
-if(is.na(kbrdat)==F){
-  tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
-tm_shape(kbrdat_30d.shp)+tm_dots(col="Abundance",
-                                 palette =c("white","grey","dodgerblue1","orange","indianred1"),
-                                 size=0.03,
-                                 id="date",
-                                 popup.vars=c("date","cellcount","cellcount_unit"
-                                              ,"category","genus","species",
-                                              "sample_depth"),
-                                 group="NOAA/FWC Redtide Data")+
-  tm_shape(CRE.ext)+tm_borders(group="Greater Caloosahatchee Estuary",col="white",lwd=2)+
-  tm_shape(HABext.poly)+tm_borders(group="Area of Interest - South Florida",lwd=1,lty="dashed",col="grey")+
-  tm_shape(TBEP.ext.poly)+tm_borders(group="Area of Interest- Tampa Bay Area",lwd=1,lty="dashed",col="grey")
-  # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
-}else{
-tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
-  tm_shape(HABext.poly)+tm_borders(group="Area of Interest - South Florida",lwd=1,lty="dashed",col="grey")+
-  tm_shape(TBEP.ext.poly)+tm_borders(group="Area of Interest- Tampa Bay Area",lwd=1,lty="dashed",col="grey")
-  # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
-}
+# if(is.na(kbrdat)==F){
+#   tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+# tm_shape(kbrdat_30d.shp)+tm_dots(col="Abundance",
+#                                  palette =c("white","grey","dodgerblue1","orange","indianred1"),
+#                                  size=0.03,
+#                                  id="date",
+#                                  popup.vars=c("date","cellcount","cellcount_unit"
+#                                               ,"category","genus","species",
+#                                               "sample_depth"),
+#                                  group="NOAA/FWC Redtide Data")+
+#   tm_shape(CRE.ext)+tm_borders(group="Greater Caloosahatchee Estuary",col="white",lwd=2)+
+#   tm_shape(HABext.poly)+tm_borders(group="Area of Interest - South Florida",lwd=1,lty="dashed",col="grey")+
+#   tm_shape(TBEP.ext.poly)+tm_borders(group="Area of Interest- Tampa Bay Area",lwd=1,lty="dashed",col="grey")
+#   # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
+# }else{
+# tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+#   tm_shape(HABext.poly)+tm_borders(group="Area of Interest - South Florida",lwd=1,lty="dashed",col="grey")+
+#   tm_shape(TBEP.ext.poly)+tm_borders(group="Area of Interest- Tampa Bay Area",lwd=1,lty="dashed",col="grey")
+#   # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
+# }
 ```
 <font size=2><center>Red tide sampling results for the last 30-days from just south of Tampa Bay to the Florida Keys. Data from NOAA HABSOS Program</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
@@ -2133,17 +2200,17 @@ NWIS.siteinfo.shp=SpatialPointsDataFrame(coords=NWIS.siteinfo[,c("dec_long_va","
 
 
 ```{r,out.width='100%'}
-tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
-  tm_shape(NWIS.siteinfo.shp)+tm_dots(col="red",
-                                 size=0.05,
-                                 id="site_no",
-                                 popup.vars=c("agency_cd","site_no","station_nm"
-                                              ,"huc_cd","drain_area_va"),
-                                 group="USGS Sites")
-  
+# tm_basemap(leaflet::providers$Esri.WorldImagery,alpha=0.9)+
+#   tm_shape(NWIS.siteinfo.shp)+tm_dots(col="red",
+#                                  size=0.05,
+#                                  id="site_no",
+#                                  popup.vars=c("agency_cd","site_no","station_nm"
+#                                               ,"huc_cd","drain_area_va"),
+#                                  group="USGS Sites")
+#   
 ```
 
-<font size=2><center>USGS discharge monitoring locations for rivers and creeks entering Charlotte Harbor</center></font>
+<!-- <font size=2><center>USGS discharge monitoring locations for rivers and creeks entering Charlotte Harbor</center></font> -->
 
 ```{r CharHar,echo=FALSE,fig.width=5,fig.height=6,fig.align='center'}
 
