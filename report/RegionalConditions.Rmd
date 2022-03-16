@@ -1771,6 +1771,7 @@ for(i in 1:nrow(bk.dbkeys.bot)){
 sal.dat=merge(sal.dat,bk.dbkeys.bot,"DBKEY")
 sal.dat$Date.EST=date.fun(sal.dat$DATETIME)
 sal.dat$Data.Value[sal.dat$Data.Value==-999]<-NA
+sal.dat$Data.Value[sal.dat$param=="SPC"&sal.dat$Data.Value<300]<-NA
 #subset(sal.dat,Data.Value<0)
 da.screen=ddply(sal.dat,c("Date.EST","SITE"),summarise,N.val=N.obs(Data.Value[param=="SPC"]))
 da.screen$screen=with(da.screen,ifelse(N.val<20,0,1))
@@ -1786,6 +1787,24 @@ Cal.Sal=merge(Cal.Sal,da.screen,c("Date.EST","SITE"))
 Cal.Sal$Sal=with(Cal.Sal,ifelse(screen==1,Sal,NA))
 Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7)))
 
+
+# test.chk=cast(subset(sal.dat,
+#                      Date.EST%in%seq(date.fun("2022-03-12"),date.fun("2022-03-14"),"1 days")),
+#               SITE+DATETIME+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T))
+# test.chk$Sal=with(test.chk,SalinityCalc(SPC,WT))
+# 
+# par(family="serif",cex.axis=1.2,mar=c(1.5,2,1,1),oma=c(2,3,4,1),mgp=c(3,1,0));
+# layout(matrix(c(1:4,rep(5,3),6),2,4,byrow=T),heights=c(1,0.25));
+# xlim.val=as.POSIXct(strptime(c("2022-03-12","2022-03-14"),"%Y-%m-%d"),tz="EST")
+# for(i in 1:4){
+# plot(Sal~DATETIME,subset(test.chk,SITE==CALSITES[i]),type="n",ylim=c(0,40),xlim=xlim.val,xaxs="i",yaxs="i",ann=F,axes=F)
+# abline(h=seq(0,40,5))
+# with(subset(test.chk,SITE==CALSITES[i]),pt_line(DATETIME,Sal,1,colrmp,2,21,colrmp,cex=2,pt.col=colrmp))
+# axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),line=-0.5)
+# axis_fun(2,ymaj,ymin,ymaj)
+# mtext(side=3,station.label[i])
+# box(lwd=lwd.val)
+# }
 ```
 
 ```{r Cal Instant Sal plot,echo=FALSE,fig.width=10,fig.height=5,fig.align='center'}
