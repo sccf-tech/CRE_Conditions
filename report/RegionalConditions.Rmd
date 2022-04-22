@@ -1068,6 +1068,7 @@ for(i in 1:length(unique(sites.dat$Station.ID))){
   print(i)
 }
 
+sonde.dat$Data.Value=with(sonde.dat,ifelse(Data.Value<0,NA,Data.Value))
 sonde.dat.xtab=cast(sonde.dat,Station.ID+Date~param,value="Data.Value",mean)
 sonde.dat.xtab$Date=date.fun(sonde.dat.xtab$Date)
 sonde.dat.xtab$Date.num=as.numeric(sonde.dat.xtab$Date)
@@ -1091,6 +1092,8 @@ xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],b
 
 par(family="serif",mar=c(1,1.5,0.25,0.25),oma=c(2.5,5.5,1,0.5));
 layout(matrix(c(1:24),4,6,byrow=F))
+
+max.turb=ceiling(max(sonde.dat.xtab$TURB,na.rm=T)+max(sonde.dat.xtab$TURB,na.rm=T)*0.2)
 
 site.list=unique(sites.dat$Station.ID)
 for(i in 1:length(site.list)){
@@ -1133,8 +1136,11 @@ if(i==1){axis_fun(2,ymaj,ymin,format(ymaj))}else{axis_fun(2,ymaj,ymin,NA)}
 box(lwd=1)
 if(i==1){mtext(side=2,line=axisln.val,expression(paste(frac("Phyco","Phyco + Chl"))),adj=0.5)}
 
-ylim.val=c(0,1000);by.y=500;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-plot(TURB~Date,tmp.dat,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ylab=NA,xlab=NA)
+max.Turb=max(sonde.dat.xtab$TURB,na.rm=T)
+ylim.max=if(max.Turb>1000){round(max.Turb+max.Turb*0.25,-2)}else{1000}
+ylim.val=c(1,ylim.max);ymaj=log.scale.fun(ylim.val,"major");ymin=log.scale.fun(ylim.val,"minor")
+# ylim.val=c(0,1000);by.y=500;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+plot(TURB~Date,tmp.dat,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ylab=NA,xlab=NA,log="y")
 abline(h=ymaj,v=xmaj,lty=3,col="grey")
 with(tmp.dat,pt_line(Date,TURB,2,"grey",1,21,"lightgoldenrod2",pt.lwd=0.1,cex=1.25))
 # tmp.loess=loess(TURB~Date.num,tmp.dat)
@@ -2242,17 +2248,24 @@ for(i in 1:5){
   tmp=subset(q.dat,site_no==charhar.sites$SITE[i])
   n.mt=sum(is.na(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft),na.rm=T)
   
+  min.q=min(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft,na.rm=T)
   max.q=max(subset(tmp,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Flow.acft,na.rm=T)
   # ylim.max=if(nchar(round(max.q,0))==2){round(max.q+max.q*0.25,-1)}else{round(max.q+max.q*0.25,-2)}
-  ylim.max=if(max.q<150){round(max.q+max.q*0.25,-1)}else{round(max.q+max.q*0.25,-2)}
+  ylim.min=if(min.q<(-10)){floor(min.q+min.q*0.55)}else{floor(min.q+min.q*0.55)}
+  ylim.max=if(max.q<150){ceiling(max.q+max.q*0.55)}else{ceiling(max.q+max.q*0.25)}
+  ylim.val=c(min.q,ylim.max);by.y=diff(c(min.q,ylim.max))/2;#ylim.max/2;
+  ymaj=round(seq(ylim.val[1],ylim.val[2],by.y));ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
   
-  ylim.val=c(0,ylim.max);by.y=ylim.max/2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+    # ylim.max=if(max.q<100){100}else{ceiling(max.q+max.q*0.5)}
+    # ylim.val=c(0.1,ylim.max);ymaj=log.scale.fun(ylim.val,"major");ymin=log.scale.fun(ylim.val,"minor")
+  
   plot(Flow.acft~Date,tmp,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
   abline(h=ymaj,v=xmaj,lty=3,col="grey")
   if(n.mt>0){with(tmp,lines(Date,flow.fill,col="grey",lwd=1,lty=2))}
   with(tmp,pt_line(Date,Flow.acft,2,cols[i],1.5,21,cols[i]))
   
   # if(i==4){axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)}else{axis_fun(1,xmaj,xmin,NA,line=-0.5)}
+  if(min.q<0){abline(h=0)}
   axis_fun(1,xmaj,xmin,NA,line=-0.5)
   axis_fun(2,ymaj,ymin,format(ymaj/1000,nsmall=1),cex.axis=1)
   box(lwd=1)
@@ -2261,7 +2274,7 @@ for(i in 1:5){
 }
 
 max.q=max(subset(q.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$Tflow,na.rm=T)
-ylim.max=round(max.q+max.q*0.25,-3)
+ylim.max=ceiling(max.q+max.q*0.5)
 
 ylim.val=c(0,ylim.max);by.y=ylim.max/2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
