@@ -176,6 +176,9 @@ for(i in 1:(length(dates)-1)){
   val=grep("/plots/s78h.pdf",mapdata)
   S78=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</a>")[[1]][1]
   
+  val=grep("/plots/s77",mapdata)
+  S77=strsplit(strsplit(mapdata[val],"\\s+")[[1]][6],"</a>")[[1]][1]
+  
   val=grep("../plots/ok8hhp.pdf",mapdata)
   LakeStage=as.numeric(strsplit(mapdata[val[1]],"\\s+")[[1]][6])
   
@@ -191,7 +194,8 @@ for(i in 1:(length(dates)-1)){
                   WCA3=as.numeric(WCA3),
                   ENP=as.numeric(ENP),
                   S79.map=as.numeric(S79),
-                  S78.map=as.numeric(S78))
+                  S78.map=as.numeric(S78),
+                  S77.map=as.numeric(S77))
   map.q=rbind(map.q,rslt)
   rslt.stg=data.frame(Date=date.val,Stg=as.numeric(LakeStage))
   map.stg=rbind(map.stg,rslt.stg)
@@ -203,6 +207,7 @@ map.q[,2:ncol(map.q)]=cfs.to.acftd(map.q[,2:ncol(map.q)])
 q.dat=merge(q.dat,map.q,"Date")
 q.dat$S79=with(q.dat,ifelse(is.na(S79)==T,round(S79.map,0),S79))
 q.dat$S78=with(q.dat,ifelse(is.na(S78)==T,round(S78.map,0),S78))
+q.dat$S77=with(q.dat,ifelse(is.na(S77)==T,round(S77.map,0),S77))
 q.dat
 vars=c("Date", "S77", "S308", "L8", "S351", "S352", "S354", "S78", 
 "S79", "S310", "S80", "FEC", "Istok", "S65E", "S65EX1", "WCA1", 
