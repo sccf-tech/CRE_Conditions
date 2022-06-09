@@ -1945,12 +1945,12 @@ kbr.AOI=extent(bind(HABext.poly,TBEP.ext.poly))
 kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 # Red Tide ----------------------------------------------------------------
 ## south of Tampa Bay 
-# Based on https://github.com/tbep-tech/piney-point/blob/141824adc082a57d79ba58ff38ac31d41dea4e44/R/dat_proc.R#L1262
-# path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/MapServer/0/query?'
-# 
+## Based on https://github.com/tbep-tech/piney-point/blob/141824adc082a57d79ba58ff38ac31d41dea4e44/R/dat_proc.R#L1262
+path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/MapServer/0/query?'
+
 # request <- GET(
 #   url = path,
-#   query= list(       
+#   query= list(
 #     where= paste("LATITUDE <",round(HABext2[4],1),"AND LATITUDE >",round(HABext2[3],1),"AND LONGITUDE >",round(HABext2[1],1),"AND LONGITUDE <",round(HABext2[2],1)),
 #     outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
 #     f = 'pjson'
@@ -1967,33 +1967,33 @@ kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 # # Tampa Bay Results
 # # request <- GET(
 # #   url = path,
-# #   query= list(       
+# #   query= list(
 # #     where= paste("LATITUDE <",round(TBEP.ext[4],1),"AND LATITUDE >",round(TBEP.ext[3],1),"AND LONGITUDE >",round(TBEP.ext[1],1),"AND LONGITUDE <",round(TBEP.ext[2],1)),
 # #     outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
 # #     f = 'pjson'
 # #   )
 # # )
-# # 
+# #
 # # response <- content(request, as = "text", encoding = "UTF-8")
 # # # if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){results=NA}else{
 # # results <- jsonlite::fromJSON(response,flatten=T)
 # # # results
-# # 
+# #
 # # kbrdat=rbind(kbrdat,results$features)
 # # kbrdat=kbrdat[duplicated(kbrdat)==F,]
 # 
 # vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
-#        "attributes.SAMPLE_DEPTH","attributes.LATITUDE", 
-#        "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT", 
-#        "attributes.WATER_TEMP", "attributes.WATER_TEMP_UNIT", "attributes.GENUS", 
-#        "attributes.SPECIES", "attributes.CATEGORY", "attributes.CELLCOUNT", 
+#        "attributes.SAMPLE_DEPTH","attributes.LATITUDE",
+#        "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT",
+#        "attributes.WATER_TEMP", "attributes.WATER_TEMP_UNIT", "attributes.GENUS",
+#        "attributes.SPECIES", "attributes.CATEGORY", "attributes.CELLCOUNT",
 #        "attributes.CELLCOUNT_UNIT", "geometry.x", "geometry.y")
 # vars=strsplit(vars,"\\.")
 # vars=sapply(vars,"[",2)
 # 
 # colnames(kbrdat)<-tolower(vars)
 # 
-# kbrdat$date=as.POSIXct(as.numeric(gsub('000$', '',format(kbrdat$sample_date,scientific=F))), 
+# kbrdat$date=as.POSIXct(as.numeric(gsub('000$', '',format(kbrdat$sample_date,scientific=F))),
 #                          origin = c('1970-01-01'), tz = 'UTC')
 # kbrdat$datetime=date.fun(kbrdat$date,form="%F %R")
 # kbrdat$date=date.fun(kbrdat$date)
@@ -2002,10 +2002,10 @@ kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 # kbrdat=subset(kbrdat,is.na(year)==T|year!=153)
 # min(kbrdat$date)
 # max(kbrdat$date)
-# ## 
+# ##
 # cat.abund.xwalk=data.frame(category=c("not observed","very low","low","medium","high"),
 #                            abund=c("not present/background (0-1,000)", "very low (>1,000-10,000)",
-#                                    "low (>10,000-100,000)", "medium (>100,000-1,000,000)", 
+#                                    "low (>10,000-100,000)", "medium (>100,000-1,000,000)",
 #                                    "high (>1,000,000)"))
 # 
 # kbrdat=merge(kbrdat,cat.abund.xwalk,"category")
@@ -2021,8 +2021,8 @@ kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 # kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude")],
 #                                           data=kbrdat_30d,
 #                                           proj4string = wgs84)
-# 
-# 
+
+
 
 ```
 
