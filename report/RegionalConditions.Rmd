@@ -3,7 +3,7 @@ title: "Caloosahatchee and Okeechobee Conditions Report <img src='horiz_SCCF_Log
 output: 
   html_document: 
     toc: yes
-    self_contained: false
+    self_contained: true
     includes:
       after_body: footer.html
 editor_options: 
