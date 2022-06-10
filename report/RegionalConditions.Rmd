@@ -3,6 +3,7 @@ title: "Caloosahatchee and Okeechobee Conditions Report <img src='horiz_SCCF_Log
 output: 
   html_document: 
     toc: yes
+    self_contained: false
     includes:
       after_body: footer.html
 editor_options: 
@@ -42,7 +43,8 @@ This webpage/report is intended to aggregate information from different agencies
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo=FALSE,
                       message=FALSE,
-                      warning=FALSE)
+                      warning=FALSE,
+                      fig.path="plots/")
 
 ## Libraries
 library(AnalystHelper)
@@ -731,7 +733,7 @@ LakeO.xtab.rec2=subset(LakeO.xtab.rec,WY%in%seq(CurWY-3,CurWY,1))
 
 ```
 
-```{r LORS plot,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+```{r LORSplot,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
 HighLakeLab.x=as.POSIXct(paste(CurWY-1,9,1,sep="-"))
 WSMLab.x=as.POSIXct(paste(CurWY-1,9,1,sep="-"))
 BENLab.x=as.POSIXct(paste(CurWY-1,7,15,sep="-"))
@@ -826,7 +828,7 @@ subset(LakeO.xtab,hydro.day==hydro.day(YEST))%>%
 
 
 
-```{r ,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+```{r LOK_recess1,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
 lwd.val=1
 ylim.val=c(-2,2);by.y=1
 ymaj=c(0,seq(ylim.val[1],ylim.val[2],by.y));ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
@@ -875,7 +877,7 @@ legend("topright",
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 
-```{r,echo=FALSE,fig.width=8,fig.height=3.75,fig.align='center'}
+```{r LOK_recess2,echo=FALSE,fig.width=8,fig.height=3.75,fig.align='center'}
 ylim.val=c(CurWY-3,CurWY);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
 ylim.val2=ylim.val
 ylim.val=c(ylim.val[1]-0.5,ylim.val[2]+0.5)
@@ -996,7 +998,7 @@ rf.dat.da%>%
 ```
 
 
-```{r ,echo=FALSE,warning=F,fig.width=6.5,fig.height=4,fig.align='center'}
+```{r CRE_RF,echo=FALSE,warning=F,fig.width=6.5,fig.height=4,fig.align='center'}
 
 xlim.val=date.fun(c(paste(CurWY-1,05,01,sep="-"),paste(CurWY,05,01,sep="-")));by.x=90;by.x.min=30;
 xmaj=seq(xlim.val[1],xlim.val[2],by=paste(by.x,"days"));
@@ -1052,7 +1054,7 @@ if(i==2){mtext(side=1,line=2.5,"Date (Month-Year)")}
 ***
 ### Relative Algae Condition
 
-```{r LO sonde, warnings=FALSE,echo=FALSE,include=FALSE}
+```{r LOKsonde_data, warnings=FALSE,echo=FALSE,include=FALSE}
 dates=c(Start.Date,End.Date)
 sites.dat=data.frame(Station.ID=c(rep("L001",5),rep("POLESOUT1",5),rep("POLESOUT3",5),rep("L005",5),rep("LZ40",5),rep("L006",5)),
                      param=rep(c("CF","CU","PF","PU","TURB"),6),
@@ -1089,7 +1091,7 @@ knitr::include_graphics("LakeO_sonde_map.png")
 
 <br>
 
-```{r LO sonde plot,echo=FALSE,warning=F,fig.width=8,fig.height=5,fig.align='center'}
+```{r LOKsonde,echo=FALSE,warning=F,fig.width=8,fig.height=5,fig.align='center'}
 EDate.plot=as.Date(Sys.time())+duration(5,"days")
 SDate.plot=as.Date(EDate.plot-duration(14,"days"))
 xlim.val=as.POSIXct(strptime(c(SDate.plot,EDate.plot),"%Y-%m-%d"),tz="EST")
@@ -1323,7 +1325,7 @@ bgdat.ext=SpatialPolygonsDataFrame(bgdat.ext,data.frame(ID="BGdata"))
 ```
 
 
-```{r,fig.width=7,fig.height=5,fig.align='center'}
+```{r BG_map30d,fig.width=7,fig.height=5,fig.align='center'}
 par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
 # layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
 # par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
@@ -1381,7 +1383,7 @@ Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r s
 ### Discharge
 
 
-```{r, echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
+```{r CRE_Q, echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
 # RECON.dates=date.fun(c(Sys.Date()-duration(6, "months"),date.fun(Sys.Date())))
 RECON.dates=date.fun(c(Sys.Date()-duration(1, "years"),date.fun(Sys.Date())))
 # RECON.dates
@@ -1477,7 +1479,7 @@ grid.raster(logo,x=0.16,y=0.9,just=c("left","top"),width=unit(1.25,"inches"))
 <font size=2><center>Fort Myers Yacht Basin salinity (SCCF-RECON) and S79 discharge (SFWMD) data for the last six months.</center></font>
 <font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
-```{r,echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
+```{r CRE_Q_30d,echo=FALSE,fig.width=6,fig.height=4,fig.align='center'}
 seq.30d=seq(date.fun(RECON.dates[2]-duration(30,"days")),date.fun(RECON.dates[2]+duration(15,"days")),"1 days")
 
 max.ylim.2=round(max(subset(cal.q,Date%in%seq.30d)$Data.Value,na.rm=T)+max(subset(cal.q,Date%in%seq.30d)$Data.Value,na.rm=T)*0.25,-3)
@@ -1555,7 +1557,7 @@ cal.flow.dat.xtab$SalEnv.cat=with(cal.flow.dat.xtab,ifelse(Q.14<750,"low",
 
 
 
-```{r Cal Flow plots, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+```{r CRE_LOK_Q, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
 
 max.q=max(subset(cal.flow.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$S79,na.rm=T)
 ylim.max=round(max.q+max.q*0.25,-3)
@@ -1589,7 +1591,7 @@ legend(0.5,0.5,
 
 <br>
 
-```{r Cal14Flow plots, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+```{r CRE_SalEnv, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
 # ylim.max=signif(max(subset(cal.flow.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$S79,na.rm=T)+max(cal.flow.dat.xtab$S79,na.rm=T)*0.1,0)
 
 ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
@@ -1635,7 +1637,7 @@ legend(0.75,0.75,
 
 <br>
 
-```{r CalcumFlow plots, echo=FALSE,fig.width=7,fig.height=4,fig.align='center'}
+```{r CRE_cumQ, echo=FALSE,fig.width=7,fig.height=4,fig.align='center'}
 ylim.max=signif(max(cal.flow.dat.xtab$cum.S79),0)
 ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 xlim.val=c(0,366);xmaj=seq(xlim.val[1],xlim.val[2],90);xmin=seq(xlim.val[1],xlim.val[2],30)
@@ -1681,7 +1683,7 @@ legend("topright",
 
 ### Chlorophyll, Phycocyanin & fDOM
 
-```{r Cal_algae,echo=FALSE,fig.width=6.5,fig.height=5,fig.align='center'}
+```{r S79_fdom,echo=FALSE,fig.width=6.5,fig.height=5,fig.align='center'}
 # 32315 relative fChl
 # 32321 relative Phycocyanin
 #cal.algae=readNWISdv("02292900",c("32315","32321"),"2017-11-01",format(End.Date,"%Y-%m-%d"))
@@ -1818,7 +1820,7 @@ Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7)
 # }
 ```
 
-```{r Cal Instant Sal plot,echo=FALSE,fig.width=10,fig.height=5,fig.align='center'}
+```{r CRE_Sal,echo=FALSE,fig.width=10,fig.height=5,fig.align='center'}
 CALSITES=c("SANIB2","MARKH","CCORAL","FORTMYERSM","S79")
 EDate.plot=as.Date(Sys.time())+duration(1,"days")
 SDate.plot=as.Date(EDate.plot-duration(14,"days"))
@@ -2244,7 +2246,7 @@ NWIS.siteinfo.shp=SpatialPointsDataFrame(coords=NWIS.siteinfo[,c("dec_long_va","
 
 <!-- <font size=2><center>USGS discharge monitoring locations for rivers and creeks entering Charlotte Harbor</center></font> -->
 
-```{r CharHar,echo=FALSE,fig.width=5,fig.height=6,fig.align='center'}
+```{r CharHar_Q,echo=FALSE,fig.width=5,fig.height=6,fig.align='center'}
 
 xlim.val=date.fun(c(TODAY-ddays(30),TODAY+ddays(3)));xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
 cols=c("#3B9AB2", "#78B7C5", "#EBCC2A", "#E1AF00", "#F21A00")
