@@ -194,6 +194,7 @@ cyano_area=rbind(cyano_area,tmp.rslt)
 cyano_area$cloud.area.per=cyano_area$cloud.area/LOK.area
 # cyano_area$bloom.area.m2.scn=with(cyano_area,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
 cyano_area$bloom.area.mi2=cyano_area$bloom.area.m2*3.86102e-7
+cyano_area$bloom.area.per=(cyano_area$bloom.area.m2/LOK.area)*100
 
 cyano_area$date=date.fun(cyano_area$date)
 
@@ -201,10 +202,10 @@ dev.off()
 plot(bloom.area.mi2~date,cyano_area,type="l")
 
 # png(filename=paste0(plot.path,"2022_LOK_Cyano.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
-par(family="serif",mar=c(1,3,0.5,1),oma=c(2,2,0.5,0.75))
+par(family="serif",mar=c(1,3,0.5,2),oma=c(2,2,0.5,2))
 layout(matrix(1:2,2,1),heights=c(0.5,1))
 
-xlim.val=date.fun(c("2022-04-01","2022-06-01"));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
+xlim.val=date.fun(c("2022-04-01","2022-07-01"));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
 ylim.val=c(0,1);by.y=0.2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
@@ -228,4 +229,7 @@ axis_fun(1,xmaj,xmin,NA)
 box(lwd=1)
 mtext(side=1,line=1.5,"Date (Month-Year)")
 mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (mi\u00B2)")
+axis_fun(4,ymaj,ymin,round((ymaj/(LOK.area*3.861e-7))*100,0))
+mtext(side=4,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
+
 dev.off()
