@@ -245,7 +245,7 @@ plot(bloom.area.mi2~date,cyano_area,type="l")
 par(family="serif",mar=c(1,3,0.5,2),oma=c(2,2,0.5,2))
 layout(matrix(1:2,2,1),heights=c(0.5,1))
 
-xlim.val=date.fun(c("2022-04-01","2022-07-01"));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
+xlim.val=c(date.fun("2022-04-01"),date.fun(Sys.Date()+lubridate::duration(1,"months")));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
 ylim.val=c(0,1);by.y=0.2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
@@ -259,10 +259,12 @@ mtext(side=2,line=2.5,"Cloud Cover (%)")
 mtext(side=3,adj=1,"Data Source: NOAA NCCOS",font=3)
 mtext(side=3,adj=0,"Lake Okeechobee",font=3)
 
-ylim.val=c(0,200);by.y=50;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+ylim.val=c(0,max(cyano_area$bloom.area.mi2)*1.10);by.y=100;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
 with(cyano_area,pt_line(date,bloom.area.mi2,1,"dodgerblue1",2,21,"dodgerblue1",pt.lwd=0.1,cex=1.25))
+with(subset(cyano_area,date==max(cyano_area$date)),
+     text(date,bloom.area.mi2,paste0(round(bloom.area.mi2),"mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
 k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0))
 x.val=seq(min(cyano_area$date2),max(cyano_area$date2),length.out=100)
 pred.mod=predict(k.mod,data.frame(date2=x.val))
