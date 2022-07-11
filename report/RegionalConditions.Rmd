@@ -1251,8 +1251,9 @@ knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
 knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
 ```
 
+
+```{r FDEP BGAlgae}
 ### Blue-Green Algae Sampling Results
-```{r}
 # Blue-Green Algae --------------------------------------------------------
 sdate.algae=date.fun(TODAY-lubridate::duration(30,"days"))
 path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/VIEW_FL_Algal_Bloom_Site_Visits_1/FeatureServer/0/query?'
@@ -1309,10 +1310,10 @@ vars=strsplit(bgdat$microcystin,"I")
 # bgdat$microcystin.halfmdl=ifelse(sapply(vars,"[",1)=="not detected",0.5,as.numeric(sapply(vars,"[",1)))
 bgdat$microcystin.val=ifelse(sapply(vars,"[",1)=="not detected",NA,as.numeric(sapply(vars,"[",1)))
 
-bgdat_30d=subset(bgdat,date<=TODAY&date>=sdate.algae)
-bgdat_30d.shp=SpatialPointsDataFrame(coords=bgdat_30d[,c("longitude","latitude")],
-                                              data=bgdat_30d,
-                                              proj4string = wgs84)
+# bgdat_30d=subset(bgdat,date<=TODAY&date>=sdate.algae)
+# bgdat_30d.shp=SpatialPointsDataFrame(coords=bgdat_30d[,c("longitude","latitude")],
+#                                               data=bgdat_30d,
+#                                               proj4string = wgs84)
 
 bgdat.shp=SpatialPointsDataFrame(coords=bgdat[,c("longitude","latitude")],
                                               data=bgdat,
@@ -1321,34 +1322,35 @@ bgdat.ext=as(extent(bgdat),"SpatialPolygons")
 proj4string(bgdat.ext)=wgs84
 bgdat.ext=SpatialPolygonsDataFrame(bgdat.ext,data.frame(ID="BGdata"))
 
-
+bgdat_30d.shp=subset(bgdat.shp,date<=TODAY&date>=sdate.algae)
 ```
 
 
 ```{r BG_map30d,fig.width=7,fig.height=5,fig.align='center'}
-par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
-# layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
-# par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
-layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
-bbox.lims=bbox(bgdat.ext)
-
-plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
-plot(subset(bgdat_30d.shp,is.na(toxinpresent)==T),add=T,pch=21,bg="grey",cex=1)
-plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="NO"),add=T,pch=21,bg="green",cex=2,lwd=0.1)
-plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",cex=2,lwd=0.1)
-box(lwd=1)
-mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
-
-plot(0:1,0:1,ann=F,axes=F,type="n")
-date.rng=range(bgdat_30d.shp$date,na.rm=T)
-legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
-       pch=c(21),lty=c(NA),lwd=c(0.1),
-       col=c("black"),pt.bg=c("red","green","grey"),
-       pt.cex=1.25,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
-       title.adj = 0,title=paste0("Blue-green Algae Toxin status\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),"\n(Presence/Absence)"))
+# par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
+# # layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
+# # par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
+# layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
+# bbox.lims=bbox(bgdat.ext)
+# 
+# plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
+# if(nrow(bgdat_30d.shp)!=0){
+# plot(subset(bgdat_30d.shp,is.na(toxinpresent)==T),add=T,pch=21,bg="grey",cex=1)
+# plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="NO"),add=T,pch=21,bg="green",cex=2,lwd=0.1)
+# plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",cex=2,lwd=0.1)
+# }
+# box(lwd=1)
+# mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
+# 
+# plot(0:1,0:1,ann=F,axes=F,type="n")
+# date.rng=range(bgdat_30d.shp$date,na.rm=T)
+# legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
+#        pch=c(21),lty=c(NA),lwd=c(0.1),
+#        col=c("black"),pt.bg=c("red","green","grey"),
+#        pt.cex=1.25,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
+#        title.adj = 0,title=paste0("Blue-green Algae Toxin status\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),"\n(Presence/Absence)"))
 
 ```
-
 
 
 ```{r,out.width='100%'}
@@ -1368,10 +1370,15 @@ legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
 #                                 title="Cyanobacteria dominate")+
 #   
 #   tm_shape(bgdat.ext)+tm_borders(group="Area of Interest",lty="dashed",col="grey",lwd=1)
-```
-<font size=2><center>Blue-green Algae sampling results for the last 30-days for the 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
-Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes",na.rm=T)` samples, `r sum(bgdat_30d$toxinpresent=="Yes",na.rm=T)` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects). 
+
+# <font size=2><center>Blue-green Algae sampling results for the last 30-days for the 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+# 
+# Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes",na.rm=T)` samples, `r sum(bgdat_30d$toxinpresent=="Yes",na.rm=T)` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects). 
+
+
+```
+
 
 <br>
 

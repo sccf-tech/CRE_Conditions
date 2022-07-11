@@ -171,7 +171,8 @@ tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
 # crs(tmp.raster)
 
 cloud.area=tmp.raster==253
-cloud.area=cloud.area==1
+cloud.area.raster=cloud.area
+# cloud.area=cloud.area==1
 cloud.area=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
 
 # remove cloud/no data values (see tif header)
@@ -200,10 +201,11 @@ cyano_area=rbind(cyano_area,tmp.rslt)
 par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
 layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
 
-b=c(0,20,100,1000,6300)*1000
+b=c(0,20,100,500,1000,6300)*1000
 cols=viridisLite::turbo(249,direction=1)
 plot(lakeO,lwd=0.05)
 image(rev.scale,add=T,col = cols)
+image(cloud.area.raster,add=T,col=c(NA,"grey"))
 plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)
 mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
 mtext(side=3,line=-2,adj=0,paste("Date:",format(noaa.HAB.image$date[i],"%m-%d-%Y"),"\nData Source: NOAA NCCOS"))
@@ -225,6 +227,10 @@ legend_image=as.raster(matrix(rev(cols),ncol=1))
 rasterImage(legend_image,x.min,bot.val,x.max,top.val)
 text(x=x.max, y = lab.pos, labels = format(b2),cex=0.75,adj=0,pos=4,offset=0.5)
 segments(rep(x.min,l.b),lab.pos,rep(x.max,l.b),lab.pos,lwd=2)
+#add cloud
+legend_image=as.raster(matrix("grey",ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.05,x.max,bot.val)
+text(x=x.max, y = bot.val-0.025, labels = "Clouds",cex=0.5,adj=0,pos=4,offset=0.5)
 # bx.val= seq(bot.val,top.val,(top.val-bot.val)/n.bks)
 # rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(col.rmp),lty=0)
 # text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
@@ -283,3 +289,29 @@ legend("topleft",legend=c("Smoothed Trend"),
        pt.cex=1.25,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 
 dev.off()
+
+# 
+# Experimenting with contours 
+# x <- 10*1:nrow(volcano)
+# y <- 10*1:ncol(volcano)
+# cl <- contourLines(x, y, volcano)
+# ## summarize the sizes of each the contour lines :
+# cbind(lev = vapply(cl, `[[`, .5, "level"),
+#       n  = vapply(cl, function(l) length(l$x), 1))
+# 
+# 
+# rasterToContour(rev.scale,levels=b,nlevels=length(b))
+# 
+# x=nrow(rev.scale)
+# y=ncol(rev.scale)
+# z=getValues(rev.scale)
+# mat.dat=matrix(z,nrow=x,ncol=y)
+# cl <- contourLines(1:x, 1:y, mat.dat,levels=b,nlevels=length(b))
+# 
+# tmp=cbind(lev = vapply(cl, `[[`, .5, "level"),
+#       n  = vapply(cl, function(l) length(l$x), 1))
+# aggregate(n~lev,tmp,sum)
+# 
+# 
+# plot(rev.scale)
+# plot(rasterToContour(rev.scale,levels=500000,nlevels=1),add=T)
