@@ -63,11 +63,13 @@ library(dataRetrieval)
 library(jsonlite)
 library(sp)
 library(rgdal)
+library(rgeos)
 # library(tmap)
 library(httr)
 library(raster)
 ##
 wgs84=CRS("+init=epsg:4326")
+utm17=CRS("+init=epsg:26917")
 # tmap_mode("view")
 ###
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
@@ -76,7 +78,36 @@ dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days"
 shore=readOGR("./GISData","FWC_Shoreline_simp") 
 shore=spTransform(shore,wgs84)
 # shore=spTransform(readOGR("C:/Julian_LaCie/_GISData/FWC","FWC_Shoreline_simp"),wgs84)
+
+lakeO=readOGR("./GISData","LakeOkeechobee_general")
+lakeO=spTransform(lakeO,utm17)
+
+lakeO.lit=readOGR("./GISData","LOK_littoral")
+lakeO.lit=spTransform(lakeO.lit,utm17)
+
+# test2=readOGR("C:/Julian_LaCie/_GISData/LakeOkeechobee/Littoral","LAKEO_LITTORALZONE_VEG2007")
+# test2=gBuffer(lakeO.lit,width=100)
+# test2=SpatialPolygonsDataFrame(test2,data.frame(buffer=100,row.names = "buffer"))
+# test2=crop(test2,lakeO)
+# writeOGR(test2,"C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LOK_littoral",driver="ESRI Shapefile",overwrite_layer = T)
+
+# Functions
+decdate.fun=function(date){
+  Y=as.numeric(format(date,"%Y"))
+  start=date.fun(paste(Y,1,1,sep="-"))
+  end=date.fun(paste(Y+1,1,1,sep="-"))
+  sofar <- as.numeric(difftime(date, start, units = "secs"))
+  total <- as.numeric(difftime(end, start, units = "secs"))
+  Y + sofar / total
+}
+ci.reverse.scaling.fun=function(DN){
+  10^(3.0 / 250.0 * DN - 4.2)
+}
+ci.scaling.fun=function(ci){
+  round(83.3 * (log10(ci[ci>0]) + 4.2))
+}
 ```
+
 
 ## USACE Data Summary
 
@@ -1213,9 +1244,49 @@ algae.week%>%
 ```
 
 
-```{r,echo=F}
+```{r noaa hab image,echo=F}
+# 
+# noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iVGZLZEU0cHZqYXlMWldYTlRDMWtEcz0=")
+# 
+# vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
+# 
+# noaa.image.inventory=data.frame()
+# # for(i in 1:6){
+# for(i in 1:length(vals)){
+#   tmp=noaa.HAB[vals[i]]
+#   tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
+#   tmp3=strsplit(tmp2,"href=|title=|>")
+#   
+#   dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp3,"[",3))
+#   
+#   fname.vals=strsplit(dat$filename,"_")
+#   dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
+#   
+#   date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
+#   yr.val=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+#   month.val=as.numeric(substr(sapply(date.vals,"[",3),1,2))
+#   day.val=as.numeric(substr(sapply(date.vals,"[",3),3,4))
+#   dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
+#   
+#   noaa.image.inventory=rbind(dat,noaa.image.inventory)
+# }
+# 
+# noaa.HAB.image=subset(noaa.image.inventory,data.product=="CIcyano.LakeOkee.png'"&date==max(noaa.image.inventory$date))
+```
 
-noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iVGZLZEU0cHZqYXlMWldYTlRDMWtEcz0=")
+```{r, out.width="100%",echo=FALSE,fig.align="center"}
+# ,fig.cap=paste("Cyanobacteria Index for Lake Okeechobee for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)")
+# knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
+```
+
+```{r, out.width="50%",echo=FALSE,fig.align="center"}
+# knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
+```
+
+
+```{r noaa hab data,echo=F,include=F}
+LOK.area=area(lakeO)
+noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iYjNnK3AvTWRrYmNWbXU0K0YvMlA1UlBtTWZlRFV3R1RicVRYb2pxeVJBUA==")
 
 vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
 
@@ -1223,12 +1294,14 @@ noaa.image.inventory=data.frame()
 # for(i in 1:6){
 for(i in 1:length(vals)){
   tmp=noaa.HAB[vals[i]]
-  tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
-  tmp3=strsplit(tmp2,"href=|title=|>")
+  tmp2=strsplit(tmp,"<a|</a>")[[1]]
+  tmp3=strsplit(tmp2[2],"href=|title=|>")
+  tmp4=strsplit(tmp2[3],"</section>")
   
-  dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp3,"[",3))
+  dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp4,"[",1))
   
   fname.vals=strsplit(dat$filename,"_")
+  if(trimws(substr(sapply(fname.vals,"[",1),1,9))!="sentinel"){next}else{
   dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
   
   date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
@@ -1238,25 +1311,186 @@ for(i in 1:length(vals)){
   dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
   
   noaa.image.inventory=rbind(dat,noaa.image.inventory)
+  }
 }
 
-noaa.HAB.image=subset(noaa.image.inventory,data.product=="CIcyano.LakeOkee.png'"&date==max(noaa.image.inventory$date))
+noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif"&date==max(noaa.image.inventory$date))
+
+data.path="./RSdata"
+noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif")
+# noaa.HAB.image$filename
+noaa.HAB.image$fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+# fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+fnames=noaa.HAB.image$fnames
+
+# paste0(data.path,"sentinel_2022/", fnames)
+new.dat=fnames[fnames%in%list.files(data.path)==F]
+
+
+noaa.HAB.image2=subset(noaa.HAB.image,fnames%in%new.dat)
+if(nrow(noaa.HAB.image2)!=0){
+for(i in 1:nrow(noaa.HAB.image2)){
+download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)),paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),mode="wb")
+  print(i)
+}
+}
+
+cyano_area=data.frame()
+for(i in 1:length(fnames)){
+tmp.raster=raster(paste(data.path, fnames[i],sep="/"))
+
+# plot(tmp.raster)
+# plot(mask(tmp.raster,gBuffer(lakeO,width=500)))
+tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+
+# plot(tmp.raster)
+# crs(tmp.raster)
+# tmp.raster>250
+# tmp.raster%in%c(250,251,253,254,255)
+
+cloud.area=tmp.raster==253
+# cloud.area=tmp.raster%in%c(253)
+cloud.area.raster=cloud.area
+# cloud.area=cloud.area==1
+cloud.area=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
+
+# remove cloud/no data values (see tif header)
+# 0= nodetect
+# 250 = saturated; 251 = ci adj; 252 = land; 253 = cloud;
+# 254 = mixed pixel; 255 = no data
+
+vals=c(0,250,251,252,253,254,255)
+tmp.raster[tmp.raster%in%vals]=NA
+
+tmp.raster=calc(tmp.raster,fun=function(x) x*1)
+# ci.scale=calc(tmp.raster,fun=function(x) ci.scaling.fun(x))
+rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+
+area=rev.scale>0
+val=cellStats(area,sum)*raster::res(area)[1]*raster::res(area)[2]
+# val*3.86102e-7 # converts from m2 to mi2
+
+tmp.rslt=data.frame(date=noaa.HAB.image$date[i],
+                    cloud.area=cloud.area,
+                    bloom.area.m2=val)
+cyano_area=rbind(cyano_area,tmp.rslt)
+}
+
+cyano_area$cloud.area.per=cyano_area$cloud.area/LOK.area
+# cyano_area$bloom.area.m2.scn=with(cyano_area,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
+cyano_area$bloom.area.mi2=cyano_area$bloom.area.m2*3.86102e-7
+cyano_area$bloom.area.per=(cyano_area$bloom.area.m2/LOK.area)*100
+cyano_area$date=date.fun(cyano_area$date)
+cyano_area$date2=decdate.fun(cyano_area$date)
+
 ```
 
-```{r, out.width="100%",echo=FALSE,fig.align="center",fig.cap=paste("Cyanobacteria Index for Lake Okeechobee for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)")}
-knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
+<br>
+
+```{r NOAA RSdata,fig.width=6.5,fig.height=5,fig.align='center'}
+par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
+layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
+
+b=c(0,20,100,500,1000,6300)*1000
+cols=viridisLite::turbo(249,direction=1)
+plot(lakeO,lwd=0.05)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T)
+image(rev.scale,add=T,col = cols)
+image(cloud.area.raster,add=T,col=c(NA,"grey"))
+plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)
+mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
+mtext(side=3,line=-2,adj=0,paste("Date:",format(noaa.HAB.image$date[i],"%m-%d-%Y"),"\nData Source: NOAA NCCOS"))
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+b2=b/1000
+l.b=length(b2)
+labs=b2
+n.bks=length(b2) -1
+top.val=0.8
+bot.val=0.2
+mid.v.val=bot.val+(top.val-bot.val)/2
+x.max=0.3
+x.min=0
+mid.val=x.min+(x.max-x.min)/2
+txt.offset.val=-0.01
+lab.pos=seq(bot.val,top.val,length.out=l.b)
+legend_image=as.raster(matrix(rev(cols),ncol=1))
+rasterImage(legend_image,x.min,bot.val,x.max,top.val)
+text(x=x.max, y = lab.pos, labels = format(b2),cex=0.75,adj=0,pos=4,offset=0.5)
+segments(rep(x.min,l.b),lab.pos,rep(x.max,l.b),lab.pos,lwd=2)
+#add cloud
+legend_image=as.raster(matrix("grey",ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.05,x.max,bot.val)
+text(x=x.max, y = bot.val-0.025, labels = "Clouds",cex=0.5,adj=0,pos=4,offset=0.5)
+
+legend_image=as.raster(matrix(adjustcolor("honeydew2",0.5),ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.1,x.max,bot.val-0.05)
+text(x=x.max, y = bot.val-0.075, labels = "Littoral Zone",cex=0.5,adj=0,pos=4,offset=0.5)
+# bx.val= seq(bot.val,top.val,(top.val-bot.val)/n.bks)
+# rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(col.rmp),lty=0)
+# text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
+text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000)")),adj=0,cex=0.8,pos=3,xpd=NA)
+
 ```
 
-```{r, out.width="50%",echo=FALSE,fig.align="center"}
-knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
+<font size=2><center>Cyanobacteria Algal Index across Lake Okeechobee. Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+<br>
+
+```{r NOAA LOK area,fig.width=6.5,fig.height=5,fig.align='center'}
+par(family="serif",mar=c(1,3,0.5,2),oma=c(2,2,0.5,2))
+layout(matrix(1:2,2,1),heights=c(0.5,1))
+
+xlim.val=c(date.fun("2022-04-01"),date.fun(Sys.Date()+lubridate::duration(1,"months")));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
+ylim.val=c(0,1);by.y=0.2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+
+plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
+with(cyano_area,pt_line(date,cloud.area.per,2,"grey",2,21,"grey"))
+axis_fun(2,ymaj,ymin,ymaj*100)
+# axis_fun(1,xmaj,xmin,format(xmaj,"%m-%Y"))
+axis_fun(1,xmaj,xmin,NA)
+box(lwd=1)
+mtext(side=2,line=2.5,"Cloud Cover (%)")
+mtext(side=3,adj=1,"Data Source: NOAA NCCOS",font=3)
+mtext(side=3,adj=0,"Lake Okeechobee",font=3)
+
+ylim.val=c(0,max(cyano_area$bloom.area.mi2)*1.10);by.y=100;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
+with(cyano_area,pt_line(date,bloom.area.mi2,1,"dodgerblue1",2,21,"dodgerblue1",pt.lwd=0.1,cex=1.25))
+with(subset(cyano_area,date==max(cyano_area$date)),
+     text(date,bloom.area.mi2,paste0(round(bloom.area.mi2)," mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
+k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0))
+x.val=seq(min(cyano_area$date2),max(cyano_area$date2),length.out=100)
+pred.mod=predict(k.mod,data.frame(date2=x.val))
+lines(date.fun(lubridate::date_decimal(x.val),form="%F %R"),pred.mod,col="red",lwd=2)
+axis_fun(2,ymaj,ymin,ymaj)
+axis_fun(1,xmaj,xmin,format(xmaj,"%b-%Y"),line=-0.5)
+axis_fun(1,xmaj,xmin,NA)
+box(lwd=1)
+mtext(side=1,line=1.5,"Date (Month-Year)")
+mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (mi\u00B2)")
+axis_fun(4,ymaj,ymin,round((ymaj/(LOK.area*3.861e-7))*100,0))
+mtext(side=4,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
+legend("topleft",legend=c("Smoothed Trend"),
+       lty=c(1),lwd=c(1),col=c("red"),
+       pch=c(NA),pt.bg=c(NA),
+       pt.cex=1.25,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 ```
 
+<font size=2><center>Cyanobacteria Algal Bloom coverage of Lake Okeechobee. Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
+### Blue-Green Algae Sampling Results
 
 ```{r FDEP BGAlgae}
-### Blue-Green Algae Sampling Results
+
 # Blue-Green Algae --------------------------------------------------------
 sdate.algae=date.fun(TODAY-lubridate::duration(30,"days"))
-path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/VIEW_FL_Algal_Bloom_Site_Visits_1/FeatureServer/0/query?'
+# path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/VIEW_FL_Algal_Bloom_Site_Visits_1/FeatureServer/0/query?'
+
+path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/AlgalBloom_Final_View/FeatureServer/0/query?'
 
 request <- GET(
   url = path,
@@ -1287,28 +1521,43 @@ results <- jsonlite::fromJSON(response,flatten=T)
 bgdat=rbind(bgdat, results$features)
 # unique(bgdat$attributes.County)
 
-vars=c("attributes.objectid", "attributes.globalid", "attributes.SiteVisitDate", 
-       "attributes.Location", "attributes.County", "attributes.Visitor", 
-       "attributes.AlgaeObserved", "attributes.SampleTaken", "attributes.DepthDesc", 
-       "attributes.SampleDepth", "attributes.AnalyzedBy", "attributes.Otherlab", 
-       "attributes.Comments", "attributes.Latitude", "attributes.Longitude", 
-       "attributes.AlgalID", "attributes.Microcystin", "attributes.OtherToxin", 
-       "attributes.EditDate", "attributes.PicURL", "attributes.ToxinPresent", 
-       "attributes.CyanobacteriaDominant", "geometry.x", "geometry.y"
-)
+# vars=c("attributes.objectid", "attributes.globalid", "attributes.SiteVisitDate", 
+#        "attributes.Location", "attributes.County", "attributes.Visitor", 
+#        "attributes.AlgaeObserved", "attributes.SampleTaken", "attributes.DepthDesc", 
+#        "attributes.SampleDepth", "attributes.AnalyzedBy", "attributes.Otherlab", 
+#        "attributes.Comments", "attributes.Latitude", "attributes.Longitude", 
+#        "attributes.AlgalID", "attributes.Microcystin", "attributes.OtherToxin", 
+#        "attributes.EditDate", "attributes.PicURL", "attributes.ToxinPresent", 
+#        "attributes.CyanobacteriaDominant", "geometry.x", "geometry.y"
+# )
+vars=c("attributes.objectid", "attributes.globalid", 
+       "attributes.SampleDateTime", "attributes.MonitoringGroupPublicFacing",
+       "attributes.County", "attributes.esrignss_latitude", 
+       "attributes.esrignss_longitude", "attributes.BloomObserved", 
+       "attributes.Comments", "attributes.MeterReadingsOnly", 
+       "attributes.SampleDepthDesc", "attributes.AnalyzedBy", 
+       "attributes.Otherlab", "attributes.SampleDepth", 
+       "attributes.AlgalIDResult", "attributes.ToxinPresent", 
+       "attributes.Microcystin", "attributes.OtherToxin", 
+       "attributes.locationString", "attributes.EditDate", 
+       "attributes.PicURL","attributes.CyanobacteriaDominant",
+       "geometry.x", "geometry.y")
+
 vars=strsplit(vars,"\\.")
 vars=sapply(vars,"[",2)
+vars[vars%in%c("esrignss_longitude","esrignss_latitude")]=c("latitude","longitude")
 colnames(bgdat)<-tolower(vars)
 
-bgdat$sitevisitdate=as.numeric(gsub('000$', '',format(bgdat$sitevisitdate,scientific=F)))
+# bgdat$sitevisitdate=as.numeric(gsub('000$', '',format(bgdat$sitevisitdate,scientific=F)))
+bgdat$sitevisitdate=as.numeric(gsub('000$', '',format(bgdat$sampledatetime,scientific=F)))
 bgdat$datetime=as.POSIXct(bgdat$sitevisitdate,origin = c('1970-01-01'), tz = 'UTC')
 bgdat$datetime=date.fun(bgdat$datetime,form="%F %R")
 bgdat$date=date.fun(bgdat$datetime)
 
 # Fix microcystin value
-vars=strsplit(bgdat$microcystin,"I")
+vars=strsplit(bgdat$microcystin,"\\ |\\(")
 # bgdat$microcystin.halfmdl=ifelse(sapply(vars,"[",1)=="not detected",0.5,as.numeric(sapply(vars,"[",1)))
-bgdat$microcystin.val=ifelse(sapply(vars,"[",1)=="not detected",NA,as.numeric(sapply(vars,"[",1)))
+bgdat$microcystin.val=ifelse(sapply(vars,"[",1)=="not",NA,as.numeric(sapply(vars,"[",1)))
 
 # bgdat_30d=subset(bgdat,date<=TODAY&date>=sdate.algae)
 # bgdat_30d.shp=SpatialPointsDataFrame(coords=bgdat_30d[,c("longitude","latitude")],
@@ -1323,32 +1572,33 @@ proj4string(bgdat.ext)=wgs84
 bgdat.ext=SpatialPolygonsDataFrame(bgdat.ext,data.frame(ID="BGdata"))
 
 bgdat_30d.shp=subset(bgdat.shp,date<=TODAY&date>=sdate.algae)
+bgdat_30d=bgdat_30d.shp@data
 ```
 
 
 ```{r BG_map30d,fig.width=7,fig.height=5,fig.align='center'}
-# par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
-# # layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
-# # par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
-# layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
-# bbox.lims=bbox(bgdat.ext)
-# 
-# plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
-# if(nrow(bgdat_30d.shp)!=0){
-# plot(subset(bgdat_30d.shp,is.na(toxinpresent)==T),add=T,pch=21,bg="grey",cex=1)
-# plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="NO"),add=T,pch=21,bg="green",cex=2,lwd=0.1)
-# plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",cex=2,lwd=0.1)
-# }
-# box(lwd=1)
-# mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
-# 
-# plot(0:1,0:1,ann=F,axes=F,type="n")
-# date.rng=range(bgdat_30d.shp$date,na.rm=T)
-# legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
-#        pch=c(21),lty=c(NA),lwd=c(0.1),
-#        col=c("black"),pt.bg=c("red","green","grey"),
-#        pt.cex=1.25,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
-#        title.adj = 0,title=paste0("Blue-green Algae Toxin status\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),"\n(Presence/Absence)"))
+par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
+# layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
+# par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
+layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
+bbox.lims=bbox(bgdat.ext)
+
+plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
+if(nrow(bgdat_30d.shp)!=0){
+plot(subset(bgdat_30d.shp,is.na(toxinpresent)==T),add=T,pch=21,bg="grey",cex=1)
+plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="NO"),add=T,pch=21,bg="green",cex=2,lwd=0.1)
+plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",cex=2,lwd=0.1)
+}
+box(lwd=1)
+mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+date.rng=range(bgdat_30d.shp$date,na.rm=T)
+legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
+       pch=c(21),lty=c(NA),lwd=c(0.1),
+       col=c("black"),pt.bg=c("red","green","grey"),
+       pt.cex=1.25,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
+       title.adj = 0,title=paste0("Blue-green Algae Toxin status\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),"\n(Presence/Absence)"))
 
 ```
 
@@ -1371,13 +1621,11 @@ bgdat_30d.shp=subset(bgdat.shp,date<=TODAY&date>=sdate.algae)
 #   
 #   tm_shape(bgdat.ext)+tm_borders(group="Area of Interest",lty="dashed",col="grey",lwd=1)
 
-
-# <font size=2><center>Blue-green Algae sampling results for the last 30-days for the 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
-# 
-# Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes",na.rm=T)` samples, `r sum(bgdat_30d$toxinpresent=="Yes",na.rm=T)` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects). 
-
-
 ```
+
+<font size=2><center>Blue-green Algae sampling results for the last 30-days for the 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae dashboard</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+ 
+Of the `r nrow(bgdat_30d)` samples collected, cyanobacteria was dominate in `r sum(bgdat_30d$cyanobacteriadominant=="Yes",na.rm=T)` samples, `r sum(bgdat_30d$toxinpresent=="Yes",na.rm=T)` samples had toxins present ranging from `r min(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` to `r max(as.numeric(bgdat_30d$microcystin.val),na.rm = T)` `r paste0("\u03BCg L\u207B\u00B9")` (does not include non-detects). 
 
 
 <br>
@@ -1918,7 +2166,7 @@ grid.raster(logo,x=0.045,y=0.055,just=c("left","bottom"),width=unit(1.25,"inches
 
 ### Red Tide Abundance
 <br>
-```{r red tide,echo=F}
+```{r red tide,echo=F,include=F}
 
 HABext=extent(-82.5,
               -80.0,
@@ -1957,79 +2205,79 @@ kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 ## Based on https://github.com/tbep-tech/piney-point/blob/141824adc082a57d79ba58ff38ac31d41dea4e44/R/dat_proc.R#L1262
 path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/MapServer/0/query?'
 
+request <- GET(
+  url = path,
+  query= list(
+    where= paste("LATITUDE <",round(HABext2[4],1),"AND LATITUDE >",round(HABext2[3],1),"AND LONGITUDE >",round(HABext2[1],1),"AND LONGITUDE <",round(HABext2[2],1)),
+    outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
+    f = 'pjson'
+  )
+)
+
+
+response <- content(request, as = "text", encoding = "UTF-8")
+results <- jsonlite::fromJSON(response,flatten=T)
+# results
+kbrdat=results$features
+# kbrdat
+
+# Tampa Bay Results
 # request <- GET(
 #   url = path,
 #   query= list(
-#     where= paste("LATITUDE <",round(HABext2[4],1),"AND LATITUDE >",round(HABext2[3],1),"AND LONGITUDE >",round(HABext2[1],1),"AND LONGITUDE <",round(HABext2[2],1)),
+#     where= paste("LATITUDE <",round(TBEP.ext[4],1),"AND LATITUDE >",round(TBEP.ext[3],1),"AND LONGITUDE >",round(TBEP.ext[1],1),"AND LONGITUDE <",round(TBEP.ext[2],1)),
 #     outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
 #     f = 'pjson'
 #   )
 # )
-# 
-# 
+#
 # response <- content(request, as = "text", encoding = "UTF-8")
+# # if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){results=NA}else{
 # results <- jsonlite::fromJSON(response,flatten=T)
 # # results
-# kbrdat=results$features
-# # kbrdat
-# 
-# # Tampa Bay Results
-# # request <- GET(
-# #   url = path,
-# #   query= list(
-# #     where= paste("LATITUDE <",round(TBEP.ext[4],1),"AND LATITUDE >",round(TBEP.ext[3],1),"AND LONGITUDE >",round(TBEP.ext[1],1),"AND LONGITUDE <",round(TBEP.ext[2],1)),
-# #     outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
-# #     f = 'pjson'
-# #   )
-# # )
-# #
-# # response <- content(request, as = "text", encoding = "UTF-8")
-# # # if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){results=NA}else{
-# # results <- jsonlite::fromJSON(response,flatten=T)
-# # # results
-# #
-# # kbrdat=rbind(kbrdat,results$features)
-# # kbrdat=kbrdat[duplicated(kbrdat)==F,]
-# 
-# vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
-#        "attributes.SAMPLE_DEPTH","attributes.LATITUDE",
-#        "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT",
-#        "attributes.WATER_TEMP", "attributes.WATER_TEMP_UNIT", "attributes.GENUS",
-#        "attributes.SPECIES", "attributes.CATEGORY", "attributes.CELLCOUNT",
-#        "attributes.CELLCOUNT_UNIT", "geometry.x", "geometry.y")
-# vars=strsplit(vars,"\\.")
-# vars=sapply(vars,"[",2)
-# 
-# colnames(kbrdat)<-tolower(vars)
-# 
-# kbrdat$date=as.POSIXct(as.numeric(gsub('000$', '',format(kbrdat$sample_date,scientific=F))),
-#                          origin = c('1970-01-01'), tz = 'UTC')
-# kbrdat$datetime=date.fun(kbrdat$date,form="%F %R")
-# kbrdat$date=date.fun(kbrdat$date)
-# kbrdat$year=as.numeric(format(kbrdat$date,"%Y"))
-# # range(kbrdat$year,na.rm=T)
-# kbrdat=subset(kbrdat,is.na(year)==T|year!=153)
+#
+# kbrdat=rbind(kbrdat,results$features)
+# kbrdat=kbrdat[duplicated(kbrdat)==F,]
+
+vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
+       "attributes.SAMPLE_DEPTH","attributes.LATITUDE",
+       "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT",
+       "attributes.WATER_TEMP", "attributes.WATER_TEMP_UNIT", "attributes.GENUS",
+       "attributes.SPECIES", "attributes.CATEGORY", "attributes.CELLCOUNT",
+       "attributes.CELLCOUNT_UNIT", "geometry.x", "geometry.y")
+vars=strsplit(vars,"\\.")
+vars=sapply(vars,"[",2)
+
+colnames(kbrdat)<-tolower(vars)
+
+kbrdat$date=as.POSIXct(as.numeric(gsub('000$', '',format(kbrdat$sample_date,scientific=F))),
+                         origin = c('1970-01-01'), tz = 'UTC')
+kbrdat$datetime=date.fun(kbrdat$date,form="%F %R")
+kbrdat$date=date.fun(kbrdat$date)
+kbrdat$year=as.numeric(format(kbrdat$date,"%Y"))
+# range(kbrdat$year,na.rm=T)
+kbrdat=subset(kbrdat,is.na(year)==T|year!=153)
 # min(kbrdat$date)
 # max(kbrdat$date)
-# ##
-# cat.abund.xwalk=data.frame(category=c("not observed","very low","low","medium","high"),
-#                            abund=c("not present/background (0-1,000)", "very low (>1,000-10,000)",
-#                                    "low (>10,000-100,000)", "medium (>100,000-1,000,000)",
-#                                    "high (>1,000,000)"))
-# 
-# kbrdat=merge(kbrdat,cat.abund.xwalk,"category")
-# kbrdat$Abundance=factor(kbrdat$abund,levels=cat.abund.xwalk$abund)
-# kbrdat$category=factor(kbrdat$category,levels=cat.abund.xwalk$category)
-# 
-# kbrdat.shp=SpatialPointsDataFrame(coords=kbrdat[,c("longitude","latitude")],
-#                                           data=kbrdat,
-#                                           proj4string = wgs84)
-# 
-# 
-# kbrdat_30d=subset(kbrdat,date<=TODAY&date>=sdate.algae)
-# kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude")],
-#                                           data=kbrdat_30d,
-#                                           proj4string = wgs84)
+##
+cat.abund.xwalk=data.frame(category=c("not observed","very low","low","medium","high"),
+                           abund=c("not present/background (0-1,000)", "very low (>1,000-10,000)",
+                                   "low (>10,000-100,000)", "medium (>100,000-1,000,000)",
+                                   "high (>1,000,000)"))
+
+kbrdat=merge(kbrdat,cat.abund.xwalk,"category")
+kbrdat$Abundance=factor(kbrdat$abund,levels=cat.abund.xwalk$abund)
+kbrdat$category=factor(kbrdat$category,levels=cat.abund.xwalk$category)
+
+kbrdat.shp=SpatialPointsDataFrame(coords=kbrdat[,c("longitude","latitude")],
+                                          data=kbrdat,
+                                          proj4string = wgs84)
+
+
+kbrdat_30d=subset(kbrdat,date<=TODAY&date>=sdate.algae)
+kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude")],
+                                          data=kbrdat_30d,
+                                          proj4string = wgs84)
 
 
 
@@ -2037,32 +2285,32 @@ path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/Map
 
 
 ```{r,fig.width=7,fig.height=6,fig.align='center',fig.cap="Red tide sampling results for the last 30-days from just south of Tampa Bay to the Florida Keys. Data from NOAA HABSOS Program.Data are provisional and subject to change."}
-# par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
-# # layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
-# # par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
-# layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
-# # bbox.lims=bbox(bind(HABext.poly,TBEP.ext.poly))
-# bbox.lims=bbox(HABext.poly)
-# 
-# plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
-# abund.cols=c("white","grey","dodgerblue1","orange","indianred1")
-# plot(kbrdat_30d.shp,add=T,pch=21,lwd=0.01,
-#      bg=abund.cols[kbrdat_30d.shp$Abundance])
-# # plot(TBEP.ext.poly,add=T,border="black",lty=2,col=NA)
-# plot(HABext.poly,add=T,border="grey",lty=2,col=NA)
-# plot(CRE.ext,add=T,border="red",lwd=2)
-# box(lwd=1)
-# mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
-# 
-# plot(0:1,0:1,ann=F,axes=F,type="n")
-# date.rng=range(kbrdat_30d.shp$date,na.rm=T)
-# legend("center",legend=c(cat.abund.xwalk$abund,"Caloosahatchee River Estuary"),
-#        pch=c(rep(21,length(cat.abund.xwalk$abund)),22),lty=c(NA),
-#              lwd=c(rep(0.01,length(cat.abund.xwalk$abund)),2),
-#        col=c(rep("black",length(cat.abund.xwalk$abund)),"red"),
-#        pt.bg=c(abund.cols,NA),
-#        pt.cex=2,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1.25,
-#        title.adj = 0,title=paste0("Red Tide Abundance\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),""))
+par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
+# layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
+# par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
+layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
+# bbox.lims=bbox(bind(HABext.poly,TBEP.ext.poly))
+bbox.lims=bbox(HABext.poly)
+
+plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
+abund.cols=c("white","grey","dodgerblue1","orange","indianred1")
+plot(kbrdat_30d.shp,add=T,pch=21,lwd=0.01,
+     bg=abund.cols[kbrdat_30d.shp$Abundance])
+# plot(TBEP.ext.poly,add=T,border="black",lty=2,col=NA)
+plot(HABext.poly,add=T,border="grey",lty=2,col=NA)
+plot(CRE.ext,add=T,border="red",lwd=2)
+box(lwd=1)
+mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+date.rng=range(kbrdat_30d.shp$date,na.rm=T)
+legend("center",legend=c(cat.abund.xwalk$abund,"Caloosahatchee River Estuary"),
+       pch=c(rep(21,length(cat.abund.xwalk$abund)),22),lty=c(NA),
+             lwd=c(rep(0.01,length(cat.abund.xwalk$abund)),2),
+       col=c(rep("black",length(cat.abund.xwalk$abund)),"red"),
+       pt.bg=c(abund.cols,NA),
+       pt.cex=2,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1.25,
+       title.adj = 0,title=paste0("Red Tide Abundance\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),""))
 
 ```
 
@@ -2090,30 +2338,30 @@ path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/Map
 #   # tm_shape(kbr.AOI)+tm_borders(group="Area of Interest",lwd=1,lty="dashed",col="grey")
 # }
 ```
-<!--
+
 <font size=2><center>Red tide sampling results for the last 30-days from just south of Tampa Bay to the Florida Keys. Data from NOAA HABSOS Program</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
--->
+
 
 ```{r}
-# rslt =plyr::ddply(kbrdat_30d.shp[CRE.ext,]@data,"category",summarise,N.val=N.obs(category))  
-# 
-# rslt=merge(cat.abund.xwalk,rslt,"category",all.x=T)
-# 
-# rslt=rslt[match(cat.abund.xwalk$abund,rslt$abund),]
-# 
-# cap.val="Count of samples within each abundance category within the greater Caloosahatchee River Estuary (see grey box on map)"
-# rslt[,c("abund","N.val")]%>%
-#   flextable()%>%
-#   colformat_num(j=2,big.mark = "",digits=0,na_str = "---")%>%
-#   set_header_labels("abund"="Cell Abundance (Cells L\u207B\u00B9)",
-#                     "N.val"="Number\nof\nSamples")%>%
-#   align(j=2,align="center",part="all")%>%
-#   width(width=c(2.5,0.5))%>%
-#   padding(padding=2,part="all")%>%
-#   fontsize(size=10,part="body")%>%
-#   fontsize(size=12,part="header")%>%
-#   add_header_lines(values=cap.val)%>%
-#   align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+rslt =plyr::ddply(kbrdat_30d.shp[CRE.ext,]@data,"category",summarise,N.val=N.obs(category))
+
+rslt=merge(cat.abund.xwalk,rslt,"category",all.x=T)
+
+rslt=rslt[match(cat.abund.xwalk$abund,rslt$abund),]
+
+cap.val="Count of samples within each abundance category within the greater Caloosahatchee River Estuary (see grey box on map)"
+rslt[,c("abund","N.val")]%>%
+  flextable()%>%
+  colformat_num(j=2,big.mark = "",digits=0,na_str = "---")%>%
+  set_header_labels("abund"="Cell Abundance (Cells L\u207B\u00B9)",
+                    "N.val"="Number\nof\nSamples")%>%
+  align(j=2,align="center",part="all")%>%
+  width(width=c(2.5,0.5))%>%
+  padding(padding=2,part="all")%>%
+  fontsize(size=10,part="body")%>%
+  fontsize(size=12,part="header")%>%
+  add_header_lines(values=cap.val)%>%
+  align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
 
 ```
 
