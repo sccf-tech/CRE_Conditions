@@ -79,9 +79,11 @@ shore=readOGR("./GISData","FWC_Shoreline_simp")
 shore=spTransform(shore,wgs84)
 # shore=spTransform(readOGR("C:/Julian_LaCie/_GISData/FWC","FWC_Shoreline_simp"),wgs84)
 
+# lakeO=readOGR("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LakeOkeechobee_general")
 lakeO=readOGR("./GISData","LakeOkeechobee_general")
 lakeO=spTransform(lakeO,utm17)
 
+# lakeO.lit=readOGR("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LOK_littoral")
 lakeO.lit=readOGR("./GISData","LOK_littoral")
 lakeO.lit=spTransform(lakeO.lit,utm17)
 
@@ -607,7 +609,7 @@ q.dat.7day2%>%
 
 ## Lake Okeechobee 
 
-```{r,echo=FALSE,include=FALSE}
+```{r dates,echo=FALSE,include=FALSE}
 #Current WY
 CurWY=as.numeric(ifelse(as.numeric(format(as.Date(Sys.time()),"%m"))>4,as.numeric(format(as.Date(Sys.time()),"%Y"))+1,format(as.Date(Sys.time()),"%Y")))
 # CurWY
@@ -1370,9 +1372,13 @@ area=rev.scale>0
 val=cellStats(area,sum)*raster::res(area)[1]*raster::res(area)[2]
 # val*3.86102e-7 # converts from m2 to mi2
 
+area2=rev.scale>(1000*1000)
+val2=cellStats(area2,sum)*raster::res(area2)[1]*raster::res(area2)[2]
+
 tmp.rslt=data.frame(date=noaa.HAB.image$date[i],
                     cloud.area=cloud.area,
-                    bloom.area.m2=val)
+                    bloom.area.m2=val,
+                    vis.bloom=val2)
 cyano_area=rbind(cyano_area,tmp.rslt)
 }
 
@@ -1382,12 +1388,23 @@ cyano_area$bloom.area.mi2=cyano_area$bloom.area.m2*3.86102e-7
 cyano_area$bloom.area.per=(cyano_area$bloom.area.m2/LOK.area)*100
 cyano_area$date=date.fun(cyano_area$date)
 cyano_area$date2=decdate.fun(cyano_area$date)
+cyano_area$vis.bloom=cyano_area$vis.bloom*3.86102e-7
 
+tmp.raster=raster(paste(data.path, fnames[length(fnames)],sep="/"))
+tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+vals=c(0,250,251,252,253,254,255)
+tmp.raster[tmp.raster%in%vals]=NA
+
+tmp.raster=calc(tmp.raster,fun=function(x) x*1)
+rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+
+
+date.val=date.fun(paste(substr(fnames[length(fnames)],1,4),substr(fnames[length(fnames)],5,6),substr(fnames[length(fnames)],7,8),sep="-"))
 ```
 
 <br>
 
-```{r NOAA RSdata,fig.width=6.5,fig.height=5,fig.align='center'}
+```{r NOAA RS Plot,fig.width=6.5,fig.height=5,fig.align='center'}
 par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
 layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
 
@@ -1400,7 +1417,7 @@ image(rev.scale,add=T,col = cols)
 image(cloud.area.raster,add=T,col=c(NA,"grey"))
 plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)
 mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
-mtext(side=3,line=-2,adj=0,paste("Date:",format(noaa.HAB.image$date[i],"%m-%d-%Y"),"\nData Source: NOAA NCCOS"))
+mtext(side=3,line=-2,adj=0,paste("Date:",format(date.val,"%m-%d-%Y"),"\nData Source: NOAA NCCOS"))
 
 plot(0:1,0:1,ann=F,axes=F,type="n")
 b2=b/1000
@@ -1462,6 +1479,8 @@ abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
 with(cyano_area,pt_line(date,bloom.area.mi2,1,"dodgerblue1",2,21,"dodgerblue1",pt.lwd=0.1,cex=1.25))
 with(subset(cyano_area,date==max(cyano_area$date)),
      text(date,bloom.area.mi2,paste0(round(bloom.area.mi2)," mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
+# with(cyano_area,pt_line(date,vis.bloom,2,
+#                         adjustcolor("grey",0.5),2,21,adjustcolor("grey",0.5),pt.lwd=0.1,cex=1.25))
 k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0))
 x.val=seq(min(cyano_area$date2),max(cyano_area$date2),length.out=100)
 pred.mod=predict(k.mod,data.frame(date2=x.val))

@@ -149,11 +149,18 @@ ci.scaling.fun=function(ci){
 
 noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif")
 noaa.HAB.image$filename
+noaa.HAB.image$fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+# fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+fnames=noaa.HAB.image$fnames
 
-fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+# paste0(data.path,"sentinel_2022/", fnames)
+new.dat=fnames[fnames%in%list.files(paste0(data.path,"sentinel_2022/"))==F]
 
-for(i in 1:nrow(noaa.HAB.image)){
-download.file(noquote(gsub("'", '', noaa.HAB.image$fileadd[i], fixed=TRUE)),paste0(data.path,"sentinel_2022/", fnames[i]),mode="wb")
+
+noaa.HAB.image2=subset(noaa.HAB.image,fnames%in%new.dat)
+
+for(i in 1:nrow(noaa.HAB.image2)){
+download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)),paste0(data.path,"sentinel_2022/", noaa.HAB.image2$fnames[i]),mode="wb")
   print(i)
 }
 
@@ -270,7 +277,7 @@ plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xli
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
 with(cyano_area,pt_line(date,bloom.area.mi2,1,"dodgerblue1",2,21,"dodgerblue1",pt.lwd=0.1,cex=1.25))
 with(subset(cyano_area,date==max(cyano_area$date)),
-     text(date,bloom.area.mi2,paste0(round(bloom.area.mi2),"mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
+     text(date,bloom.area.mi2,paste0(round(bloom.area.mi2)," mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
 k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0))
 x.val=seq(min(cyano_area$date2),max(cyano_area$date2),length.out=100)
 pred.mod=predict(k.mod,data.frame(date2=x.val))
