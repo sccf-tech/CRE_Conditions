@@ -1246,6 +1246,7 @@ algae.week%>%
 ```
 
 
+### Algae Coverage
 ```{r noaa hab image,echo=F}
 # 
 # noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iVGZLZEU0cHZqYXlMWldYTlRDMWtEcz0=")
