@@ -911,7 +911,7 @@ legend("topright",
 
 
 ```{r LOK_recess2,echo=FALSE,fig.width=8,fig.height=3.75,fig.align='center'}
-ylim.val=c(CurWY-3,CurWY);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
+ylim.val=c(CurWY-3,CurWY-1);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
 ylim.val2=ylim.val
 ylim.val=c(ylim.val[1]-0.5,ylim.val[2]+0.5)
 xlim.val=c(1,366);by.x=60;xmaj=c(1,60,120,180,240,300,360);xmin=seq(0,xlim.val[2],by.x/2)#seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/2)
@@ -1816,6 +1816,7 @@ cal.flow.dat.xtab$Data.Value=with(cal.flow.dat.xtab,ifelse(is.na(P1)==T,P2,P1))
 
 cal.flow.dat.xtab=cast(cal.flow.dat.xtab,Date+WY~SITE,value="Data.Value",mean)
 cal.flow.dat.xtab$hydro.day=hydro.day(cal.flow.dat.xtab$Date)
+cal.flow.dat.xtab$S77=with(cal.flow.dat.xtab,ifelse(S77<0,0,S77))
 cal.flow.dat.xtab$C43=with(cal.flow.dat.xtab,ifelse(S79<S77,0,S79-S77))
 
 cal.flow.dat.xtab$cum.S79=with(cal.flow.dat.xtab,ave(cfs.to.acftd(S79),WY,FUN = function(x)cumsum(ifelse(is.na(x),0,x))))
@@ -1868,8 +1869,57 @@ legend(0.5,0.5,
 
 <br>
 
-```{r CRE_SalEnv, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+```{r CRE_SalEnv6mon, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
 # ylim.max=signif(max(subset(cal.flow.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$S79,na.rm=T)+max(cal.flow.dat.xtab$S79,na.rm=T)*0.1,0)
+
+max.q=max(subset(cal.flow.dat.xtab,Date%in%seq(date.fun(TODAY-duration(6,"months")),date.fun(TODAY+ddays(3)),"1 days"))$S79,na.rm=T)
+ylim.max=round(max.q+max.q*0.1,-3)
+
+ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+xlim.val=date.fun(c(TODAY-duration(6,"months"),TODAY+ddays(3)));xmaj=seq(xlim.val[1],xlim.val[2],by="2 month");xmin=seq(xlim.val[1],xlim.val[2],by="1 months")
+
+layout(matrix(1:2,2,1,byrow=F),widths=c(2,1),heights=c(1,0.5))
+par(family="serif",cex.axis=1.2,mar=c(2,2,1,2),oma=c(0.5,3,1,2));
+plot(S79~Date,cal.flow.dat.xtab,type="n",ylim=ylim.val,xlim=xlim.val,xaxs="i",yaxs="i",xaxt="n",yaxt="n",xlab=NA,ylab=NA)
+xx=c(xlim.val[1],xlim.val[1],xlim.val[2],xlim.val[2])
+yy3=c(2600,ylim.max,ylim.max,2600);polygon(x=xx,y=yy3,col=adjustcolor("red",0.5))
+yy4=c(2100,2600,2600,2100);polygon(x=xx,y=yy4,col=adjustcolor("yellow",0.5))
+yy5=c(750,2100,2100,750);polygon(x=xx,y=yy5,col=adjustcolor("green",0.5))
+abline(h=ymaj,v=xmaj,lty=3,col="grey")
+abline(h=457,col="red")
+with(cal.flow.dat.xtab,pt_line(Date,S79,2,"black",1,21,"grey",cex=1,pt.lwd=0.1))
+with(cal.flow.dat.xtab,lines(Date,Q.14,lwd=3,col=adjustcolor("dodgerblue3",0.5)))
+with(cal.flow.dat.xtab,lines(Date,Q.30,lwd=3,col=adjustcolor("black",0.5),lty=2))
+axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)
+axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
+axis_fun(4,ymaj,ymin,format(round(cfs.to.acftd(ymaj)/1000,1)),cex.axis=1)
+
+box(lwd=lwd.val)
+mtext("Date\n(MM/DD/YYYY)",side=1,line=2.75,cex=1.25)
+mtext("Discharge (cfs)",side=2,line=3.5,cex=1.25)
+mtext("Discharge (kAc-Ft D\u207B\u00B9)",side=4,line=2.5,cex=1.25)
+
+plot(0:1,0:1,type="n",yaxt="n",xaxt="n",bty="n")
+legend(0.25,0.75,
+       legend=c( "Damaging (>2600 cfs)","Stress (2100 - 2600 cfs)","Optimum (750 - 2100 cfs)"),pch=22,
+       pt.bg=adjustcolor(c("red","yellow","green"),0.5),pt.cex=2,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5,title.adj = 0,title='RECOVER PM')
+
+legend(0.75,0.75,
+       legend=c("Daily Discharge","14-Day moving average","30-Day moving average","MFL (40E-8.221(2) FAC)"),
+       pch=c(21,NA,NA,NA),pt.bg=c("grey",NA,NA,NA),pt.cex=c(1.5,NA,NA,NA),lty=c(NA,1,2,1),lwd=c(0.5,2,2,1),col=c("black",adjustcolor(c("dodgerblue1","black"),0.5),"red"),
+       ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=1,xpd=NA,xjust=0.5,title.adj = 0,title='')
+
+```
+
+<font size=3><center>Daily, 14-day moving average and 30-day moving average discharge for S-79 relative to the Northern Estuaries RECOVER performance measure and the established minimium flows and levels (MFLs) for the recent 6-month period.</center></font>
+<font size=4 color="red"><center>Data are provisional and subject to change.</center></font>
+
+
+```{r CRE_SalEnv30d, echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
+# ylim.max=signif(max(subset(cal.flow.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$S79,na.rm=T)+max(cal.flow.dat.xtab$S79,na.rm=T)*0.1,0)
+
+max.q=max(subset(cal.flow.dat.xtab,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$S79,na.rm=T)
+ylim.max=round(max.q+max.q*0.25,-3)
 
 ylim.val=c(0,ylim.max);by.y=ylim.max/4;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 xlim.val=date.fun(c(TODAY-ddays(30),TODAY+ddays(3)));xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
@@ -1888,7 +1938,7 @@ with(cal.flow.dat.xtab,lines(Date,Q.14,lwd=3,col=adjustcolor("dodgerblue3",0.5))
 with(cal.flow.dat.xtab,lines(Date,Q.30,lwd=3,col=adjustcolor("black",0.5),lty=2))
 axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"),line=-0.5)
 axis_fun(2,ymaj,ymin,ymaj,cex.axis=1)
-axis_fun(4,ymaj,ymin,round(cfs.to.acftd(ymaj)/1000,1),cex.axis=1)
+axis_fun(4,ymaj,ymin,format(round(cfs.to.acftd(ymaj)/1000,1)),cex.axis=1)
 
 box(lwd=lwd.val)
 mtext("Date\n(MM/DD/YYYY)",side=1,line=2.75,cex=1.25)
