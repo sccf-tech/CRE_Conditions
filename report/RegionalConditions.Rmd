@@ -1403,6 +1403,22 @@ rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
 
 
 date.val=date.fun(paste(substr(fnames[length(fnames)],1,4),substr(fnames[length(fnames)],5,6),substr(fnames[length(fnames)],7,8),sep="-"))
+
+
+## weather data
+# wx.dates=date.fun(range(noaa.HAB.image$date))
+# 
+# dbkeys=data.frame(DBKEY=c("13077","13076"),param=c('WINDD','WINDS'))
+# wx.dat=DBHYDRO_daily(wx.dates[1],wx.dates[2],dbkeys$DBKEY)
+# 
+# wx.dat=merge(wx.dat,dbkeys,'DBKEY')
+# wx.dat$Date=date.fun(wx.dat$Date)
+# 
+# wx.dat.xtab=cast(wx.dat,Date~param,value="Data.Value",mean)
+# wx.dat.xtab$WINDS.ms=wx.dat.xtab$WINDS*0.44704
+
+
+
 ```
 
 <br>
