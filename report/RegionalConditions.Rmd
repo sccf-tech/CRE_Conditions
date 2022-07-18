@@ -1408,15 +1408,24 @@ date.val=date.fun(paste(substr(fnames[length(fnames)],1,4),substr(fnames[length(
 ## weather data
 # wx.dates=date.fun(range(noaa.HAB.image$date))
 # 
-# dbkeys=data.frame(DBKEY=c("13077","13076"),param=c('WINDD','WINDS'))
-# wx.dat=DBHYDRO_daily(wx.dates[1],wx.dates[2],dbkeys$DBKEY)
-# 
+# dbkeys=data.frame(DBKEY=c("IY033","KV252"),param=c('WINVD','WINVS'))
+# wx.dat=DBHYDRO_breakpoint(as.Date("2022-04-01"),as.Date("2022-07-18"),dbkeys$DBKEY)
 # wx.dat=merge(wx.dat,dbkeys,'DBKEY')
-# wx.dat$Date=date.fun(wx.dat$Date)
 # 
-# wx.dat.xtab=cast(wx.dat,Date~param,value="Data.Value",mean)
-# wx.dat.xtab$WINDS.ms=wx.dat.xtab$WINDS*0.44704
-
+# wx.dat.xtab=cast(wx.dat,DATETIME~param,value="Data.Value",mean)
+# 
+# wx.dat.xtab$WINVS=wx.dat.xtab$WINVS*0.44704
+# wx.dat.xtab$u_vec=with(wx.dat.xtab,-WINVS*sin(2*pi*(WINVD/360)))
+# wx.dat.xtab$v_vec=with(wx.dat.xtab,-WINVS*cos(2*pi*(WINVD/360)))
+# wx.dat.xtab$Date=date.fun(wx.dat.xtab$DATETIME)
+# 
+# wx.dat.xtab.da=ddply(wx.dat.xtab,"Date",summarise,
+#                      mean.u.scalar=mean(WINVS,na.rm=T),
+#                      mean.u=mean(u_vec,na.rm=T),
+#                      mean.v=mean(v_vec,na.rm=T))
+# wx.dat.xtab.da$wd.average=with(wx.dat.xtab.da,(atan2(mean.u,mean.v)*360/2/pi)+180)
+# wx.dat.xtab.da$ws.vec.avg=with(wx.dat.xtab.da,((mean.u^2+mean.v^2)^0.5))
+# 
 
 
 ```
@@ -1479,8 +1488,21 @@ par(family="serif",mar=c(1,3,0.5,2),oma=c(2,2,0.5,2))
 layout(matrix(1:2,2,1),heights=c(0.5,1))
 
 xlim.val=c(date.fun("2022-04-01"),date.fun(Sys.Date()+lubridate::duration(1,"months")));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
-ylim.val=c(0,1);by.y=0.2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
+# ylim.val=c(-10,10);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+# plot(ws.vec.avg~Date,wx.dat.xtab.da,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val)
+# abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
+# abline(h=0)
+# stickplot.dat.arrows(Date,ws.vec.avg,wd.average,wx.dat.xtab.da,col="dodgerblue1",lty=1,lwd=2)
+# axis_fun(2,ymaj,ymin,ymaj)
+# # axis_fun(1,xmaj,xmin,format(xmaj,"%m-%Y"))
+# axis_fun(1,xmaj,xmin,NA)
+# box(lwd=1)
+# mtext(side=2,line=2.5,"Avg Wind Speed & Dir\n(m s\u207B\u00B9)")
+# mtext(side=3,adj=1,"Data Source: SFWMD",font=3)
+# mtext(side=3,adj=0,"Station: LZ40",font=3)
+
+ylim.val=c(0,1);by.y=0.2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
 with(cyano_area,pt_line(date,cloud.area.per,2,"grey",2,21,"grey"))
@@ -1518,7 +1540,7 @@ legend("topleft",legend=c("Smoothed Trend"),
        pt.cex=1.25,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 ```
 
-<font size=2><center>Cyanobacteria Algal Bloom coverage of Lake Okeechobee. Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+<font size=2><center>Average daily windspeed and direction and cyanobacteria algal bloom coverage of Lake Okeechobee. Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 ### Blue-Green Algae Sampling Results
 
