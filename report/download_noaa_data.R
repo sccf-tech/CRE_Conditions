@@ -47,12 +47,12 @@ fnames=noaa.HAB.image$fnames
 new.dat=fnames[fnames%in%list.files(data.path)==F]
 
 # adjust timeout time
-options(timeout = max(600, getOption("timeout")))
+options(timeout = max(800, getOption("timeout")))
 
 noaa.HAB.image2=subset(noaa.HAB.image,fnames%in%new.dat)
 if(nrow(noaa.HAB.image2)!=0){
   for(i in 1:nrow(noaa.HAB.image2)){
-    download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)),paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),mode="wb",method="libcurl")
-    print(i)
+    download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)),paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),mode="wb",method="wininet")
+    # print(i)
   }
 }
