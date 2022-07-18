@@ -32,6 +32,9 @@ jobs:
           # install.packages(pack.url,repos=NULL,type="source")
           remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
+      - name: Download data
+        run: |
+          source("./report/dowload_noaa_data.R")
       
       - name: Render Site
         run: |
