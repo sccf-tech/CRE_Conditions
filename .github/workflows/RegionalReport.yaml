@@ -32,14 +32,17 @@ jobs:
           # install.packages(pack.url,repos=NULL,type="source")
           remotes::install_github("SwampThingPaul/AnalystHelper")
         shell: Rscript {0}
+        
       - name: Download data
         run: |
-          base::source("./report/dowload_noaa_data.R")
+          source("./report/dowload_noaa_data.R")
+        shell: Rscript {0}
       
       - name: Render Site
         run: |
           rmarkdown::render("./report/RegionalConditions.Rmd", output_format = "html_document")
         shell: Rscript {0}
+      
       - name: setup git config
         run: |
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
