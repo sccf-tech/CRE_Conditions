@@ -3,7 +3,7 @@
 ## Lake Okeechobee Cyano-HAB
 
 data.path="./report/RSdata"
-
+# data.path="C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata"
 ##
 ## Get list of files on NOAA site
 noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iYjNnK3AvTWRrYmNWbXU0K0YvMlA1UlBtTWZlRFV3R1RicVRYb2pxeVJBUA==")
