@@ -1320,6 +1320,8 @@ for(i in 1:length(vals)){
 noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif"&date==max(noaa.image.inventory$date))
 
 data.path="./RSdata"
+data.path="C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata"
+
 noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif")
 # noaa.HAB.image$filename
 noaa.HAB.image$fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
@@ -1402,8 +1404,8 @@ tmp.raster=calc(tmp.raster,fun=function(x) x*1)
 rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
 
 
-date.val=date.fun(paste(substr(fnames[length(fnames)],1,4),substr(fnames[length(fnames)],5,6),substr(fnames[length(fnames)],7,8),sep="-"))
-
+date.val=subset(cyano_area,date==max(cyano_area$date))$date
+algae.cov=subset(cyano_area,date==max(cyano_area$date))$bloom.area.mi2
 
 ## weather data
 # wx.dates=date.fun(range(noaa.HAB.image$date))
@@ -1445,7 +1447,10 @@ image(rev.scale,add=T,col = cols)
 image(cloud.area.raster,add=T,col=c(NA,"grey"))
 plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)
 mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
-mtext(side=3,line=-2,adj=0,paste("Date:",format(date.val,"%m-%d-%Y"),"\nData Source: NOAA NCCOS"))
+mtext(side=3,line=-2.5,adj=0,paste("Date:",format(date.val,"%m-%d-%Y"),
+                                   "\nData Source: NOAA NCCOS\nAlgae Coverage:",
+                                   round(algae.cov),"mi\u00B2"))
+
 
 plot(0:1,0:1,ann=F,axes=F,type="n")
 b2=b/1000
