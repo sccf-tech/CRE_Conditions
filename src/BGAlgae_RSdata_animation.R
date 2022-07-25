@@ -1,5 +1,5 @@
 ## 
-## Kissimmee River Restoration Sediment
+## BGAlgae remote sensing data animation
 ##
 ## Code was compiled by Paul Julian
 ## contact info: pauljulianphd@gmail.com
