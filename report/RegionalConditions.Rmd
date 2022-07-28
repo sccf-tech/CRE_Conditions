@@ -75,9 +75,9 @@ utm17=CRS("+init=epsg:26917")
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
 
 #### GIS data
+# shore=spTransform(readOGR("C:/Julian_LaCie/_GISData/FWC","FWC_Shoreline_simp"),wgs84)
 shore=readOGR("./GISData","FWC_Shoreline_simp") 
 shore=spTransform(shore,wgs84)
-# shore=spTransform(readOGR("C:/Julian_LaCie/_GISData/FWC","FWC_Shoreline_simp"),wgs84)
 
 # lakeO=readOGR("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LakeOkeechobee_general")
 lakeO=readOGR("./GISData","LakeOkeechobee_general")
@@ -1320,7 +1320,7 @@ for(i in 1:length(vals)){
 noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif"&date==max(noaa.image.inventory$date))
 
 data.path="./RSdata"
-data.path="C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata"
+# data.path="C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata"
 
 noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif")
 # noaa.HAB.image$filename
@@ -1398,6 +1398,7 @@ cyano_area$vis.bloom=cyano_area$vis.bloom*3.86102e-7
 tmp.raster=raster(paste(data.path, fnames[length(fnames)],sep="/"))
 tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
 vals=c(0,250,251,252,253,254,255)
+# tmp.raster_nodata=tmp.raster>=250
 tmp.raster[tmp.raster%in%vals]=NA
 
 tmp.raster=calc(tmp.raster,fun=function(x) x*1)
