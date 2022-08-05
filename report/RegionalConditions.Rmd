@@ -1446,7 +1446,8 @@ plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
 plot(lakeO,lwd=0.05,add=T)
 image(rev.scale,add=T,col = cols)
 image(cloud.area.raster,add=T,col=c(NA,"grey"))
-plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)
+if(sum(is.na(getValues(rev.scale)))/length(getValues(rev.scale))<0.75){
+plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)}
 mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
 mtext(side=3,line=-2.5,adj=0,paste("Date:",format(date.val,"%m-%d-%Y"),
                                    "\nData Source: NOAA NCCOS\nAlgae Coverage:",

@@ -146,6 +146,8 @@ cyano_area$date2=decdate.fun(cyano_area$date)
 cyano_area$vis.bloom=cyano_area$vis.bloom*3.86102e-7
 
 # write.csv(cyano_area,paste0(export.path,"CIHAB_ts.csv"),row.names = F)
+cyano_area=read.csv(paste0(export.path,"CIHAB_ts.csv"))
+cyano_area$date=date.fun(cyano_area$date)
 
 plot(mean~date,cyano_area)
 plot(median~date,cyano_area)
@@ -158,7 +160,6 @@ cyano_area$CY=as.numeric(format(cyano_area$date,'%Y'))
 plot(bloom.area.per~DOY,cyano_area)
 plot(median~DOY,cyano_area,log="y")
 
-format(subset(cyano_area2,is.na(DOY))$date,"%j")
 
 ## 
 cyano_area2=cyano_area[order(cyano_area$date),]
@@ -170,12 +171,41 @@ cyano_area2$DOY=as.numeric(format(cyano_area2$date,'%j'))
 cyano_area2$CY=as.numeric(format(cyano_area2$date,'%Y'))
 
 tmp2=ddply(cyano_area2,"DOY",summarise,
-          min.val=min(ifelse(bloom.area.per==0&cloud.area.per>0.4,NA,bloom.area.per),na.rm=T),
-          median.val=median(ifelse(bloom.area.per==0&cloud.area.per>0.4,NA,bloom.area.per),na.rm=T),
-          max.val=max(ifelse(bloom.area.per==0&cloud.area.per>0.4,NA,bloom.area.per),na.rm=T))
+          min.val=min(ifelse(bloom.area.per==0,NA,bloom.area.per),na.rm=T),
+          median.val=median(ifelse(bloom.area.per==0,NA,bloom.area.per),na.rm=T),
+          max.val=max(ifelse(bloom.area.per==0,NA,bloom.area.per),na.rm=T),
+          q1=quantile(ifelse(bloom.area.per==0,NA,bloom.area.per),na.rm=T,prob=0.25),
+          q3=quantile(ifelse(bloom.area.per==0,NA,bloom.area.per),na.rm=T,prob=0.75))
 tmp2$max.MA=with(tmp2,c(rep(NA,29),rollapply(max.val,width=30,FUN=function(x)mean(x,na.rm=T))))
 tmp2$min.MA=with(tmp2,c(rep(NA,29),rollapply(min.val,width=30,FUN=function(x)mean(x,na.rm=T))))
 tmp2$median.MA=with(tmp2,c(rep(NA,29),rollapply(median.val,width=30,FUN=function(x)mean(x,na.rm=T))))
+
+plot(q1~DOY,tmp2,ylim=c(0,70),type="l")
+lines(q3~DOY,tmp2)
+lines(median.val~DOY,tmp2)
+with(tmp2,shaded.range(DOY,q1,q3,"grey",lty=1))
+
+
+ylim.val=c(0,70);by.y=20;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+xlim.val=c(1,366);by.x=60;xmaj=c(1,60,120,180,240,300,360);xmin=seq(0,xlim.val[2],by.x/2)
+
+plot(q1~DOY,tmp2,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
+with(tmp2,shaded.range(DOY,min.MA,max.MA,"limegreen",lty=1))
+lines(median.mean~DOY.date,tmp2,lty=1,col="forestgreen")
+lines(median.MA~DOY,tmp2,lwd=2)
+axis_fun(2,ymaj,ymin,ymaj)
+axis_fun(1,xmaj,xmin,xmaj,line=-0.5)
+box(lwd=1)
+mtext(side=1,line=1.5,"DOY")
+mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
+legend("topleft",legend=c("2016 - 2021 30d MA range","2016 - 2021 30d MA median"),
+       lty=c(NA,1,NA),lwd=c(0.1,1,0.1),col=c("limegreen","forestgreen","black"),
+       pch=c(22,NA,21),pt.bg=c(adjustcolor("limegreen",0.5),NA,"indianred1"),
+       pt.cex=1.25,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
+mtext(side=3,adj=1,"Data Source: NOAA NCCOS",font=3)
+mtext(side=3,adj=0,"Lake Okeechobee",font=3)
+
 
 cyano_area2$area.per.MA=with(cyano_area2,c(rep(NA,29),
                                            rollapply(
@@ -301,3 +331,95 @@ legend("topleft",legend=c("2016 - 2021 30d MA range","2016 - 2021 30d MA median"
 mtext(side=3,adj=1,"Data Source: NOAA NCCOS",font=3)
 mtext(side=3,adj=0,"Lake Okeechobee",font=3)
 dev.off()
+
+
+
+# bloom duration metric ---------------------------------------------------
+
+for(j in 1:length(YRS)){
+files=list.files(paste0(data.path,"/",YRS[j],"/"))
+tmp.files=files[grep("1_2.CIcyano.LakeOkee.",files)]
+CI.files=tmp.files
+
+i=1
+date.vals=strsplit(sapply(tmp.files,"[",1),"\\.")
+yr.val.path=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+
+tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
+tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+vals=c(0,250,251,252,253,254,255)
+tmp.raster[tmp.raster%in%vals]=NA
+rev.scale.1=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+
+i=2
+tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
+tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+tmp.raster[tmp.raster%in%vals]=NA
+rev.scale.2=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+rast.stack=stack(rev.scale.1,rev.scale.2)
+
+for(i in 3:length(CI.files)){
+  tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
+  tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+  
+  tmp.raster[tmp.raster%in%vals]=NA
+  
+  rev.scale.2=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+  
+  rast.stack=stack(rast.stack,rev.scale.2)
+  print(i)
+}
+
+tmp=sum(rast.stack>0,na.rm=T)
+tmp=tmp/nlayers(rast.stack>0)
+assign(paste0("bloom",YRS[j]),tmp)
+print(j)
+}
+
+
+layout(matrix(1:6,2,3,byrow=T))
+
+b=seq(0,0.5,0.1)
+cols=viridisLite::magma(length(b),direction=1)
+plot(lakeO,lwd=0.05)
+image(mask(bloom2016,lakeO),add=T,col = cols)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T,border="white")
+mtext(side=3,"2016")
+
+plot(lakeO,lwd=0.05)
+image(mask(bloom2017,lakeO),add=T,col = cols)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T,border="white")
+mtext(side=3,"2017")
+
+plot(lakeO,lwd=0.05)
+image(mask(bloom2018,lakeO),add=T,col = cols)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T,border="white")
+mtext(side=3,"2018")
+
+plot(lakeO,lwd=0.05)
+image(mask(bloom2019,lakeO),add=T,col = cols)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T,border="white")
+mtext(side=3,"2019")
+
+plot(lakeO,lwd=0.05)
+image(mask(bloom2020,lakeO),add=T,col = cols)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T,border="white")
+mtext(side=3,"2020")
+
+plot(lakeO,lwd=0.05)
+image(mask(bloom2021,lakeO),add=T,col = cols)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T,border="white")
+mtext(side=3,"2021")
+
+plot(bloom2016)
+plot(bloom2017)
+plot(bloom2018)
+plot(bloom2019)
+plot(bloom2020)
+plot(bloom2021)
