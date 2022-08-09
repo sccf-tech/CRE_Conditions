@@ -171,7 +171,7 @@ for(i in 1:length(fnames)){
   #add cloud
   legend_image=as.raster(matrix("grey",ncol=1))
   rasterImage(legend_image,x.min,bot.val-0.05,x.max,bot.val)
-  text(x=x.max, y = bot.val-0.025, labels = "Clouds",cex=0.5,adj=0,pos=4,offset=0.5)
+  text(x=x.max, y = bot.val-0.025, labels = "Clouds/Invalid data",cex=0.5,adj=0,pos=4,offset=0.5)
   
   legend_image=as.raster(matrix(adjustcolor("honeydew2",0.5),ncol=1))
   rasterImage(legend_image,x.min,bot.val-0.1,x.max,bot.val-0.05)
