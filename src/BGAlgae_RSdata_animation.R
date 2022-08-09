@@ -1,5 +1,6 @@
 ## 
 ## BGAlgae remote sensing data animation
+## https://coastalscience.noaa.gov/research/stressor-impacts-mitigation/hab-monitoring-system/cyanobacteria-algal-bloom-satellite-lake-okeechobee-fl/
 ##
 ## Code was compiled by Paul Julian
 ## contact info: pauljulianphd@gmail.com
@@ -97,12 +98,14 @@ noaa.HAB.image$fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIc
 # date.range=seq(date.fun("2022-05-01"),date.fun(max(noaa.HAB.image$date)),"1 days")
 
 
-date.range=seq(date.fun(max(noaa.HAB.image$date)-lubridate::duration(1,"month")),date.fun(max(noaa.HAB.image$date)),"1 days")
+date.range=seq(date.fun(max(noaa.HAB.image$date)-lubridate::duration(1,"month")),date.fun(max(noaa.HAB.image$date)-lubridate::duration(1,"day")),"1 days")
 noaa.HAB.image=subset(noaa.HAB.image,date.fun(date)%in%date.range)
+
+f.fnames=paste0(format(noaa.HAB.image$date,"%Y%m%d"),"_CiCyano.png")
 
 fnames=noaa.HAB.image$fnames
 
-
+f.fnames[!(f.fnames%in%list.files(paste0(plot.path,"BGAlgae/")))]
 
 for(i in 1:length(fnames)){
   tmp.raster=raster(paste(data.path, fnames[i],sep="/"))
@@ -110,6 +113,7 @@ for(i in 1:length(fnames)){
   
   cloud.area=tmp.raster==253
   cloud.area.raster=cloud.area
+  cloud.area.val=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
   
   vals=c(0,250,251,252,253,254,255)
   tmp.raster[tmp.raster%in%vals]=NA
@@ -135,11 +139,14 @@ for(i in 1:length(fnames)){
   plot(lakeO,lwd=0.05,add=T)
   image(rev.scale,add=T,col = cols)
   image(cloud.area.raster,add=T,col=c(NA,"grey"))
+  if(sum(is.na(getValues(rev.scale)))/length(getValues(rev.scale))<0.75){
   plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)
+  }
   mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
-  mtext(side=3,line=-2.5,adj=0,paste("Date:",format(tmp.date,"%m-%d-%Y"),
-                                   "\nData Source: NOAA NCCOS\nAlgae Coverage:",
-                                   round(val*1e-6),"km\u00B2"))
+  mtext(side=3,line=-2.5,adj=0,paste0("Date: ",format(tmp.date,"%m-%d-%Y"),
+                                   "\nData Source: NOAA NCCOS\nAlgae Coverage: ",
+                                   round(val*1e-6)," km\u00B2"," (",round((val/gArea(lakeO))*100),"%)"))
+  # mtext(side=1,line=-1.5,adj=0,paste("Lake Area:",round(gArea(lakeO)*1e-6),"km\u00B2"))
   
   plot(0:1,0:1,ann=F,axes=F,type="n")
   b2=b/1000
@@ -170,14 +177,17 @@ for(i in 1:length(fnames)){
   # rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(col.rmp),lty=0)
   # text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
   text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000)")),adj=0,cex=0.8,pos=3,xpd=NA)
+  logo=png::readPNG(paste0(wd,"/report/Logo no Background.png"))
+  grid::grid.raster(logo,x=0.825,y=0.12,just=c("center","top"),width=grid::unit(1.25,"inches"))
   dev.off()
 }
 
+ann.list=paste0(format(noaa.HAB.image$date,"%Y%m%d"),"_CiCyano.png")
+ann.list=ann.list[ann.list!="20220712_CiCyano.png"]
 
-
-file.names=paste0(plot.path,"BGAlgae/",list.files(paste0(plot.path,"BGAlgae/")))
+file.names=paste0(plot.path,"BGAlgae/",ann.list)
 
 gifski::gifski(file.names, 
-               delay = 70 / 100, 
-               gif_file  = paste0(plot.path,"BGAlgae/LOK_BGAlgae_month_gifski.gif"),
+               delay = 45 / 100, 
+               gif_file  = paste0(plot.path,"BGAlgae/20220809_LOK_BGAlgae_month_gifski.gif"),
                loop = T)
