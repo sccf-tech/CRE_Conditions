@@ -1349,13 +1349,16 @@ tmp.raster=raster(paste(data.path, fnames[i],sep="/"))
 # plot(tmp.raster)
 # plot(mask(tmp.raster,gBuffer(lakeO,width=500)))
 tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-
+tmp.raster[tmp.raster==255]=NA; # No Data
 # plot(tmp.raster)
 # crs(tmp.raster)
 # tmp.raster>250
 # tmp.raster%in%c(250,251,253,254,255)
+# 251 = CI adj; 252 = land; 253 = clouds; 254 = mixed pixels; 255 = No data; 0 = nodetect
 
-cloud.area=tmp.raster==253
+
+cloud.area=tmp.raster>253
+# cloud.area=tmp.raster[!tmp.raster%in%c(253,254,250)]
 # cloud.area=tmp.raster%in%c(253)
 cloud.area.raster=cloud.area
 # cloud.area=cloud.area==1
@@ -1531,7 +1534,7 @@ with(subset(cyano_area,date==max(cyano_area$date)),
      text(date,bloom.area.mi2,paste0(round(bloom.area.mi2)," mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
 # with(cyano_area,pt_line(date,vis.bloom,2,
 #                         adjustcolor("grey",0.5),2,21,adjustcolor("grey",0.5),pt.lwd=0.1,cex=1.25))
-k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0))
+k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0&cloud.area.per<0.30))
 x.val=seq(min(cyano_area$date2),max(cyano_area$date2),length.out=100)
 pred.mod=predict(k.mod,data.frame(date2=x.val))
 lines(date.fun(lubridate::date_decimal(x.val),form="%F %R"),pred.mod,col="red",lwd=2)

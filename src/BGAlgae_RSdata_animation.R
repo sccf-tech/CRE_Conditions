@@ -110,8 +110,11 @@ f.fnames[!(f.fnames%in%list.files(paste0(plot.path,"BGAlgae/")))]
 for(i in 1:length(fnames)){
   tmp.raster=raster(paste(data.path, fnames[i],sep="/"))
   tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-  
-  cloud.area=tmp.raster==253
+  tmp.raster[tmp.raster==255]=NA; # No Data
+
+  # 251 = CI adj; 252 = land; 253 = clouds; 254 = mixed pixels; 255 = No data; 0 = nodetect
+  cloud.area=tmp.raster>253
+  # cloud.area=tmp.raster==253
   cloud.area.raster=cloud.area
   cloud.area.val=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
   
@@ -178,7 +181,7 @@ for(i in 1:length(fnames)){
   # text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
   text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000)")),adj=0,cex=0.8,pos=3,xpd=NA)
   logo=png::readPNG(paste0(wd,"/report/Logo no Background.png"))
-  grid::grid.raster(logo,x=0.825,y=0.12,just=c("center","top"),width=grid::unit(1.25,"inches"))
+  grid::grid.raster(logo,x=0.2,y=0.12,just=c("center","top"),width=grid::unit(1.25,"inches"))
   dev.off()
 }
 
@@ -188,6 +191,6 @@ ann.list=ann.list[ann.list!="20220712_CiCyano.png"]
 file.names=paste0(plot.path,"BGAlgae/",ann.list)
 
 gifski::gifski(file.names, 
-               delay = 45 / 100, 
+               delay = 75 / 100, 
                gif_file  = paste0(plot.path,"BGAlgae/20220809_LOK_BGAlgae_month_gifski.gif"),
                loop = T)
