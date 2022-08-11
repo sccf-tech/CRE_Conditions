@@ -2341,6 +2341,7 @@ response <- content(request, as = "text", encoding = "UTF-8")
 results <- jsonlite::fromJSON(response,flatten=T)
 # results
 kbrdat=results$features
+if(is.null(kbrdat)==F){
 # kbrdat
 
 # Tampa Bay Results
@@ -2401,7 +2402,7 @@ kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude
                                           data=kbrdat_30d,
                                           proj4string = wgs84)
 
-
+}
 
 ```
 
@@ -2413,6 +2414,12 @@ par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
 layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
 # bbox.lims=bbox(bind(HABext.poly,TBEP.ext.poly))
 bbox.lims=bbox(HABext.poly)
+
+if(is.null(kbrdat)==T){
+  plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
+  text(gCentroid(HABext.poly),"No data available\nat this time\n(data server issues)",col="red",cex=3)
+  plot(0:1,0:1,ann=F,axes=F,type="n")
+  }else{
 
 plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
 abund.cols=c("white","grey","dodgerblue1","orange","indianred1")
@@ -2433,6 +2440,7 @@ legend("center",legend=c(cat.abund.xwalk$abund,"Caloosahatchee River Estuary"),
        pt.bg=c(abund.cols,NA),
        pt.cex=2,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1.25,
        title.adj = 0,title=paste0("Red Tide Abundance\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),""))
+  }
 
 ```
 
