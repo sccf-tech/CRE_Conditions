@@ -130,7 +130,8 @@ for(i in 1:length(fnames)){
   
   if(cellStats(calc(rev.scale,fun=function(x) is.na(x)),min)==1){next}
   tmp.date=subset(noaa.HAB.image,fnames==fnames[i])$date
-  png(filename=paste0(plot.path,"BGAlgae/",format(tmp.date,"%Y%m%d"),"_CiCyano.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
+  # png(filename=paste0(plot.path,"BGAlgae/",format(tmp.date,"%Y%m%d"),"_CiCyano.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
+  png(filename=paste0(plot.path,"BGAlgae/",format(tmp.date,"%Y%m%d"),"_CiCyano.png"),width=6.5,height=3.66,units="in",res=200,type="windows",bg="white")
   
   par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
   layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
@@ -193,4 +194,6 @@ file.names=paste0(plot.path,"BGAlgae/",ann.list)
 gifski::gifski(file.names, 
                delay = 75 / 100, 
                gif_file  = paste0(plot.path,"BGAlgae/20220809_LOK_BGAlgae_month_gifski.gif"),
-               loop = T)
+               loop = T,
+               width=800,
+               height=800*(9/16))
