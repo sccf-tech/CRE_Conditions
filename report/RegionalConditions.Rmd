@@ -439,6 +439,7 @@ S79dat2$Low=with(S79dat2,ifelse(Q.14<750,1,0))
 S79dat2$Opt=with(S79dat2,ifelse(Q.14>=750&Q.14<2100,1,0))
 S79dat2$Stress=with(S79dat2,ifelse(Q.14>=2100&Q.14<2600,1,0))
 S79dat2$Dam=with(S79dat2,ifelse(Q.14>=2600,1,0))
+S79dat2$Date=date.fun(S79dat2$Date)
 
 consec.startend=function(var){
   runs=rle(var)
@@ -504,7 +505,7 @@ for(i in 1:length(Dam.consec.val$ends)){
   S79dat2[Dam.consec.val$ends[i],]$sum.Dam.consec=with(S79dat2[c(Dam.consec.val$starts[i]:Dam.consec.val$ends[i]),],sum(Dam.consec,na.rm=T))
 }
 }
-
+# S79dat2=subset(S79dat2,is.na(Q.14)==F)
 salenv.vals=subset(S79dat2,Date==max(S79dat2$Date))
 
 salenv.vals1=salenv.vals[,paste("sum",c("Low","Opt","Stress","Dam"),"consec",sep=".")]
@@ -2177,7 +2178,9 @@ Cal.Sal=merge(Cal.Sal,da.screen,c("Date.EST","SITE"))
 Cal.Sal$Sal=with(Cal.Sal,ifelse(screen==1,Sal,NA))
 Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7)))
 
-
+# subset(sal.dat,SITE==CALSITES[2])
+# subset(da.screen,SITE==CALSITES[2])
+# subset(Cal.Sal,SITE==CALSITES[2])
 # test.chk=cast(subset(sal.dat,
 #                      Date.EST%in%seq(date.fun("2022-03-12"),date.fun("2022-03-14"),"1 days")),
 #               SITE+DATETIME+Date.EST~param,value="Data.Value",fun.aggregate = function(x)mean(x,na.rm=T))
