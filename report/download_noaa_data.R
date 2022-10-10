@@ -52,7 +52,14 @@ options(timeout = max(800, getOption("timeout")))
 noaa.HAB.image2=subset(noaa.HAB.image,fnames%in%new.dat)
 if(nrow(noaa.HAB.image2)!=0){
   for(i in 1:nrow(noaa.HAB.image2)){
-    download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)),paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),mode="wb",method="wininet")
+    url.val=(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)))
+    hd=httr::HEAD(url.val);# check the status of url if valid (value = 200 is ok)
+    if(hd$all_headers[[1]]$status!=200){next}else{
+    
+    download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i])),
+                  paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),
+                  mode="wb",method="wininet")
     # print(i)
+    }
   }
 }

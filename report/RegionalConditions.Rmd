@@ -1327,6 +1327,9 @@ noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif
 # noaa.HAB.image$filename
 noaa.HAB.image$fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
 # fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+
+noaa.HAB.image=subset(noaa.HAB.image,fnames%in%list.files(data.path))
+
 fnames=noaa.HAB.image$fnames
 
 # # paste0(data.path,"sentinel_2022/", fnames)
@@ -1346,6 +1349,7 @@ fnames=noaa.HAB.image$fnames
 cyano_area=data.frame()
 for(i in 1:length(fnames)){
 tmp.raster=raster(paste(data.path, fnames[i],sep="/"))
+
 
 # plot(tmp.raster)
 # plot(mask(tmp.raster,gBuffer(lakeO,width=500)))
@@ -1389,6 +1393,7 @@ tmp.rslt=data.frame(date=noaa.HAB.image$date[i],
                     bloom.area.m2=val,
                     vis.bloom=val2)
 cyano_area=rbind(cyano_area,tmp.rslt)
+
 }
 
 cyano_area$cloud.area.per=cyano_area$cloud.area/LOK.area
@@ -1399,11 +1404,12 @@ cyano_area$date=date.fun(cyano_area$date)
 cyano_area$date2=decdate.fun(cyano_area$date)
 cyano_area$vis.bloom=cyano_area$vis.bloom*3.86102e-7
 
-tmp.raster=raster(paste(data.path, fnames[length(fnames)],sep="/"))
-tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-vals=c(0,250,251,252,253,254,255)
-# tmp.raster_nodata=tmp.raster>=250
-tmp.raster[tmp.raster%in%vals]=NA
+
+# tmp.raster=raster(paste(data.path, fnames[length(fnames)],sep="/"))
+# tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+# vals=c(0,250,251,252,253,254,255)
+# # tmp.raster_nodata=tmp.raster>=250
+# tmp.raster[tmp.raster%in%vals]=NA
 
 tmp.raster=calc(tmp.raster,fun=function(x) x*1)
 rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
