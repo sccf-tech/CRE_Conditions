@@ -2286,17 +2286,18 @@ with(subset(Cal.Sal,SITE==CALSITES[i]),pt_line(Date.EST,Sal,1,colrmp,2,21,colrmp
 with(subset(Cal.Sal,SITE==CALSITES[i]),lines(Date.EST,MovingAvg.7d,lwd=2.5,col="orange"))
 
 if(i<3){
-with(subset(recon.dat,SiteID==recon.sites[i]),pt_line(Date.EST,sal,1,"grey50",2,22,"grey50",cex=1,pt.col="black"))
+with(subset(recon.dat,SiteID==recon.sites[i]),pt_line(Date.EST,sal,1,"grey50",1,22,"grey50",cex=1.5,pt.col="black"))
 with(subset(recon.dat,SiteID==recon.sites[i]),lines(Date.EST,MovingAvg.7d,lty=2,lwd=1.5,col="orange"))
-legend("topleft",legend=c(paste0(station.label[i]," - SFWMD"),paste0(recon.lab[i]," - SCCF")),
-       lty=c(NA,NA),lwd=c(0.1,0.1),col=c(colrmp,"grey50"),
-       pch=c(21,22),pt.bg=c(colrmp,"grey50"),
-       pt.cex=1,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
+legend("topleft",legend=c(paste0(station.label[i]," - SFWMD"),"SFWMD Moving Avg",
+                          paste0(recon.lab[i]," - SCCF"),"SCCF Moving Avg"),
+       lty=c(NA,1,NA,2),lwd=c(0.1,1,0.1,1),col=c(colrmp,"orange","black","orange"),
+       pch=c(21,NA,22,NA),pt.bg=c(colrmp,NA,"grey50",NA),
+       pt.cex=1,ncol=2,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 }else{
-  legend("topleft",legend=c(paste0(station.label[i]," - SFWMD")),
-       lty=c(NA,NA),lwd=c(0.1,0.1),col=c(colrmp,"grey50"),
-       pch=c(21,22),pt.bg=c(colrmp,"grey50"),
-       pt.cex=1,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
+  legend("topleft",legend=c(paste0(station.label[i]," - SFWMD"),"SFWMD Moving Avg"),
+       lty=c(NA,1),lwd=c(0.1,1),col=c(colrmp,"orange"),
+       pch=c(21,NA),pt.bg=c(colrmp,"grey50"),
+       pt.cex=1,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 }
 axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),line=-0.5)
 axis_fun(2,ymaj,ymin,ymaj)
@@ -2316,10 +2317,11 @@ with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp,2,21,colrmp
 with(subset(Cal.Sal,SITE==CALSITES[4]),lines(Date.EST,MovingAvg.7d,lwd=2.5,col="orange"))
 with(subset(recon.dat,SiteID==recon.sites[4]),pt_line(Date.EST,sal,1,"grey50",2,22,"grey50",cex=1,pt.col="black"))
 with(subset(recon.dat,SiteID==recon.sites[4]),lines(Date.EST,MovingAvg.7d,lty=2,lwd=1.5,col="orange"))
-legend("topleft",legend=c(paste0(station.label[4]," - SFWMD"),paste0(recon.lab[4]," - SCCF")),
-       lty=c(NA,NA),lwd=c(0.1,0.1),col=c(colrmp,"grey50"),
-       pch=c(21,22),pt.bg=c(colrmp,"grey50"),
-       pt.cex=1,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
+legend("topleft",legend=c(paste0(station.label[4]," - SFWMD"),"SFWMD Moving Avg",
+                          paste0(recon.lab[4]," - SCCF"),"SCCF Moving Avg"),
+       lty=c(NA,1,NA,2),lwd=c(0.1,1,0.1,1),col=c(colrmp,"orange","black","orange"),
+       pch=c(21,NA,22,NA),pt.bg=c(colrmp,NA,"grey50",NA),
+       pt.cex=1,ncol=2,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 
 axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d"),line=-0.5)
 axis_fun(2,ymaj,ymin,ymaj)
