@@ -2418,10 +2418,11 @@ request <- GET(
 
 
 response <- content(request, as = "text", encoding = "UTF-8")
+if(validate(response)[1]==T){
 results <- jsonlite::fromJSON(response,flatten=T)
 # results
 kbrdat=results$features
-if(is.null(kbrdat)==F){
+
 # kbrdat
 
 # Tampa Bay Results
@@ -2482,6 +2483,9 @@ kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude
                                           data=kbrdat_30d,
                                           proj4string = wgs84)
 
+}else{
+kbrdat=NULL
+kbrdat_30d.shp=NULL
 }
 
 ```
@@ -2553,6 +2557,7 @@ legend("center",legend=c(cat.abund.xwalk$abund,"Caloosahatchee River Estuary"),
 
 
 ```{r}
+if(is.null(kbrdat_30d.shp)==F){
 rslt =plyr::ddply(kbrdat_30d.shp[CRE.ext,]@data,"category",summarise,N.val=N.obs(category))
 
 rslt=merge(cat.abund.xwalk,rslt,"category",all.x=T)
@@ -2572,7 +2577,7 @@ rslt[,c("abund","N.val")]%>%
   fontsize(size=12,part="header")%>%
   add_header_lines(values=cap.val)%>%
   align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
-
+}
 ```
 
 <br>
