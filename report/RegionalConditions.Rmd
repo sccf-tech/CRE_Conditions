@@ -2559,7 +2559,7 @@ legend("center",legend=c(cat.abund.xwalk$abund,"Caloosahatchee River Estuary"),
 ```{r}
 if(is.null(kbrdat_30d.shp)==F){
 rslt =plyr::ddply(kbrdat_30d.shp[CRE.ext,]@data,"category",summarise,N.val=N.obs(category))
-
+if(nrow(rslt)!=0){
 rslt=merge(cat.abund.xwalk,rslt,"category",all.x=T)
 
 rslt=rslt[match(cat.abund.xwalk$abund,rslt$abund),]
@@ -2577,6 +2577,7 @@ rslt[,c("abund","N.val")]%>%
   fontsize(size=12,part="header")%>%
   add_header_lines(values=cap.val)%>%
   align(align="center",part="header")%>%fontsize(size=12,part="header")%>%font(fontname = "Times New Roman",part="all")
+}
 }
 ```
 
