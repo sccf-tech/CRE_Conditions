@@ -543,7 +543,7 @@ colnames(salenv.vals1)=c("low","optimal","stress","damaging")
 # names(salenv.vals1)[which(salenv.vals1==max(salenv.vals1))]
 
 flow.envs=c("< 750","750 - 2100", "2100 - 2600","> 2600")
-cols=c("red","green","yellow","red")
+cols=c("red","green","orange","red")
 ```
 
 **Caloosahatchee Conditions Summary:** Flow to the Caloosahatchee Estuary had a 7-day average of **`r format(Q7d.sum.tmp[1],big.mark=",")` cfs** at **S-79** with a 7-day average of **`r format(Q7d.sum.tmp[3],big.mark=",")` cfs (`r round((Q7d.sum.tmp[3]/Q7d.sum.tmp[1])*100)`%)** coming from the lake at **S-77**. **The 14-day moving average flow at S-79 is `r format(round(salenv.vals$Q.14),big.mark=",")` cfs and has been in the `r paste0("<span style='color:",cols[which(salenv.vals1==max(salenv.vals1))],"'>")` `r names(salenv.vals1)[which(salenv.vals1==max(salenv.vals1))]`</span> flow envelope (`r flow.envs[which(salenv.vals1==max(salenv.vals1))]` cfs; RECOVER 2020) for `r as.numeric(salenv.vals1[which(salenv.vals1==max(salenv.vals1))])` days.**
@@ -893,7 +893,7 @@ subset(LakeO.xtab,hydro.day==hydro.day(YEST))%>%
 
 ```{r LOK_recess1,echo=FALSE,fig.width=7,fig.height=5,fig.align='center'}
 lwd.val=1
-ylim.val=c(-2,2);by.y=1
+ylim.val=c(-2,3);by.y=1
 ymaj=c(0,seq(ylim.val[1],ylim.val[2],by.y));ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 xlim.vals=as.POSIXct(strptime(c(as.Date(paste(CurWY-1,05,01,sep="-")),as.Date(paste(CurWY,05,01,sep="-"))),"%Y-%m-%d"),tz="EST")
 #xlim.vals=as.POSIXct(strptime(dates,"%Y-%m-%d"),tz="EST")
@@ -2235,7 +2235,7 @@ Cal.Sal$MovingAvg.7d=with(Cal.Sal,ave(Sal,SITE,FUN=function(x) roll_meanr(x,n=7)
 # }
 
 ## recon data
-recon.dat.fun
+# recon.dat.fun
 
 recon.dat=data.frame()
 recon.site.val=c(53,13,11)
@@ -2246,9 +2246,14 @@ for(i in 1:3){
 recon.dat$sal=with(recon.dat,SalinityCalc(conductivity*10000,temperature))
 plot(recon.dat$sal)
 
-fill=data.frame(expand.grid(SiteID=unique(recon.dat$SiteID),Date.EST=date.fun(seq(Start.Date,End.Date,"1 days"))))
-recon.dat=merge(recon.dat,fill,c("SiteID","Date.EST"),all.y=T)
-recon.dat$MovingAvg.7d=with(recon.dat,ave(sal,SiteID,FUN=function(x) roll_meanr(x,n=7)))
+fill=data.frame(expand.grid(SiteID=unique(recon.dat$SiteID),Date=date.fun(seq(Start.Date,End.Date,"1 days"))))
+
+recon.dat$Date=date.fun(recon.dat$Date.EST)
+recon.dat2=ddply(recon.dat,c("Date","SiteName","SiteID"),summarise,sal.mean=mean(sal,na.rm=T),N.val=N.obs(sal))
+
+recon.dat2=merge(recon.dat2,fill,c("SiteID","Date"),all.y=T)
+recon.dat2$sal.mean=with(recon.dat2,ifelse(N.val<20,NA,sal.mean))
+recon.dat2$MovingAvg.7d=with(recon.dat2,ave(sal.mean,SiteID,FUN=function(x) roll_meanr(x,n=7)))
 
 ```
 
@@ -2286,8 +2291,8 @@ with(subset(Cal.Sal,SITE==CALSITES[i]),pt_line(Date.EST,Sal,1,colrmp,2,21,colrmp
 with(subset(Cal.Sal,SITE==CALSITES[i]),lines(Date.EST,MovingAvg.7d,lwd=2.5,col="orange"))
 
 if(i<3){
-with(subset(recon.dat,SiteID==recon.sites[i]),pt_line(Date.EST,sal,1,"grey50",1,22,"grey50",cex=1.5,pt.col="black"))
-with(subset(recon.dat,SiteID==recon.sites[i]),lines(Date.EST,MovingAvg.7d,lty=2,lwd=1.5,col="orange"))
+with(subset(recon.dat2,SiteID==recon.sites[i]),pt_line(Date,sal.mean,1,"grey50",1,22,"grey50",cex=1.5,pt.col="black"))
+with(subset(recon.dat2,SiteID==recon.sites[i]),lines(Date,MovingAvg.7d,lty=2,lwd=1.5,col="orange"))
 legend("topleft",legend=c(paste0(station.label[i]," - SFWMD"),"SFWMD Moving Avg",
                           paste0(recon.lab[i]," - SCCF"),"SCCF Moving Avg"),
        lty=c(NA,1,NA,2),lwd=c(0.1,1,0.1,1),col=c(colrmp,"orange","black","orange"),
@@ -2315,8 +2320,8 @@ yy=c(15,40,40,15);polygon(x=xx,y=yy,col="peachpuff1")
 abline(h=seq(0,40,5))
 with(subset(Cal.Sal,SITE==CALSITES[4]),pt_line(Date.EST,Sal,1,colrmp,2,21,colrmp,cex=2,pt.col=colrmp))
 with(subset(Cal.Sal,SITE==CALSITES[4]),lines(Date.EST,MovingAvg.7d,lwd=2.5,col="orange"))
-with(subset(recon.dat,SiteID==recon.sites[4]),pt_line(Date.EST,sal,1,"grey50",2,22,"grey50",cex=1,pt.col="black"))
-with(subset(recon.dat,SiteID==recon.sites[4]),lines(Date.EST,MovingAvg.7d,lty=2,lwd=1.5,col="orange"))
+with(subset(recon.dat2,SiteID==recon.sites[4]),pt_line(Date,sal.mean,1,"grey50",2,22,"grey50",cex=1,pt.col="black"))
+with(subset(recon.dat2,SiteID==recon.sites[4]),lines(Date,MovingAvg.7d,lty=2,lwd=1.5,col="orange"))
 legend("topleft",legend=c(paste0(station.label[4]," - SFWMD"),"SFWMD Moving Avg",
                           paste0(recon.lab[4]," - SCCF"),"SCCF Moving Avg"),
        lty=c(NA,1,NA,2),lwd=c(0.1,1,0.1,1),col=c(colrmp,"orange","black","orange"),
