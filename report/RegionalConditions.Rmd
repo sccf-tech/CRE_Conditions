@@ -2504,9 +2504,14 @@ kbrdat.shp=SpatialPointsDataFrame(coords=kbrdat[,c("longitude","latitude")],
 
 
 kbrdat_30d=subset(kbrdat,date<=TODAY&date>=sdate.algae)
+if(nrow(kbrdat_30d)==0){
+  kbrdat_30d.shp=NULL
+  kbrdat=NULL
+  }else{
 kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude")],
                                           data=kbrdat_30d,
                                           proj4string = wgs84)
+}
 
 }else{
 kbrdat=NULL
