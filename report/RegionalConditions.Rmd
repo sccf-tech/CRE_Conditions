@@ -559,7 +559,7 @@ cfs** at **S-79** with a 7-day average of
 (`r round((Q7d.sum.tmp[3]/Q7d.sum.tmp[1])*100)`%)** coming from the lake
 at **S-77**. **The 14-day moving average flow at S-79 is
 `r format(round(salenv.vals$Q.14),big.mark=",")` cfs and has been in the
-`r paste0("<span style='color:",cols[which(salenv.vals1==max(salenv.vals1))],"'>") `r names(salenv.vals1)[which(salenv.vals1==max(salenv.vals1))]` **</span>
+`r paste0("<span style='color:",cols[which(salenv.vals1==max(salenv.vals1))],"'>")` `r names(salenv.vals1)[which(salenv.vals1==max(salenv.vals1))]` **</span>
 flow envelope (`r flow.envs[which(salenv.vals1==max(salenv.vals1))]`
 cfs; RECOVER 2020) for
 `r as.numeric(salenv.vals1[which(salenv.vals1==max(salenv.vals1))])`
@@ -2631,6 +2631,14 @@ kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 # Red Tide ----------------------------------------------------------------
 ## south of Tampa Bay 
 ## Based on https://github.com/tbep-tech/piney-point/blob/141824adc082a57d79ba58ff38ac31d41dea4e44/R/dat_proc.R#L1262
+
+
+##FWC source
+# path <- 'https://atoll.floridamarine.org/arcgis/rest/services/Projects_FWC/HAB_Current/MapServer/0/query?'
+# request <- GET(url=path,query=list(outFields = '*',f='pjson'))
+# request
+
+
 path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/MapServer/0/query?'
 
 request <- GET(
