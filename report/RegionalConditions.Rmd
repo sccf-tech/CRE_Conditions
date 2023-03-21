@@ -1007,7 +1007,7 @@ level (ascension) during this 7-day period .</center>
 </font>
 
 ```{r LOK_recess2,echo=FALSE,fig.width=8,fig.height=3.75,fig.align='center'}
-ylim.val=c(CurWY-3,CurWY-1);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
+ylim.val=c(CurWY-3,CurWY);by.y=1;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/by.y)
 ylim.val2=ylim.val
 ylim.val=c(ylim.val[1]-0.5,ylim.val[2]+0.5)
 xlim.val=c(1,366);by.x=60;xmaj=c(1,60,120,180,240,300,360);xmin=seq(0,xlim.val[2],by.x/2)#seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/2)
@@ -2392,6 +2392,14 @@ bk.dbkeys.bot=data.frame(depth="bottom",
                          param=rep(c("WT","SPC"),5),
                          DBKEY=c("UL030","UL026","88288","88291","UO832","AJ012","88198","88202","WN375","WN377")
                          )
+bk.dbkeys.bot=subset(bk.dbkeys.bot,SITE!="MARKH")
+bk.dbkeys.bot=rbind(bk.dbkeys.bot,
+                    data.frame(depth="bottom",
+                         SITE=c(rep("MARKH",2)),
+                         param=c("WT","SPC"),
+                         DBKEY=c("WZ152","WZ156")
+                         ));# Adds site MARKHA - temporary alterantive site for MARKH
+
 sal.dat=data.frame()
 for(i in 1:nrow(bk.dbkeys.bot)){
   tmp=DBHYDRO_breakpoint(Start.Date,End.Date,bk.dbkeys.bot$DBKEY[i])
@@ -2632,75 +2640,64 @@ kbr.AOI=as(kbr.AOI,"SpatialPolygons")
 ## south of Tampa Bay 
 ## Based on https://github.com/tbep-tech/piney-point/blob/141824adc082a57d79ba58ff38ac31d41dea4e44/R/dat_proc.R#L1262
 
+path <- 'https://atoll.floridamarine.org/arcgis/rest/services/FWC_GIS/OpenData_HAB/MapServer/18/query?'
 
-##FWC source
-# path <- 'https://atoll.floridamarine.org/arcgis/rest/services/Projects_FWC/HAB_Current/MapServer/0/query?'
-# request <- GET(url=path,query=list(outFields = '*',f='pjson'))
-# request
-
-
-path <- 'https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/MapServer/0/query?'
-
+months.vals=c(as.Date(TODAY-duration(2,"months")),TODAY)
 request <- GET(
-  url = path,
-  query= list(
-    where= paste("LATITUDE <",round(HABext2[4],1),"AND LATITUDE >",round(HABext2[3],1),"AND LONGITUDE >",round(HABext2[1],1),"AND LONGITUDE <",round(HABext2[2],1)),
-    outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
-    f = 'pjson'
+    url = path,
+    query= list(
+      where= paste("LATITUDE <",round(HABext2[4],1),
+                   "AND LATITUDE >",round(HABext2[3],1),
+                   "AND LONGITUDE >",round(HABext2[1],1),
+                   "AND LONGITUDE <",round(HABext2[2],1),
+                   "AND SAMPLE_DATE >= date",paste0("'",paste0(months.vals[1], " 00:00:00"),"'"),
+                   "AND SAMPLE_DATE < date",paste0("'",paste0(months.vals[2], " 00:00:00"),"'")),
+      outFields = '*',
+      f = 'pjson'
+    )
   )
-)
-
-
-
-response <- content(request, as = "text", encoding = "UTF-8")
+  
+  
+  
+  
+  response <- content(request, as = "text", encoding = "UTF-8")
 resp.check=sum(grepl("Unable to complete operation",unlist(strsplit(response,":"))))==1
 if(resp.check==F){
-results <- jsonlite::fromJSON(response,flatten=T)
-# results
-kbrdat=results$features
-
-# kbrdat
-
-# Tampa Bay Results
-# request <- GET(
-#   url = path,
-#   query= list(
-#     where= paste("LATITUDE <",round(TBEP.ext[4],1),"AND LATITUDE >",round(TBEP.ext[3],1),"AND LONGITUDE >",round(TBEP.ext[1],1),"AND LONGITUDE <",round(TBEP.ext[2],1)),
-#     outFields = 'DESCRIPTION,SAMPLE_DATE,SAMPLE_DEPTH,LATITUDE,LONGITUDE,SALINITY,SALINITY_UNIT,WATER_TEMP,WATER_TEMP_UNIT,GENUS,SPECIES,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT',
-#     f = 'pjson'
-#   )
-# )
-#
-# response <- content(request, as = "text", encoding = "UTF-8")
-# # if(strsplit(response,"<title>|</title>")[[1]][2]=="503 Service Unavailable"){results=NA}else{
-# results <- jsonlite::fromJSON(response,flatten=T)
-# # results
-#
-# kbrdat=rbind(kbrdat,results$features)
-# kbrdat=kbrdat[duplicated(kbrdat)==F,]
-
-vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
-       "attributes.SAMPLE_DEPTH","attributes.LATITUDE",
-       "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT",
-       "attributes.WATER_TEMP", "attributes.WATER_TEMP_UNIT", "attributes.GENUS",
-       "attributes.SPECIES", "attributes.CATEGORY", "attributes.CELLCOUNT",
-       "attributes.CELLCOUNT_UNIT", "geometry.x", "geometry.y")
-vars=strsplit(vars,"\\.")
-vars=sapply(vars,"[",2)
-
-colnames(kbrdat)<-tolower(vars)
-
-kbrdat$date=as.POSIXct(as.numeric(gsub('000$', '',format(kbrdat$sample_date,scientific=F))),
+  results <- jsonlite::fromJSON(response,flatten=T)
+  
+  # results
+  kbrdat=results$features
+  
+  # vars=c("attributes.DESCRIPTION","attributes.SAMPLE_DATE",
+  #        "attributes.SAMPLE_DEPTH","attributes.LATITUDE",
+  #        "attributes.LONGITUDE", "attributes.SALINITY", "attributes.SALINITY_UNIT",
+  #        "attributes.WATER_TEMP", "attributes.WATER_TEMP_UNIT", "attributes.GENUS",
+  #        "attributes.SPECIES", "attributes.CATEGORY", "attributes.CELLCOUNT",
+  #        "attributes.CELLCOUNT_UNIT")
+  vars=names(kbrdat)
+  vars=strsplit(vars,"\\.")
+  vars=sapply(vars,"[",2)
+  
+  colnames(kbrdat)<-tolower(vars)
+  kbrdat$date=as.POSIXct(as.numeric(gsub('000$', '',format(kbrdat$sample_date,scientific=F))),
                          origin = c('1970-01-01'), tz = 'UTC')
-kbrdat$datetime=date.fun(kbrdat$date,form="%F %R")
-kbrdat$date=date.fun(kbrdat$date)
-kbrdat$year=as.numeric(format(kbrdat$date,"%Y"))
-# range(kbrdat$year,na.rm=T)
-kbrdat=subset(kbrdat,is.na(year)==T|year!=153)
-# min(kbrdat$date)
-# max(kbrdat$date)
-##
+  kbrdat$datetime=date.fun(kbrdat$date,form="%F %R")
+  kbrdat$date=date.fun(kbrdat$date)
+  kbrdat$year=as.numeric(format(kbrdat$date,"%Y"))
+  kbrdat$WY=WY(kbrdat$date)
+  # range(kbrdat$year,na.rm=T)
+  kbrdat=subset(kbrdat,is.na(year)==T|year!=153)
+  # min(kbrdat$date)
+  # max(kbrdat$date)
+  ##
+  
+  
+  kbrdat$cellcount=kbrdat$count_
+  vars=c("date","latitude","longitude","cellcount")
 
+  kbrdat=kbrdat[,vars]
+  kbrdat$cellcount.log=with(kbrdat,ifelse(cellcount==0,0,log10(cellcount)))
+  kbrdat$category=cat.abund.xwalk$category[findInterval(kbrdat$cellcount.log,c(0,3,4,5,6,10))]
 
 kbrdat=merge(kbrdat,cat.abund.xwalk,"category")
 kbrdat$Abundance=factor(kbrdat$abund,levels=cat.abund.xwalk$abund)
@@ -2725,6 +2722,7 @@ kbrdat_30d.shp=SpatialPointsDataFrame(coords=kbrdat_30d[,c("longitude","latitude
 kbrdat=NULL
 kbrdat_30d.shp=NULL
 }
+
 
 ```
 
@@ -3034,31 +3032,31 @@ potential data gap with values linearly interpolated.</center>
 </font>
 
 ```{r}
-q.dat$flow.fill=round(q.dat$flow.fill,1)
-q.dat$Q.7d=round(q.dat$Q.7d,1)
-q.dat$Q.7d2=with(q.dat,ifelse(N.Q.7d<7,NA,Q.7d))
-
-vars=c("Date","site_no","Site.Lab.y","Flow.acft","Q.7d2")
-cap.val="Daily and 7-day moving mean discharge to Charlotte Harbor."
-
-subset(q.dat,Date==YEST)[,vars]%>%
-  flextable()%>%
-  width(width=c(1,1.25,1.25,1,1))%>%
-  align(align="center",part="all")%>%
-  colformat_datetime(j=1,fmt_date="%m-%d")%>%
-  colformat_double(j=4:5,big.mark="",digits=1,na_str="---")%>%
-  merge_v(1)%>%
-  fix_border_issues()%>%
-  padding(padding=1,part="all")%>%
-  fontsize(size=12,part="body")%>%
-  fontsize(size=13,part="header")%>%
-  bold(part="header")%>%
-  set_header_labels("DATE"="Date\n(Month-Day)",
-                    "site_no"="USGS Site ID",
-                    "Site.Lab.y"="Site Name",
-                    "Flow.acft"="Daily Discharge (Ac-Ft d\u207B\u00B9)",
-                    "Q.7d2"="Mean 7-d Discharge (Ac-Ft d\u207B\u00B9)")%>%
-  add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")%>%
-  footnote(j=1,part="header",ref_symbols = " ",value=as_paragraph(" '---' values indicate missing data either in the current day or past 7-days."))%>%
-  font(fontname="Times New Roman",part="all")
+# q.dat$flow.fill=round(q.dat$flow.fill,1)
+# q.dat$Q.7d=round(q.dat$Q.7d,1)
+# q.dat$Q.7d2=with(q.dat,ifelse(N.Q.7d<7,NA,Q.7d))
+# 
+# vars=c("Date","site_no","Site.Lab.y","Flow.acft","Q.7d2")
+# cap.val="Daily and 7-day moving mean discharge to Charlotte Harbor."
+# 
+# subset(q.dat,Date==YEST)[,vars]%>%
+#   flextable()%>%
+#   width(width=c(1,1.25,1.25,1,1))%>%
+#   align(align="center",part="all")%>%
+#   colformat_datetime(j=1,fmt_date="%m-%d")%>%
+#   colformat_double(j=4:5,big.mark="",digits=1,na_str="---")%>%
+#   merge_v(1)%>%
+#   fix_border_issues()%>%
+#   padding(padding=1,part="all")%>%
+#   fontsize(size=12,part="body")%>%
+#   fontsize(size=13,part="header")%>%
+#   bold(part="header")%>%
+#   set_header_labels("DATE"="Date\n(Month-Day)",
+#                     "site_no"="USGS Site ID",
+#                     "Site.Lab.y"="Site Name",
+#                     "Flow.acft"="Daily Discharge (Ac-Ft d\u207B\u00B9)",
+#                     "Q.7d2"="Mean 7-d Discharge (Ac-Ft d\u207B\u00B9)")%>%
+#   add_header_lines(values=cap.val)%>%align(align="center",part="header")%>%fontsize(size=13,part="header")%>%
+#   footnote(j=1,part="header",ref_symbols = " ",value=as_paragraph(" '---' values indicate missing data either in the current day or past 7-days."))%>%
+#   font(fontname="Times New Roman",part="all")
 ```
