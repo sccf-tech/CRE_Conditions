@@ -2287,99 +2287,99 @@ Day of water year is analogous to day of year with Day 1 = May
 
 </font>
 
-### Chlorophyll, Phycocyanin & fDOM
+<!-- ### Chlorophyll, Phycocyanin & fDOM -->
 
 ```{r S79_fdom,echo=FALSE,fig.width=6.5,fig.height=5,fig.align='center'}
-# 32315 relative fChl
-# 32321 relative Phycocyanin
-#cal.algae=readNWISdv("02292900",c("32315","32321"),"2017-11-01",format(End.Date,"%Y-%m-%d"))
-cal.algae=readNWISdv("02292900",c("00300","32295","32315","32321"),format(Start.Date,"%Y-%m-%d"),format(End.Date,"%Y-%m-%d"))
-cal.algae=renameNWISColumns(cal.algae)
-cal.algae$Date=date.fun(cal.algae$Date)
-
-cal.algae=merge(cal.algae,data.frame(Date=date.fun(seq(Start.Date,End.Date,"1 days")),fill=1),"Date",all.y=T)
-
-cal.algae$phy_chl=with(cal.algae,X_FLOATING_32321/(X_FLOATING_32321+X_FLOATING_32315))
-
-EDate.plot=as.Date(Sys.time())+duration(1,"days")
-SDate.plot=as.Date(EDate.plot-duration(14,"days"))
-lwd.val=1
-xlim.val=as.POSIXct(strptime(c(SDate.plot,EDate.plot),"%Y-%m-%d"),tz="EST")
-xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
-
-min.CDOM=min(subset(cal.algae,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$X_FLOATING_32295,na.rm=T)
-ylim.min=if(min.CDOM>300){200}else{100}
-max.CDOM=max(subset(cal.algae,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$X_FLOATING_32295,na.rm=T)
-ylim.max=round(max.CDOM+max.CDOM*0.25,-2)
-ylim.val=c(ylim.min,ylim.max);
-
-by.y=100
-ymaj=seq(ylim.val[1],ylim.val[2],by.y);
-ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-
-par(family="serif",mar=c(1,3,0.5,4),oma=c(3,3,2.5,2));
-layout(matrix(1:3,3,1),heights=c(1,1,0.5))
-
-plot(X_FLOATING_32295~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
-abline(h=ymaj,v=xmaj,lty=3,col="grey")
-with(cal.algae,pt_line(Date,X_FLOATING_32295,2,"tan3",1.5,21,"tan3",cex=1.5,pt.lwd=0.1))
-axis_fun(2,ymaj,ymin,format(ymaj))
-axis_fun(1,xmaj,xmin,NA);box(lwd=1)
-mtext(side=2,line=2.5,"fDOM (RFU)")
-mtext(side=3,adj=0,"S-79 - Floating Sensor\n(USGS Site: 02292900)")
-mtext(side=3,adj=1,"Data are provisional",col="red")
-
-ylim.val=c(0,12);
-by.y=max(ylim.val)/3;
-ymaj=seq(ylim.val[1],ylim.val[2],by.y);
-ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-
-ylim.val2=c(0,6);
-by.y2=max(ylim.val2)/3;
-ymaj2=round(seq(ylim.val2[1],ylim.val2[2],by.y2),1);
-ymin2=round(seq(ylim.val2[1],ylim.val2[2],by.y2/2),1)
-
-plot(X_FLOATING_32315~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
-abline(h=ymaj,v=xmaj,lty=3,col="grey")
-with(cal.algae,pt_line(Date,X_FLOATING_32315,1,"forestgreen",1.5,21,"forestgreen",cex=1.5,pt.lwd=0.1))
-with(cal.algae,pt_line(Date,X_FLOATING_32321,1,"dodgerblue1",1.5,21,"dodgerblue1",cex=1.5,pt.lwd=0.1))
-axis_fun(2,ymaj,ymin,format(ymaj))
-abline(h=3.8,lty=2,col="red");# based ib fChl and grab Chl-a model (fChlAnalysis_summary.rmd). 
-
-axis_fun(1,xmaj,xmin,NA);box(lwd=1)
-mtext(side=2,line=2.5,"Relative Fluorescence\nUnits (RFU) ")
-legend("topleft",legend=c("Chlorophyll","Phycocyanin","~20 \u03BCg L\u207B\u00B9 Chl-a"),
-       lty=c(1,1,2),lwd=3,col=c("forestgreen","dodgerblue1","red"),
-       ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
-ylim.val3=c(0,1);
-by.y3=0.5;
-ymaj3=seq(ylim.val3[1],ylim.val3[2],by.y3);
-ymin3=seq(ylim.val3[1],ylim.val3[2],by.y3/2)
-
-plot(phy_chl~Date,cal.algae,ylim=ylim.val3,xlim=xlim.val,type="n",axes=F,ann=F)
-abline(h=ymaj3,v=xmaj,lty=3,col="grey")
-with(cal.algae,pt_line(Date,phy_chl,1,"indianred1",1.5,21,"indianred1",cex=1.5,pt.lwd=0.1))
-axis_fun(2,ymaj3,ymin3,format(ymaj3))
-axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"));box(lwd=1)
-mtext(side=2,line=2.5,expression(paste(frac("Phyco","Phyco + Chl"))))
-mtext("Date (MM/DD/YYYY)",side=1,line=2.25,cex=1)
+# # 32315 relative fChl
+# # 32321 relative Phycocyanin
+# #cal.algae=readNWISdv("02292900",c("32315","32321"),"2017-11-01",format(End.Date,"%Y-%m-%d"))
+# cal.algae=readNWISdv("02292900",c("00300","32295","32315","32321"),format(Start.Date,"%Y-%m-%d"),format(End.Date,"%Y-%m-%d"))
+# cal.algae=renameNWISColumns(cal.algae)
+# cal.algae$Date=date.fun(cal.algae$Date)
+# 
+# cal.algae=merge(cal.algae,data.frame(Date=date.fun(seq(Start.Date,End.Date,"1 days")),fill=1),"Date",all.y=T)
+# 
+# cal.algae$phy_chl=with(cal.algae,X_FLOATING_32321/(X_FLOATING_32321+X_FLOATING_32315))
+# 
+# EDate.plot=as.Date(Sys.time())+duration(1,"days")
+# SDate.plot=as.Date(EDate.plot-duration(14,"days"))
+# lwd.val=1
+# xlim.val=as.POSIXct(strptime(c(SDate.plot,EDate.plot),"%Y-%m-%d"),tz="EST")
+# xmaj=seq(xlim.val[1],xlim.val[2],by="7 days");xmin=seq(xlim.val[1],xlim.val[2],by="1 days")
+# 
+# min.CDOM=min(subset(cal.algae,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$X_FLOATING_32295,na.rm=T)
+# ylim.min=if(min.CDOM>300){200}else{100}
+# max.CDOM=max(subset(cal.algae,Date%in%seq(TODAY-ddays(30),TODAY+ddays(3),"1 days"))$X_FLOATING_32295,na.rm=T)
+# ylim.max=round(max.CDOM+max.CDOM*0.25,-2)
+# ylim.val=c(ylim.min,ylim.max);
+# 
+# by.y=100
+# ymaj=seq(ylim.val[1],ylim.val[2],by.y);
+# ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+# 
+# par(family="serif",mar=c(1,3,0.5,4),oma=c(3,3,2.5,2));
+# layout(matrix(1:3,3,1),heights=c(1,1,0.5))
+# 
+# plot(X_FLOATING_32295~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
+# abline(h=ymaj,v=xmaj,lty=3,col="grey")
+# with(cal.algae,pt_line(Date,X_FLOATING_32295,2,"tan3",1.5,21,"tan3",cex=1.5,pt.lwd=0.1))
+# axis_fun(2,ymaj,ymin,format(ymaj))
+# axis_fun(1,xmaj,xmin,NA);box(lwd=1)
+# mtext(side=2,line=2.5,"fDOM (RFU)")
+# mtext(side=3,adj=0,"S-79 - Floating Sensor\n(USGS Site: 02292900)")
+# mtext(side=3,adj=1,"Data are provisional",col="red")
+# 
+# ylim.val=c(0,12);
+# by.y=max(ylim.val)/3;
+# ymaj=seq(ylim.val[1],ylim.val[2],by.y);
+# ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+# 
+# ylim.val2=c(0,6);
+# by.y2=max(ylim.val2)/3;
+# ymaj2=round(seq(ylim.val2[1],ylim.val2[2],by.y2),1);
+# ymin2=round(seq(ylim.val2[1],ylim.val2[2],by.y2/2),1)
+# 
+# plot(X_FLOATING_32315~Date,cal.algae,ylim=ylim.val,xlim=xlim.val,type="n",axes=F,ann=F)
+# abline(h=ymaj,v=xmaj,lty=3,col="grey")
+# with(cal.algae,pt_line(Date,X_FLOATING_32315,1,"forestgreen",1.5,21,"forestgreen",cex=1.5,pt.lwd=0.1))
+# with(cal.algae,pt_line(Date,X_FLOATING_32321,1,"dodgerblue1",1.5,21,"dodgerblue1",cex=1.5,pt.lwd=0.1))
+# axis_fun(2,ymaj,ymin,format(ymaj))
+# abline(h=3.8,lty=2,col="red");# based ib fChl and grab Chl-a model (fChlAnalysis_summary.rmd). 
+# 
+# axis_fun(1,xmaj,xmin,NA);box(lwd=1)
+# mtext(side=2,line=2.5,"Relative Fluorescence\nUnits (RFU) ")
+# legend("topleft",legend=c("Chlorophyll","Phycocyanin","~20 \u03BCg L\u207B\u00B9 Chl-a"),
+#        lty=c(1,1,2),lwd=3,col=c("forestgreen","dodgerblue1","red"),
+#        ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5)
+# ylim.val3=c(0,1);
+# by.y3=0.5;
+# ymaj3=seq(ylim.val3[1],ylim.val3[2],by.y3);
+# ymin3=seq(ylim.val3[1],ylim.val3[2],by.y3/2)
+# 
+# plot(phy_chl~Date,cal.algae,ylim=ylim.val3,xlim=xlim.val,type="n",axes=F,ann=F)
+# abline(h=ymaj3,v=xmaj,lty=3,col="grey")
+# with(cal.algae,pt_line(Date,phy_chl,1,"indianred1",1.5,21,"indianred1",cex=1.5,pt.lwd=0.1))
+# axis_fun(2,ymaj3,ymin3,format(ymaj3))
+# axis_fun(1,xmaj,xmin,format(xmaj,"%m/%d/%Y"));box(lwd=1)
+# mtext(side=2,line=2.5,expression(paste(frac("Phyco","Phyco + Chl"))))
+# mtext("Date (MM/DD/YYYY)",side=1,line=2.25,cex=1)
 
 
 ```
 
-<font size=3>
+<!-- <font size=3> -->
 
-<center>Top: Daily dissolved organic matter (fluorescence DOM). Middle:
-Daily relative fluorescence Chlorophyll and Phycocyanin observed at the
-floating sensor bouy at S-79 monitoring by USGS. Bottom: The relative
-ratio of Phycocyanin (Phyco) relative to Phyco and Chlorophyll
-(Chl).</center>
+<!-- <center>Top: Daily dissolved organic matter (fluorescence DOM). Middle: -->
+<!-- Daily relative fluorescence Chlorophyll and Phycocyanin observed at the -->
+<!-- floating sensor bouy at S-79 monitoring by USGS. Bottom: The relative -->
+<!-- ratio of Phycocyanin (Phyco) relative to Phyco and Chlorophyll -->
+<!-- (Chl).</center> -->
 
-</font> <font size=4 color="red">
+<!-- </font> <font size=4 color="red"> -->
 
-<center>Data are provisional and subject to change.</center>
+<!-- <center>Data are provisional and subject to change.</center> -->
 
-</font>
+<!-- </font> -->
 
 ### Estuary Salinity
 
