@@ -1377,48 +1377,9 @@ algae.week%>%
 
 ### Algae Coverage
 
-```{r noaa hab image,echo=F}
-
-noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iVGZLZEU0cHZqYXlMWldYTlRDMWtEcz0=")
-
-vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
-
-noaa.image.inventory=data.frame()
-# for(i in 1:6){
-for(i in 1:length(vals)){
-  tmp=noaa.HAB[vals[i]]
-  tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
-  tmp3=strsplit(tmp2,"href=|title=|>")
-
-  dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp3,"[",3))
-
-  fname.vals=strsplit(dat$filename,"_")
-  dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
-
-  date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
-  yr.val=as.numeric(substr(sapply(date.vals,"[",2),1,4))
-  month.val=as.numeric(substr(sapply(date.vals,"[",3),1,2))
-  day.val=as.numeric(substr(sapply(date.vals,"[",3),3,4))
-  dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
-
-  noaa.image.inventory=rbind(dat,noaa.image.inventory)
-}
-
-noaa.HAB.image=subset(noaa.image.inventory,data.product=="CIcyano.LakeOkee.png'"&date==max(noaa.image.inventory$date))
-```
-
-```{r, out.width="100%",echo=FALSE,fig.align="center",fig.cap=paste("Cyanobacteria Index for Lake Okeechobee for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)")}
-
-knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
-```
-
-```{r, out.width="50%",echo=FALSE,fig.align="center"}
-knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
-```
-
-```{r noaa hab data,echo=F,include=F}
-# LOK.area=area(lakeO)
-# noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iYjNnK3AvTWRrYmNWbXU0K0YvMlA1UlBtTWZlRFV3R1RicVRYb2pxeVJBUA==")
+```{r noaa hab image,echo=F,include=F}
+# 
+# noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iVGZLZEU0cHZqYXlMWldYTlRDMWtEcz0=")
 # 
 # vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
 # 
@@ -1426,147 +1387,190 @@ knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/
 # # for(i in 1:6){
 # for(i in 1:length(vals)){
 #   tmp=noaa.HAB[vals[i]]
-#   tmp2=strsplit(tmp,"<a|</a>")[[1]]
-#   tmp3=strsplit(tmp2[2],"href=|title=|>")
-#   tmp4=strsplit(tmp2[3],"</section>")
-#   
-#   dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp4,"[",1))
-#   
+#   tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
+#   tmp3=strsplit(tmp2,"href=|title=|>")
+# 
+#   dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp3,"[",3))
+# 
 #   fname.vals=strsplit(dat$filename,"_")
-#   if(trimws(substr(sapply(fname.vals,"[",1),1,9))!="sentinel"){next}else{
 #   dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
-#   
+# 
 #   date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
 #   yr.val=as.numeric(substr(sapply(date.vals,"[",2),1,4))
 #   month.val=as.numeric(substr(sapply(date.vals,"[",3),1,2))
 #   day.val=as.numeric(substr(sapply(date.vals,"[",3),3,4))
 #   dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
-#   
+# 
 #   noaa.image.inventory=rbind(dat,noaa.image.inventory)
-#   }
 # }
 # 
-# noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif"&date==max(noaa.image.inventory$date))
+# noaa.HAB.image=subset(noaa.image.inventory,data.product=="CIcyano.LakeOkee.png'"&date==max(noaa.image.inventory$date))
+
+# ```{r, out.width="100%",echo=FALSE,fig.align="center",fig.cap=paste("Cyanobacteria Index for Lake Okeechobee for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)")}
 # 
-# data.path="./RSdata"
-# # data.path="C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata"
+# knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
+# ```
 # 
-# noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif")
-# # noaa.HAB.image$filename
-# noaa.HAB.image$fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
-# # fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
-# 
-# noaa.HAB.image=subset(noaa.HAB.image,fnames%in%list.files(data.path))
-# 
-# fnames=noaa.HAB.image$fnames
-# 
-# # # paste0(data.path,"sentinel_2022/", fnames)
-# # new.dat=fnames[fnames%in%list.files(data.path)==F]
-# # 
-# # # adjust timeout time
-# # options(timeout = max(300, getOption("timeout")))
-# # 
-# # noaa.HAB.image2=subset(noaa.HAB.image,fnames%in%new.dat)
-# # if(nrow(noaa.HAB.image2)!=0){
-# # for(i in 1:nrow(noaa.HAB.image2)){
-# # download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)),paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),mode="wb",method="libcurl")
-# #   print(i)
-# # }
-# # }
-# 
-# cyano_area=data.frame()
-# for(i in 1:length(fnames)){
-# tmp.raster=raster(paste(data.path, fnames[i],sep="/"))
-# 
-# 
-# # plot(tmp.raster)
-# # plot(mask(tmp.raster,gBuffer(lakeO,width=500)))
-# tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-# tmp.raster[tmp.raster==255]=NA; # No Data
-# # plot(tmp.raster)
-# # crs(tmp.raster)
-# # tmp.raster>250
-# # tmp.raster%in%c(250,251,253,254,255)
-# # 251 = CI adj; 252 = land; 253 = clouds; 254 = mixed pixels; 255 = No data; 0 = nodetect
-# 
-# 
-# cloud.area=tmp.raster>253
-# # cloud.area=tmp.raster[!tmp.raster%in%c(253,254,250)]
-# # cloud.area=tmp.raster%in%c(253)
-# cloud.area.raster=cloud.area
-# # cloud.area=cloud.area==1
-# cloud.area=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
-# 
-# # remove cloud/no data values (see tif header)
-# # 0= nodetect
-# # 250 = saturated; 251 = ci adj; 252 = land; 253 = cloud;
-# # 254 = mixed pixel; 255 = no data
-# 
+# ```{r, out.width="50%",echo=FALSE,fig.align="center"}
+# knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
+# ```
+
+
+```
+
+
+```{r noaa hab data,echo=F,include=F}
+LOK.area=area(lakeO)
+noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iYjNnK3AvTWRrYmNWbXU0K0YvMlA1UlBtTWZlRFV3R1RicVRYb2pxeVJBUA==")
+
+vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
+
+noaa.image.inventory=data.frame()
+# for(i in 1:6){
+for(i in 1:length(vals)){
+  tmp=noaa.HAB[vals[i]]
+  tmp2=strsplit(tmp,"<a|</a>")[[1]]
+  tmp3=strsplit(tmp2[2],"href=|title=|>")
+  tmp4=strsplit(tmp2[3],"</section>")
+  
+  dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp4,"[",1))
+  
+  fname.vals=strsplit(dat$filename,"_")
+  if(trimws(substr(sapply(fname.vals,"[",1),1,9))!="sentinel"){next}else{
+    dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
+    
+    date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
+    yr.val=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+    month.val=as.numeric(substr(sapply(date.vals,"[",3),1,2))
+    day.val=as.numeric(substr(sapply(date.vals,"[",3),3,4))
+    dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
+    
+    noaa.image.inventory=rbind(dat,noaa.image.inventory)
+  }
+}
+noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif"&date==max(noaa.image.inventory$date))
+
+data.path="./RSdata"
+# data.path="C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata"
+
+noaa.HAB.image=subset(noaa.image.inventory,data.product=="3.CIcyano.LakeOkee.tif")
+# noaa.HAB.image$filename
+noaa.HAB.image$fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+# fnames=with(noaa.HAB.image,paste0(format(date,"%Y%m%d"),"_LOK_CIcyano.tif"))
+
+noaa.HAB.image=subset(noaa.HAB.image,fnames%in%list.files(data.path))
+
+fnames=noaa.HAB.image$fnames
+
+# # paste0(data.path,"sentinel_2022/", fnames)
+# new.dat=fnames[fnames%in%list.files(data.path)==F]
+#
+# # adjust timeout time
+# options(timeout = max(300, getOption("timeout")))
+#
+# noaa.HAB.image2=subset(noaa.HAB.image,fnames%in%new.dat)
+# if(nrow(noaa.HAB.image2)!=0){
+# for(i in 1:nrow(noaa.HAB.image2)){
+# download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i], fixed=TRUE)),paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),mode="wb",method="libcurl")
+#   print(i)
+# }
+# }
+
+cyano_area=data.frame()
+for(i in 1:length(fnames)){
+tmp.raster=raster::raster(paste(data.path, fnames[i],sep="/"))
+
+
+# plot(tmp.raster)
+# plot(mask(tmp.raster,gBuffer(lakeO,width=500)))
+tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+tmp.raster[tmp.raster==255]=NA; # No Data
+# plot(tmp.raster)
+# crs(tmp.raster)
+# tmp.raster>250
+# tmp.raster%in%c(250,251,253,254,255)
+# 251 = CI adj; 252 = land; 253 = clouds; 254 = mixed pixels; 255 = No data; 0 = nodetect
+
+
+cloud.area=tmp.raster>253
+# cloud.area=tmp.raster[!tmp.raster%in%c(253,254,250)]
+# cloud.area=tmp.raster%in%c(253)
+cloud.area.raster=cloud.area
+# cloud.area=cloud.area==1
+cloud.area=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
+
+# remove cloud/no data values (see tif header)
+# 0= nodetect
+# 250 = saturated; 251 = ci adj; 252 = land; 253 = cloud;
+# 254 = mixed pixel; 255 = no data
+
 # vals=c(0,250,251,252,253,254,255)
+vals=c(0,250,251,252,253,254,255)
+tmp.raster[tmp.raster%in%vals]=NA
+
+tmp.raster=calc(tmp.raster,fun=function(x) x*1)
+# ci.scale=calc(tmp.raster,fun=function(x) ci.scaling.fun(x))
+rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+
+area=rev.scale>0
+val=cellStats(area,sum)*raster::res(area)[1]*raster::res(area)[2]
+# val*3.86102e-7 # converts from m2 to mi2
+
+area2=rev.scale>(1000*1000)
+val2=cellStats(area2,sum)*raster::res(area2)[1]*raster::res(area2)[2]
+
+tmp.rslt=data.frame(date=noaa.HAB.image$date[i],
+                    cloud.area=cloud.area,
+                    bloom.area.m2=val,
+                    vis.bloom=val2)
+cyano_area=rbind(cyano_area,tmp.rslt)
+
+}
+
+cyano_area$cloud.area.per=cyano_area$cloud.area/LOK.area
+# cyano_area$bloom.area.m2.scn=with(cyano_area,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
+cyano_area$bloom.area.mi2=cyano_area$bloom.area.m2*3.86102e-7
+cyano_area$bloom.area.per=(cyano_area$bloom.area.m2/LOK.area)*100
+cyano_area$date=date.fun(cyano_area$date)
+cyano_area$date2=decdate.fun(cyano_area$date)
+cyano_area$vis.bloom=cyano_area$vis.bloom*3.86102e-7
+tail(cyano_area)
+
+# tmp.raster=raster(paste(data.path, fnames[length(fnames)],sep="/"))
+# tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+# vals=c(0,250,251,252,253,254,255)
+# # tmp.raster_nodata=tmp.raster>=250
 # tmp.raster[tmp.raster%in%vals]=NA
-# 
-# tmp.raster=calc(tmp.raster,fun=function(x) x*1)
-# # ci.scale=calc(tmp.raster,fun=function(x) ci.scaling.fun(x))
-# rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
-# 
-# area=rev.scale>0
-# val=cellStats(area,sum)*raster::res(area)[1]*raster::res(area)[2]
-# # val*3.86102e-7 # converts from m2 to mi2
-# 
-# area2=rev.scale>(1000*1000)
-# val2=cellStats(area2,sum)*raster::res(area2)[1]*raster::res(area2)[2]
-# 
-# tmp.rslt=data.frame(date=noaa.HAB.image$date[i],
-#                     cloud.area=cloud.area,
-#                     bloom.area.m2=val,
-#                     vis.bloom=val2)
-# cyano_area=rbind(cyano_area,tmp.rslt)
-# 
-# }
-# 
-# cyano_area$cloud.area.per=cyano_area$cloud.area/LOK.area
-# # cyano_area$bloom.area.m2.scn=with(cyano_area,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
-# cyano_area$bloom.area.mi2=cyano_area$bloom.area.m2*3.86102e-7
-# cyano_area$bloom.area.per=(cyano_area$bloom.area.m2/LOK.area)*100
-# cyano_area$date=date.fun(cyano_area$date)
-# cyano_area$date2=decdate.fun(cyano_area$date)
-# cyano_area$vis.bloom=cyano_area$vis.bloom*3.86102e-7
-# 
-# 
-# # tmp.raster=raster(paste(data.path, fnames[length(fnames)],sep="/"))
-# # tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-# # vals=c(0,250,251,252,253,254,255)
-# # # tmp.raster_nodata=tmp.raster>=250
-# # tmp.raster[tmp.raster%in%vals]=NA
-# 
-# tmp.raster=calc(tmp.raster,fun=function(x) x*1)
-# rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
-# 
-# 
-# date.val=subset(cyano_area,date==max(cyano_area$date))$date
-# algae.cov=subset(cyano_area,date==max(cyano_area$date))$bloom.area.mi2
+
+tmp.raster=calc(tmp.raster,fun=function(x) x*1)
+rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+
+
+date.val=subset(cyano_area,date==max(cyano_area$date))$date
+algae.cov=subset(cyano_area,date==max(cyano_area$date))$bloom.area.mi2
+algae.cov.per=subset(cyano_area,date==max(cyano_area$date))$bloom.area.per
 
 ## weather data
 # wx.dates=date.fun(range(noaa.HAB.image$date))
-# 
+#
 # dbkeys=data.frame(DBKEY=c("IY033","KV252"),param=c('WINVD','WINVS'))
 # wx.dat=DBHYDRO_breakpoint(as.Date("2022-04-01"),as.Date("2022-07-18"),dbkeys$DBKEY)
 # wx.dat=merge(wx.dat,dbkeys,'DBKEY')
-# 
+#
 # wx.dat.xtab=cast(wx.dat,DATETIME~param,value="Data.Value",mean)
-# 
+#
 # wx.dat.xtab$WINVS=wx.dat.xtab$WINVS*0.44704
 # wx.dat.xtab$u_vec=with(wx.dat.xtab,-WINVS*sin(2*pi*(WINVD/360)))
 # wx.dat.xtab$v_vec=with(wx.dat.xtab,-WINVS*cos(2*pi*(WINVD/360)))
 # wx.dat.xtab$Date=date.fun(wx.dat.xtab$DATETIME)
-# 
+#
 # wx.dat.xtab.da=ddply(wx.dat.xtab,"Date",summarise,
 #                      mean.u.scalar=mean(WINVS,na.rm=T),
 #                      mean.u=mean(u_vec,na.rm=T),
 #                      mean.v=mean(v_vec,na.rm=T))
 # wx.dat.xtab.da$wd.average=with(wx.dat.xtab.da,(atan2(mean.u,mean.v)*360/2/pi)+180)
 # wx.dat.xtab.da$ws.vec.avg=with(wx.dat.xtab.da,((mean.u^2+mean.v^2)^0.5))
-# 
+#
 
 
 ```
@@ -1574,118 +1578,119 @@ knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/
 <br>
 
 ```{r NOAA RS Plot,fig.width=6.5,fig.height=5,fig.align='center'}
-# par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
-# layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
-# 
-# b=c(0,20,100,500,1000,6300)*1000
-# cols=viridisLite::turbo(249,direction=1)
-# plot(lakeO,lwd=0.05)
-# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
-# plot(lakeO,lwd=0.05,add=T)
-# image(rev.scale,add=T,col = cols)
-# image(cloud.area.raster,add=T,col=c(NA,"grey"))
-# if(sum(is.na(getValues(rev.scale)))/length(getValues(rev.scale))<0.75){
-# plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)}
-# mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
-# mtext(side=3,line=-2.5,adj=0,paste("Date:",format(date.val,"%m-%d-%Y"),
-#                                    "\nData Source: NOAA NCCOS\nAlgae Coverage:",
-#                                    round(algae.cov),"mi\u00B2"))
-# 
-# 
-# plot(0:1,0:1,ann=F,axes=F,type="n")
-# b2=b/1000
-# l.b=length(b2)
-# labs=b2
-# n.bks=length(b2) -1
-# top.val=0.8
-# bot.val=0.2
-# mid.v.val=bot.val+(top.val-bot.val)/2
-# x.max=0.3
-# x.min=0
-# mid.val=x.min+(x.max-x.min)/2
-# txt.offset.val=-0.01
-# lab.pos=seq(bot.val,top.val,length.out=l.b)
-# legend_image=as.raster(matrix(rev(cols),ncol=1))
-# rasterImage(legend_image,x.min,bot.val,x.max,top.val)
-# text(x=x.max, y = lab.pos, labels = format(b2),cex=0.75,adj=0,pos=4,offset=0.5)
-# segments(rep(x.min,l.b),lab.pos,rep(x.max,l.b),lab.pos,lwd=2)
-# #add cloud
-# legend_image=as.raster(matrix("grey",ncol=1))
-# rasterImage(legend_image,x.min,bot.val-0.05,x.max,bot.val)
-# text(x=x.max, y = bot.val-0.025, labels = "Clouds/Invalid data",cex=0.5,adj=0,pos=4,offset=0.5)
-# 
-# legend_image=as.raster(matrix(adjustcolor("honeydew2",0.5),ncol=1))
-# rasterImage(legend_image,x.min,bot.val-0.1,x.max,bot.val-0.05)
-# text(x=x.max, y = bot.val-0.075, labels = "Littoral Zone",cex=0.5,adj=0,pos=4,offset=0.5)
-# # bx.val= seq(bot.val,top.val,(top.val-bot.val)/n.bks)
-# # rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(col.rmp),lty=0)
-# # text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
-# text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000)")),adj=0,cex=0.8,pos=3,xpd=NA)
-# 
+par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
+layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
+
+b=c(0,20,100,500,1000,6300)*1000
+cols=viridisLite::turbo(249,direction=1)
+plot(lakeO,lwd=0.05)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T)
+image(rev.scale,add=T,col = cols)
+image(cloud.area.raster,add=T,col=c(NA,"grey"))
+if(sum(is.na(getValues(rev.scale)))/length(getValues(rev.scale))<0.75){
+plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)}
+mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
+mtext(side=3,line=-2.5,adj=0,paste("Date: ",format(date.val,"%m-%d-%Y"),
+                                   "\nData Source: NOAA NCCOS\nAlgae Coverage: ",
+                                   round(algae.cov)," mi\u00B2 (",round(algae.cov.per)," %)",sep=""))
+
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+b2=b/1000
+l.b=length(b2)
+labs=b2
+n.bks=length(b2) -1
+top.val=0.8
+bot.val=0.2
+mid.v.val=bot.val+(top.val-bot.val)/2
+x.max=0.3
+x.min=0
+mid.val=x.min+(x.max-x.min)/2
+txt.offset.val=-0.01
+lab.pos=seq(bot.val,top.val,length.out=l.b)
+legend_image=as.raster(matrix(rev(cols),ncol=1))
+rasterImage(legend_image,x.min,bot.val,x.max,top.val)
+text(x=x.max, y = lab.pos, labels = format(b2),cex=0.75,adj=0,pos=4,offset=0.5)
+segments(rep(x.min,l.b),lab.pos,rep(x.max,l.b),lab.pos,lwd=2)
+#add cloud
+legend_image=as.raster(matrix("grey",ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.05,x.max,bot.val)
+text(x=x.max, y = bot.val-0.025, labels = "Clouds/Invalid data",cex=0.5,adj=0,pos=4,offset=0.5)
+
+legend_image=as.raster(matrix(adjustcolor("honeydew2",0.5),ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.1,x.max,bot.val-0.05)
+text(x=x.max, y = bot.val-0.075, labels = "Littoral Zone",cex=0.5,adj=0,pos=4,offset=0.5)
+# bx.val= seq(bot.val,top.val,(top.val-bot.val)/n.bks)
+# rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(col.rmp),lty=0)
+# text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
+text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000)")),adj=0,cex=0.8,pos=3,xpd=NA)
+
 # logo=png::readPNG("./Logo no Background.png")
 # grid::grid.raster(logo,x=0.825,y=0.12,just=c("center","top"),width=grid::unit(1.25,"inches"))
 
-# <font size=2><center>Cyanobacteria Algal Index across Lake Okeechobee. Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 ```
+<font size=2><center>Cyanobacteria Algal Index across Lake Okeechobee. Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+
 
 <br>
 
 ```{r NOAA LOK area,fig.width=6.5,fig.height=5,fig.align='center'}
-# par(family="serif",mar=c(1,3,0.5,2),oma=c(2,2,0.5,2))
-# layout(matrix(1:2,2,1),heights=c(0.5,1))
-# 
-# xlim.val=c(date.fun("2022-04-01"),date.fun(Sys.Date()+lubridate::duration(1,"months")));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
+par(family="serif",mar=c(1,3,0.5,2),oma=c(2,2,0.5,2))
+layout(matrix(1:2,2,1),heights=c(0.5,1))
 
-## ylim.val=c(-10,10);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-## plot(ws.vec.avg~Date,wx.dat.xtab.da,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val)
-## abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
-## abline(h=0)
-## stickplot.dat.arrows(Date,ws.vec.avg,wd.average,wx.dat.xtab.da,col="dodgerblue1",lty=1,lwd=2)
-## axis_fun(2,ymaj,ymin,ymaj)
-## # axis_fun(1,xmaj,xmin,format(xmaj,"%m-%Y"))
-## axis_fun(1,xmaj,xmin,NA)
-## box(lwd=1)
-## mtext(side=2,line=2.5,"Avg Wind Speed & Dir\n(m s\u207B\u00B9)")
-## mtext(side=3,adj=1,"Data Source: SFWMD",font=3)
-## mtext(side=3,adj=0,"Station: LZ40",font=3)
+xlim.val=c(date.fun("2023-01-01"),date.fun(Sys.Date()+lubridate::duration(1,"months")));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
 
-# ylim.val=c(0,1);by.y=0.2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-# plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
+# ylim.val=c(-10,10);by.y=5;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+# plot(ws.vec.avg~Date,wx.dat.xtab.da,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val)
 # abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
-# with(cyano_area,pt_line(date,cloud.area.per,2,"grey",2,21,"grey"))
-# axis_fun(2,ymaj,ymin,ymaj*100)
+# abline(h=0)
+# stickplot.dat.arrows(Date,ws.vec.avg,wd.average,wx.dat.xtab.da,col="dodgerblue1",lty=1,lwd=2)
+# axis_fun(2,ymaj,ymin,ymaj)
 # # axis_fun(1,xmaj,xmin,format(xmaj,"%m-%Y"))
 # axis_fun(1,xmaj,xmin,NA)
 # box(lwd=1)
-# mtext(side=2,line=2.5,"Cloud Cover (%)")
-# mtext(side=3,adj=1,"Data Source: NOAA NCCOS",font=3)
-# mtext(side=3,adj=0,"Lake Okeechobee",font=3)
-# 
-# ylim.val=c(0,max(cyano_area$bloom.area.mi2)*1.10);by.y=100;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
-# plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
-# abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
-# with(cyano_area,pt_line(date,bloom.area.mi2,1,"dodgerblue1",2,21,"dodgerblue1",pt.lwd=0.1,cex=1.25))
-# with(subset(cyano_area,date==max(cyano_area$date)),
-#      text(date,bloom.area.mi2,paste0(round(bloom.area.mi2)," mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
-# # with(cyano_area,pt_line(date,vis.bloom,2,
-# #                         adjustcolor("grey",0.5),2,21,adjustcolor("grey",0.5),pt.lwd=0.1,cex=1.25))
-# k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0&cloud.area.per<0.30))
-# x.val=seq(min(cyano_area$date2),max(cyano_area$date2),length.out=100)
-# pred.mod=predict(k.mod,data.frame(date2=x.val))
-# lines(date.fun(lubridate::date_decimal(x.val),form="%F %R"),pred.mod,col="red",lwd=2)
-# axis_fun(2,ymaj,ymin,ymaj)
-# axis_fun(1,xmaj,xmin,format(xmaj,"%b-%Y"),line=-0.5)
-# axis_fun(1,xmaj,xmin,NA)
-# box(lwd=1)
-# mtext(side=1,line=1.5,"Date (Month-Year)")
-# mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (mi\u00B2)")
-# axis_fun(4,ymaj,ymin,round((ymaj/(LOK.area*3.861e-7))*100,0))
-# mtext(side=4,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
-# legend("topleft",legend=c("Smoothed Trend"),
-#        lty=c(1),lwd=c(1),col=c("red"),
-#        pch=c(NA),pt.bg=c(NA),
-#        pt.cex=1.25,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
+# mtext(side=2,line=2.5,"Avg Wind Speed & Dir\n(m s\u207B\u00B9)")
+# mtext(side=3,adj=1,"Data Source: SFWMD",font=3)
+# mtext(side=3,adj=0,"Station: LZ40",font=3)
+
+ylim.val=c(0,1);by.y=0.2;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
+with(cyano_area,pt_line(date,cloud.area.per,2,"grey",2,21,"grey"))
+axis_fun(2,ymaj,ymin,ymaj*100)
+# axis_fun(1,xmaj,xmin,format(xmaj,"%m-%Y"))
+axis_fun(1,xmaj,xmin,NA)
+box(lwd=1)
+mtext(side=2,line=2.5,"Cloud Cover (%)")
+mtext(side=3,adj=1,"Data Source: NOAA NCCOS",font=3)
+mtext(side=3,adj=0,"Lake Okeechobee",font=3)
+ 
+ylim.val=c(0,max(cyano_area$bloom.area.mi2)*1.10);by.y=100;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+plot(cloud.area.per~date,cyano_area,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
+with(cyano_area,pt_line(date,bloom.area.mi2,1,"dodgerblue1",2,21,"dodgerblue1",pt.lwd=0.1,cex=1.25))
+with(subset(cyano_area,date==max(cyano_area$date)),
+     text(date,bloom.area.mi2,paste0(round(bloom.area.mi2)," mi\u00B2\n(",round(bloom.area.per),"%)"),pos=4,offset=0.5,cex=0.75))
+# with(cyano_area,pt_line(date,vis.bloom,2,
+#                         adjustcolor("grey",0.5),2,21,adjustcolor("grey",0.5),pt.lwd=0.1,cex=1.25))
+k.mod=loess(bloom.area.mi2~date2,subset(cyano_area,bloom.area.mi2>0&cloud.area.per<0.30))
+x.val=seq(min(cyano_area$date2),max(cyano_area$date2),length.out=100)
+pred.mod=predict(k.mod,data.frame(date2=x.val))
+lines(date.fun(lubridate::date_decimal(x.val),form="%F %R"),pred.mod,col="red",lwd=2)
+axis_fun(2,ymaj,ymin,ymaj)
+axis_fun(1,xmaj,xmin,format(xmaj,"%b-%Y"),line=-0.5)
+axis_fun(1,xmaj,xmin,NA)
+box(lwd=1)
+mtext(side=1,line=1.5,"Date (Month-Year)")
+mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (mi\u00B2)")
+axis_fun(4,ymaj,ymin,round((ymaj/(LOK.area*3.861e-7))*100,0))
+mtext(side=4,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
+legend("topleft",legend=c("Smoothed Trend"),
+      lty=c(1),lwd=c(1),col=c("red"),
+      pch=c(NA),pt.bg=c(NA),
+      pt.cex=1.25,ncol=1,cex=0.75,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 ```
 
 <font size=2>
@@ -1705,7 +1710,7 @@ explorer.</center>
 ```{r FDEP BGAlgae}
 
 # Blue-Green Algae --------------------------------------------------------
-sdate.algae=date.fun(TODAY-lubridate::duration(30,"days"))
+sdate.algae=date.fun(TODAY-lubridate::duration(15,"days"))
 # path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/VIEW_FL_Algal_Bloom_Site_Visits_1/FeatureServer/0/query?'
 
 path <- 'https://services1.arcgis.com/nRHtyn3uE1kyzoYc/arcgis/rest/services/AlgalBloom_Final_View/FeatureServer/0/query?'
@@ -1804,7 +1809,7 @@ bgdat_30d.shp=NULL
 }
 ```
 
-```{r BG_map30d,fig.width=7,fig.height=5,fig.align='center'}
+```{r BG_map30d,fig.width=6.5,fig.height=4,fig.align='center'}
 par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
 # layout(matrix(c(1:2),1,2,byrow=T),widths = c(1,0.3))
 # par(family="serif",mar=c(0.1,0.1,0.1,0.1),oma=c(0.5,0.5,0.5,0.5));
@@ -1821,17 +1826,18 @@ plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xl
 if(nrow(bgdat_30d.shp)!=0){
 plot(subset(bgdat_30d.shp,is.na(toxinpresent)==T),add=T,pch=21,bg="grey",cex=1)
 plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="NO"),add=T,pch=21,bg="green",cex=2,lwd=0.1)
-plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",cex=2,lwd=0.1)
+plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",
+     cex=ifelse(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES")$microcystin.val>10,2,1),lwd=0.1)
 }
 box(lwd=1)
 mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
 
 plot(0:1,0:1,ann=F,axes=F,type="n")
 date.rng=range(bgdat_30d.shp$date,na.rm=T)
-legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
+legend("center",legend=c("Toxin Present","Toxin Not Present >10 \u03BCg L\u207B\u00B9","Toxin Not Present","No Data"),
        pch=c(21),lty=c(NA),lwd=c(0.1),
-       col=c("black"),pt.bg=c("red","green","grey"),
-       pt.cex=1.25,ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
+       col=c("black"),pt.bg=c("red","red","green","grey"),
+       pt.cex=c(1,2,1,1),ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
        title.adj = 0,title=paste0("Blue-green Algae Toxin status\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),"\n(Presence/Absence)"))
 }
 ```
@@ -1858,7 +1864,7 @@ legend("center",legend=c("Toxin Present","Toxin Not Present","No Data"),
 
 <font size=2>
 
-<center>Blue-green Algae sampling results for the last 30-days for the
+<center>Blue-green Algae sampling results for the last 14-days for the
 10 county area (Lee, Collier, Hendry, Glades, Okeechobee, Martin, Palm
 Beach, Broward, Miami-Dade and Monroe). Data from FDEP Blue-green algae
 dashboard</center>
