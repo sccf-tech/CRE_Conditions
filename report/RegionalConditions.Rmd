@@ -77,8 +77,8 @@ library(rgeos)
 library(httr)
 library(raster)
 ##
-wgs84=CRS("+init=epsg:4326")
-utm17=CRS("+init=epsg:26917")
+wgs84=sp::CRS("+init=epsg:4326")
+utm17=sp::CRS("+init=epsg:26917")
 # tmap_mode("view")
 ###
 dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days")
