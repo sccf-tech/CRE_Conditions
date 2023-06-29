@@ -85,8 +85,10 @@ dates=seq(date.fun(date.fun(Sys.Date())-ddays(13)),date.fun(Sys.Date()),"1 days"
 
 #### GIS data
 # shore=spTransform(readOGR("C:/Julian_LaCie/_GISData/FWC","FWC_Shoreline_simp"),wgs84)
-shore=readOGR("./GISData","FWC_Shoreline_simp") 
-shore=sp::spTransform(shore,CRSobj=wgs84)
+# shore=readOGR("C:/Julian_LaCie/_GISData/FWC","FWC_Shoreline_simp")
+shore=readOGR("./GISData","FWC_Shoreline_simp_WGS") 
+#shore=sp::spTransform(shore,CRSobj=wgs84)
+# writeOGR(shore,"C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","FWC_Shoreline_simp_WGS",driver="ESRI Shapefile")
 
 # lakeO=readOGR("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LakeOkeechobee_general")
 lakeO=readOGR("./GISData","LakeOkeechobee_general")

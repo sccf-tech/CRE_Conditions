@@ -60,13 +60,13 @@ lakeO.lit=readOGR("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LOK_l
 lakeO.lit=spTransform(lakeO.lit,utm17)
 
 LOK.area=area(lakeO)
-YRS=c(2016:2021)
+YRS=c(2016:2022)
 ## 2016 -------------------------------------------------------------------
 CI.files=c()
 
 for( i in 1:length(YRS)){
   files=list.files(paste0(data.path,"/",YRS[i],"/"))
-  tmp.files=files[grep("1_2.CIcyano.LakeOkee.",files)]
+  tmp.files=files[grep("CIcyano.LakeOkee.",files)]
   CI.files=c(tmp.files,CI.files)
   print(i)
 }
@@ -76,6 +76,7 @@ for( i in 1:length(YRS)){
 
 date.vals=strsplit(sapply(CI.files,"[",1),"\\.")
 yr.val.path=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+range(yr.val.path)
 
 pb=txtProgressBar(min=0,max=length(CI.files),style=3)
 cyano_area=data.frame()
@@ -136,6 +137,7 @@ tmp.rslt=data.frame(date=date,
 cyano_area=rbind(cyano_area,tmp.rslt)
 setTxtProgressBar(pb, i)
 }
+beepr::beep(4)
 
 cyano_area$cloud.area.per=cyano_area$cloud.area/LOK.area
 # cyano_area$bloom.area.m2.scn=with(cyano_area,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
@@ -146,13 +148,12 @@ cyano_area$date2=decdate.fun(cyano_area$date)
 cyano_area$vis.bloom=cyano_area$vis.bloom*3.86102e-7
 
 # write.csv(cyano_area,paste0(export.path,"CIHAB_ts.csv"),row.names = F)
-cyano_area=read.csv(paste0(export.path,"CIHAB_ts.csv"))
+# cyano_area=read.csv(paste0(export.path,"CIHAB_ts.csv"))
 cyano_area$date=date.fun(cyano_area$date)
 
 plot(mean~date,cyano_area)
 plot(median~date,cyano_area)
 plot(bloom.area.per~date,cyano_area)
-beepr::beep(4)
 
 cyano_area$DOY=as.numeric(format(cyano_area$date,'%j'))
 cyano_area$CY=as.numeric(format(cyano_area$date,'%Y'))
@@ -199,7 +200,7 @@ axis_fun(1,xmaj,xmin,xmaj,line=-0.5)
 box(lwd=1)
 mtext(side=1,line=1.5,"DOY")
 mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
-legend("topleft",legend=c("2016 - 2021 30d MA range","2016 - 2021 30d MA median"),
+legend("topleft",legend=c("2016 - 2022 30d MA range","2016 - 2022 30d MA median"),
        lty=c(NA,1,NA),lwd=c(0.1,1,0.1),col=c("limegreen","forestgreen","black"),
        pch=c(22,NA,21),pt.bg=c(adjustcolor("limegreen",0.5),NA,"indianred1"),
        pt.cex=1.25,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
@@ -232,7 +233,8 @@ month.val=substr(fnames,5,6)
 day.val=substr(fnames,7,8)
 date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
 
-cyano_area_2022=data.frame()
+cyano_area_curyr=data.frame()
+pb=txtProgressBar(min=0,max=length(fnames),style=3)
 for(i in 1:length(fnames)){
   tmp.raster=raster(paste(data.path2, fnames[i],sep="/"))
   
@@ -274,57 +276,81 @@ for(i in 1:length(fnames)){
                       cloud.area=cloud.area,
                       bloom.area.m2=val,
                       vis.bloom=val2)
-  cyano_area_2022=rbind(cyano_area_2022,tmp.rslt)
+  cyano_area_curyr=rbind(cyano_area_curyr,tmp.rslt)
+  setTxtProgressBar(pb, i)
 }
 
-cyano_area_2022$cloud.area.per=cyano_area_2022$cloud.area/LOK.area
-# cyano_area_2022$bloom.area.m2.scn=with(cyano_area_2022,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
-cyano_area_2022$bloom.area.mi2=cyano_area_2022$bloom.area.m2*3.86102e-7
-cyano_area_2022$bloom.area.per=(cyano_area_2022$bloom.area.m2/LOK.area)*100
-cyano_area_2022$date=date.fun(cyano_area_2022$date)
-cyano_area_2022$date2=decdate.fun(cyano_area_2022$date)
-cyano_area_2022$vis.bloom=cyano_area_2022$vis.bloom*3.86102e-7
+cyano_area_curyr$cloud.area.per=cyano_area_curyr$cloud.area/LOK.area
+# cyano_area_curyr$bloom.area.m2.scn=with(cyano_area_curyr,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
+cyano_area_curyr$bloom.area.mi2=cyano_area_curyr$bloom.area.m2*3.86102e-7
+cyano_area_curyr$bloom.area.per=(cyano_area_curyr$bloom.area.m2/LOK.area)*100
+cyano_area_curyr$date=date.fun(cyano_area_curyr$date)
+cyano_area_curyr$date2=decdate.fun(cyano_area_curyr$date)
+cyano_area_curyr$vis.bloom=cyano_area_curyr$vis.bloom*3.86102e-7
 
-cyano_area_2022_2=cyano_area_2022[order(cyano_area_2022$date),]
-cyano_area_2022_2=merge(cyano_area_2022_2,
-                  data.frame(date=seq(min(cyano_area_2022_2$date),max(cyano_area_2022_2$date),"1 days"),
+cyano_area_curyr_2=cyano_area_curyr[order(cyano_area_curyr$date),]
+cyano_area_curyr_2=merge(cyano_area_curyr_2,
+                  data.frame(date=seq(min(cyano_area_curyr_2$date),max(cyano_area_curyr_2$date),"1 days"),
                              fill=1),
                   "date",all.y=T)
-cyano_area_2022_2$DOY=as.numeric(format(cyano_area_2022_2$date,"%j"))
-cyano_area_2022_2$area.per.MA=with(cyano_area_2022_2,c(rep(NA,29),
+cyano_area_curyr_2$DOY=as.numeric(format(cyano_area_curyr_2$date,"%j"))
+cyano_area_curyr_2$area.per.MA=with(cyano_area_curyr_2,c(rep(NA,29),
                                            rollapply(
                                              ifelse(bloom.area.per==0&cloud.area.per>0.4,NA,bloom.area.per),
                                              width=30,FUN=function(x)mean(x,na.rm=T))))
+
+names(cyano_area2)
+names(cyano_area_curyr_2)
+
+cyano_area.all=rbind(
+  cyano_area2[,names(cyano_area_curyr_2)],
+  cyano_area_curyr_2
+)
+cyano_area.all$CY=as.numeric(format(cyano_area.all$date,"%Y"))
+cyano_area.all$area.per.MA=with(cyano_area.all,c(rep(NA,29),
+                                                         rollapply(
+                                                           ifelse(bloom.area.per==0&cloud.area.per>0.4,NA,bloom.area.per),
+                                                           width=30,FUN=function(x)mean(x,na.rm=T))))
 
 
 plot(max.mean~DOY,tmp,type="l",ylim=c(0,50))
 lines(min.mean~DOY,tmp)
 with(tmp,shaded.range(DOY,min.mean,max.mean,"grey"))
 
-lines(bloom.area.per~DOY,cyano_area_2022,lwd=2)
-lines(area.per.MA~DOY,cyano_area_2022_2,lwd=2)
+lines(bloom.area.per~DOY,cyano_area_curyr,lwd=2)
+lines(area.per.MA~DOY,cyano_area_curyr_2,lwd=2)
 
 tmp2$DOY[tmp2$DOY==366]=NA
-tmp2$DOY.date=date.fun(as.Date(tmp2$DOY,origin="2022-01-01"))
+tmp2$DOY.date=date.fun(as.Date(tmp2$DOY,origin="curyr-01-01"))
 tmp2=subset(tmp2,is.na(DOY)==F)
+
+DOY.stats=tmp2
+DOY.stats$DOY.date=date.fun(as.Date(DOY.stats$DOY,origin="2023-01-01"))
+ma.DOY.stats=ddply(cyano_area2,"DOY",summarise,
+          min.mean=min(area.per.MA,na.rm=T),
+          median.mean=median(area.per.MA,na.rm=T),
+          max.mean=max(area.per.MA,na.rm=T))
+ma.DOY.stats$DOY.date=date.fun(as.Date(ma.DOY.stats$DOY,origin="2022-12-31"))
+
+ma.DOY.stats=subset(ma.DOY.stats,as.numeric(format(DOY.date,'%Y'))==2023)
 
 # png(filename=paste0(plot.path,"CiCyano_area_ts.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
 par(family="serif",mar=c(1,3,0.5,1),oma=c(2,2,0.5,0.5))
-xlim.val=c(date.fun("2022-04-01"),date.fun(Sys.Date()+lubridate::duration(1,"months")));xmaj=seq(xlim.val[1],xlim.val[2],"1 months");xmin=seq(xlim.val[1],xlim.val[2],"1 days")
+xlim.val=c(date.fun("2023-01-01"),date.fun("2023-12-31"));xmaj=seq(xlim.val[1],xlim.val[2],"3 months");xmin=seq(xlim.val[1],xlim.val[2],"1 months")
 ylim.val=c(0,40);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
-plot(max.mean~DOY.date,tmp,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
+plot(max.mean~DOY.date,ma.DOY.stats,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
-with(tmp,shaded.range(DOY.date,min.mean,max.mean,"limegreen",lty=1))
-lines(median.mean~DOY.date,tmp,lty=1,col="forestgreen")
-lines(area.per.MA~date,cyano_area_2022_2,lwd=2)
-with(cyano_area_2022_2,pt_line(date,area.per.MA,2,"black",1,21,"indianred1",cex=0.8))
+with(ma.DOY.stats,shaded.range(DOY.date,min.mean,max.mean,"limegreen",lty=1))
+lines(median.mean~DOY.date,ma.DOY.stats,lty=1,col="forestgreen")
+lines(area.per.MA~date,cyano_area.all,lwd=2)
+with(cyano_area.all,pt_line(date,area.per.MA,2,"black",1,21,"indianred1",cex=0.8))
 axis_fun(2,ymaj,ymin,ymaj)
 axis_fun(1,xmaj,xmin,format(xmaj,"%b-%Y"),line=-0.5)
 box(lwd=1)
 mtext(side=1,line=1.5,"Date (Month-Year)")
 mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
-legend("topleft",legend=c("2016 - 2021 30d MA range","2016 - 2021 30d MA median","30d MA coverage"),
+legend("topleft",legend=c("2016 - 2022 30d MA range","2016 - 2022 30d MA median","30d MA coverage"),
        lty=c(NA,1,NA),lwd=c(0.1,1,0.1),col=c("limegreen","forestgreen","black"),
        pch=c(22,NA,21),pt.bg=c(adjustcolor("limegreen",0.5),NA,"indianred1"),
        pt.cex=1.25,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
@@ -334,92 +360,128 @@ dev.off()
 
 
 
+# png(filename=paste0(plot.path,"CiCyano_area_ts_2018_2023.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
+par(family="serif",mar=c(1,3,0.5,1),oma=c(2,2,0.5,0.5))
+xlim.val=date.fun(c("2023-01-01","2023-12-31"));xmaj.lab=seq(xlim.val[1],xlim.val[2],"3 months");xmin.lab=seq(xlim.val[1],xlim.val[2],"1 months")
+xlim.val=as.numeric(format(xlim.val,"%j"));xmaj=as.numeric(format(xmaj.lab,"%j"));xmin=as.numeric(format(xmin.lab,"%j"))
+
+# xlim.val=c(1,365);by.x=90;xmaj=seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/3)
+ylim.val=c(0,40);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+
+plot(area.per.MA~DOY,cyano_area.all,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i",xaxs="i")
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
+with(subset(cyano_area.all,CY==2018),pt_line(DOY,area.per.MA,2,"black",1,21,"indianred1",cex=0.8))
+with(subset(cyano_area.all,CY==2023),pt_line(DOY,area.per.MA,2,"black",1,21,"dodgerblue1",cex=0.8))
+axis_fun(2,ymaj,ymin,ymaj)
+axis_fun(1,xmaj,xmin,format(xmaj.lab,"%b"),line=-0.5)
+box(lwd=1)
+mtext(side=1,line=1.5,"Date (Month)")
+mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
+legend("topleft",legend=c("2018 - 30d MA coverage","2023 - 30d MA coverage"),
+       lty=c(NA),lwd=c(0.1),col=c("black"),
+       pch=c(21),pt.bg=c("indianred1","dodgerblue1"),
+       pt.cex=1.25,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
+dev.off()
+
 # bloom duration metric ---------------------------------------------------
 
-for(j in 1:length(YRS)){
-files=list.files(paste0(data.path,"/",YRS[j],"/"))
-tmp.files=files[grep("1_2.CIcyano.LakeOkee.",files)]
-CI.files=tmp.files
+# for(j in 1:length(YRS)){
+# files=list.files(paste0(data.path,"/",YRS[j],"/"))
+# tmp.files=files[grep("CIcyano.LakeOkee.",files)]
+# CI.files=tmp.files
+# 
+# i=1
+# date.vals=strsplit(sapply(tmp.files,"[",1),"\\.")
+# yr.val.path=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+# 
+# tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
+# tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+# vals=c(0,250,251,252,253,254,255)
+# tmp.raster[tmp.raster%in%vals]=NA
+# rev.scale.1=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+# 
+# i=2
+# tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
+# tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+# tmp.raster[tmp.raster%in%vals]=NA
+# rev.scale.2=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+# rast.stack=stack(rev.scale.1,rev.scale.2)
+# 
+# for(i in 3:length(CI.files)){
+#   tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
+#   tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+#   
+#   tmp.raster[tmp.raster%in%vals]=NA
+#   
+#   rev.scale.2=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+#   
+#   rast.stack=stack(rast.stack,rev.scale.2)
+#   print(i)
+# }
+# 
+# tmp=sum(rast.stack>0,na.rm=T)
+# tmp=tmp/nlayers(rast.stack>0)
+# assign(paste0("bloom",YRS[j]),tmp)
+# print(j)
+# }
+# 
+# 
+# layout(matrix(1:8,2,4,byrow=T))
+# 
+# b=seq(0,0.5,0.1)
+# cols=viridisLite::magma(length(b),direction=1)
+# plot(lakeO,lwd=0.05)
+# image(mask(bloom2016,lakeO),add=T,col = cols)
+# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+# plot(lakeO,lwd=0.05,add=T,border="white")
+# mtext(side=3,"2016")
+# 
+# plot(lakeO,lwd=0.05)
+# image(mask(bloom2017,lakeO),add=T,col = cols)
+# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+# plot(lakeO,lwd=0.05,add=T,border="white")
+# mtext(side=3,"2017")
+# 
+# plot(lakeO,lwd=0.05)
+# image(mask(bloom2018,lakeO),add=T,col = cols)
+# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+# plot(lakeO,lwd=0.05,add=T,border="white")
+# mtext(side=3,"2018")
+# 
+# plot(lakeO,lwd=0.05)
+# image(mask(bloom2019,lakeO),add=T,col = cols)
+# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+# plot(lakeO,lwd=0.05,add=T,border="white")
+# mtext(side=3,"2019")
+# 
+# plot(lakeO,lwd=0.05)
+# image(mask(bloom2020,lakeO),add=T,col = cols)
+# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+# plot(lakeO,lwd=0.05,add=T,border="white")
+# mtext(side=3,"2020")
+# 
+# plot(lakeO,lwd=0.05)
+# image(mask(bloom2021,lakeO),add=T,col = cols)
+# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+# plot(lakeO,lwd=0.05,add=T,border="white")
+# mtext(side=3,"2021")
+# 
+# plot(lakeO,lwd=0.05)
+# image(mask(bloom2022,lakeO),add=T,col = cols)
+# plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+# plot(lakeO,lwd=0.05,add=T,border="white")
+# mtext(side=3,"2022")
+# 
+# plot(bloom2016)
+# plot(bloom2017)
+# plot(bloom2018)
+# plot(bloom2019)
+# plot(bloom2020)
+# plot(bloom2021)
+# plot(bloom2022)
 
-i=1
-date.vals=strsplit(sapply(tmp.files,"[",1),"\\.")
-yr.val.path=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+# workspace image ---------------------------------------------------------
+## Save workspace image to this point
+# save.image(file=paste0(export.path,"LOK_algae_RS.RData"))
+# load(paste0(export.path,"LOK_algae_RS.RData"))
 
-tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
-tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-vals=c(0,250,251,252,253,254,255)
-tmp.raster[tmp.raster%in%vals]=NA
-rev.scale.1=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
-
-i=2
-tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
-tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-tmp.raster[tmp.raster%in%vals]=NA
-rev.scale.2=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
-rast.stack=stack(rev.scale.1,rev.scale.2)
-
-for(i in 3:length(CI.files)){
-  tmp.raster=raster(paste(data.path,yr.val.path[i], CI.files[i],sep="/"))
-  tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
-  
-  tmp.raster[tmp.raster%in%vals]=NA
-  
-  rev.scale.2=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
-  
-  rast.stack=stack(rast.stack,rev.scale.2)
-  print(i)
-}
-
-tmp=sum(rast.stack>0,na.rm=T)
-tmp=tmp/nlayers(rast.stack>0)
-assign(paste0("bloom",YRS[j]),tmp)
-print(j)
-}
-
-
-layout(matrix(1:6,2,3,byrow=T))
-
-b=seq(0,0.5,0.1)
-cols=viridisLite::magma(length(b),direction=1)
-plot(lakeO,lwd=0.05)
-image(mask(bloom2016,lakeO),add=T,col = cols)
-plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
-plot(lakeO,lwd=0.05,add=T,border="white")
-mtext(side=3,"2016")
-
-plot(lakeO,lwd=0.05)
-image(mask(bloom2017,lakeO),add=T,col = cols)
-plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
-plot(lakeO,lwd=0.05,add=T,border="white")
-mtext(side=3,"2017")
-
-plot(lakeO,lwd=0.05)
-image(mask(bloom2018,lakeO),add=T,col = cols)
-plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
-plot(lakeO,lwd=0.05,add=T,border="white")
-mtext(side=3,"2018")
-
-plot(lakeO,lwd=0.05)
-image(mask(bloom2019,lakeO),add=T,col = cols)
-plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
-plot(lakeO,lwd=0.05,add=T,border="white")
-mtext(side=3,"2019")
-
-plot(lakeO,lwd=0.05)
-image(mask(bloom2020,lakeO),add=T,col = cols)
-plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
-plot(lakeO,lwd=0.05,add=T,border="white")
-mtext(side=3,"2020")
-
-plot(lakeO,lwd=0.05)
-image(mask(bloom2021,lakeO),add=T,col = cols)
-plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
-plot(lakeO,lwd=0.05,add=T,border="white")
-mtext(side=3,"2021")
-
-plot(bloom2016)
-plot(bloom2017)
-plot(bloom2018)
-plot(bloom2019)
-plot(bloom2020)
-plot(bloom2021)

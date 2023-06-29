@@ -33,7 +33,7 @@ jobs:
           # pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
           # nstall.packages(pack.url,repos=NULL,type="source")
           remotes::install_github("SwampThingPaul/AnalystHelper")
-          remotes::install_github("rspatial/raster")
+          # remotes::install_github("rspatial/raster")
         shell: Rscript {0}
         
       - name: Download data
