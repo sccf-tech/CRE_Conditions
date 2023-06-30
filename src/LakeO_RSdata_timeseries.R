@@ -51,6 +51,7 @@ ci.scaling.fun=function(ci){
   round(83.3 * (log10(ci[ci>0]) + 4.2))
 }
 
+# load(paste0(export.path,"LOK_algae_RS.RData"))
 # -------------------------------------------------------------------------
 # GIS Data
 lakeO=readOGR("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LakeOkeechobee_general")
@@ -59,7 +60,7 @@ lakeO=spTransform(lakeO,utm17)
 lakeO.lit=readOGR("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/GISData","LOK_littoral")
 lakeO.lit=spTransform(lakeO.lit,utm17)
 
-LOK.area=area(lakeO)
+LOK.area=area(lakeO)-area(lakeO.lit)
 YRS=c(2016:2022)
 ## 2016 -------------------------------------------------------------------
 CI.files=c()
@@ -279,6 +280,7 @@ for(i in 1:length(fnames)){
   cyano_area_curyr=rbind(cyano_area_curyr,tmp.rslt)
   setTxtProgressBar(pb, i)
 }
+beepr::beep(6)
 
 cyano_area_curyr$cloud.area.per=cyano_area_curyr$cloud.area/LOK.area
 # cyano_area_curyr$bloom.area.m2.scn=with(cyano_area_curyr,ifelse(cloud.area.per>0.25,NA,bloom.area.m2))
@@ -337,7 +339,7 @@ ma.DOY.stats=subset(ma.DOY.stats,as.numeric(format(DOY.date,'%Y'))==2023)
 # png(filename=paste0(plot.path,"CiCyano_area_ts.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
 par(family="serif",mar=c(1,3,0.5,1),oma=c(2,2,0.5,0.5))
 xlim.val=c(date.fun("2023-01-01"),date.fun("2023-12-31"));xmaj=seq(xlim.val[1],xlim.val[2],"3 months");xmin=seq(xlim.val[1],xlim.val[2],"1 months")
-ylim.val=c(0,40);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+ylim.val=c(0,60);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 plot(max.mean~DOY.date,ma.DOY.stats,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
@@ -366,7 +368,7 @@ xlim.val=date.fun(c("2023-01-01","2023-12-31"));xmaj.lab=seq(xlim.val[1],xlim.va
 xlim.val=as.numeric(format(xlim.val,"%j"));xmaj=as.numeric(format(xmaj.lab,"%j"));xmin=as.numeric(format(xmin.lab,"%j"))
 
 # xlim.val=c(1,365);by.x=90;xmaj=seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/3)
-ylim.val=c(0,40);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+ylim.val=c(0,60);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 plot(area.per.MA~DOY,cyano_area.all,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i",xaxs="i")
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
