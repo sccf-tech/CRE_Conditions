@@ -1836,7 +1836,7 @@ mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
 
 plot(0:1,0:1,ann=F,axes=F,type="n")
 date.rng=range(bgdat_30d.shp$date,na.rm=T)
-legend("center",legend=c("Toxin Present","Toxin Not Present >10 \u03BCg L\u207B\u00B9","Toxin Not Present","No Data"),
+legend("center",legend=c("Toxin Present","Toxin Present >10 \u03BCg L\u207B\u00B9","Toxin Not Present","No Data"),
        pch=c(21),lty=c(NA),lwd=c(0.1),
        col=c("black"),pt.bg=c("red","red","green","grey"),
        pt.cex=c(1,2,1,1),ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
