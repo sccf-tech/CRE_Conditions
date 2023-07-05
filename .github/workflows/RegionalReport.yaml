@@ -28,7 +28,7 @@ jobs:
                   "rvest","lubridate","flextable","magrittr",
                   "RcppRoll","downloadthis","dataRetrieval",
                   "RCurl","png","jsonlite","httr","sp","mapmisc","rgdal",
-                  "rgeos","remotes","httr"))
+                  "rgeos","remotes","httr","sf"))
           install.packages('raster', repos='https://rspatial.r-universe.dev')
           # pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
           # nstall.packages(pack.url,repos=NULL,type="source")
