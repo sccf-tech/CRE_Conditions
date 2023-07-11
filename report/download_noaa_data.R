@@ -56,9 +56,9 @@ if(nrow(noaa.HAB.image2)!=0){
     # hd=httr::HEAD(url.val);# check the status of url if valid (value = 200 is ok)
     # if(hd$all_headers[[1]]$status!=200){next}else{
     
-    download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i])),
+    try(download.file(noquote(gsub("'", '', noaa.HAB.image2$fileadd[i])),
                   paste(data.path, noaa.HAB.image2$fnames[i],sep="/"),
-                  mode="wb",method="wininet")
+                  mode="wb",method="wininet"))
      print(i)
     }
   }
