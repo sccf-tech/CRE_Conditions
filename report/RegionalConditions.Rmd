@@ -1422,7 +1422,7 @@ algae.week%>%
 
 
 ```{r noaa hab data,echo=F,include=F}
-LOK.area=area(lakeO)
+LOK.area=area(lakeO)-area(lakeO.lit)
 noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iYjNnK3AvTWRrYmNWbXU0K0YvMlA1UlBtTWZlRFV3R1RicVRYb2pxeVJBUA==")
 
 vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
@@ -1633,7 +1633,7 @@ text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000
 
 
 ```
-<font size=2><center>Cyanobacteria Algal Index across Lake Okeechobee. Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
+<font size=2><center>Cyanobacteria Algal Index across Lake Okeechobee. Percent area based on open water coverage (Lake Area minus Littoral Zone). Data from NOAA NCCOS HAB data explorer.</center></font><font size=3 color="red"><center>Data are provisional and subject to change.</center></font>
 
 
 <br>
@@ -1697,9 +1697,7 @@ legend("topleft",legend=c("Smoothed Trend"),
 
 <font size=2>
 
-<center>Average daily windspeed and direction and cyanobacteria algal
-bloom coverage of Lake Okeechobee. Data from NOAA NCCOS HAB data
-explorer.</center>
+<center>Daily cloud cover and cyanobacteria algal bloom coverage of Lake Okeechobee. Percent area based on open water coverage (Lake Area minus Littoral Zone). Data from NOAA NCCOS HAB data explorer.</center>
 
 </font><font size=3 color="red">
 
