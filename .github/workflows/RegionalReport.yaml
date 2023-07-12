@@ -27,12 +27,13 @@ jobs:
           install.packages(c("rmarkdown","knitr","reshape","plyr","zoo",
                   "rvest","lubridate","flextable","magrittr",
                   "RcppRoll","downloadthis","dataRetrieval",
-                  "RCurl","png","jsonlite","httr","sp","mapmisc","rgdal",
-                  "rgeos","remotes","httr","sf"))
+                  "RCurl","png","jsonlite","httr","sp","rgdal",
+                  "rgeos","remotes","httr","sf"))#,"mapmisc"))
           install.packages('raster', repos='https://rspatial.r-universe.dev')
           # pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
           # nstall.packages(pack.url,repos=NULL,type="source")
           remotes::install_github("SwampThingPaul/AnalystHelper")
+          remotes::install_github("cran/mapmisc")
           # remotes::install_github("rspatial/raster")
         shell: Rscript {0}
         
