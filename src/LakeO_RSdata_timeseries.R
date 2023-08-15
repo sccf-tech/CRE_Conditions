@@ -336,25 +336,31 @@ ma.DOY.stats$DOY.date=date.fun(as.Date(ma.DOY.stats$DOY,origin="2022-12-31"))
 
 ma.DOY.stats=subset(ma.DOY.stats,as.numeric(format(DOY.date,'%Y'))==2023)
 
+ma.DOY.stats
+subset(ma.DOY.stats,max.mean==max(max.mean,na.rm=T))
+
 # png(filename=paste0(plot.path,"CiCyano_area_ts.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
 par(family="serif",mar=c(1,3,0.5,1),oma=c(2,2,0.5,0.5))
 xlim.val=c(date.fun("2023-01-01"),date.fun("2023-12-31"));xmaj=seq(xlim.val[1],xlim.val[2],"3 months");xmin=seq(xlim.val[1],xlim.val[2],"1 months")
-ylim.val=c(0,60);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+ylim.val=c(0,105);by.y=20;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 plot(max.mean~DOY.date,ma.DOY.stats,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i")
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
 with(ma.DOY.stats,shaded.range(DOY.date,min.mean,max.mean,"limegreen",lty=1))
 lines(median.mean~DOY.date,ma.DOY.stats,lty=1,col="forestgreen")
 lines(area.per.MA~date,cyano_area.all,lwd=2)
-with(cyano_area.all,pt_line(date,area.per.MA,2,"black",1,21,"indianred1",cex=0.8))
+# with(cyano_area.all,pt_line(date,area.per.MA,2,"grey",1,21,"indianred1",cex=0.8))
+# lines(bloom.area.per~date,cyano_area.all,col=adjustcolor("indianred",0.5),cex=1.5)
+lines(area.per.MA~date,cyano_area.all,lwd=2,col="indianred1")
+points(bloom.area.per~date,cyano_area.all,pch=21,bg=adjustcolor("indianred",0.5),cex=1,lwd=0.01,col=adjustcolor("red",0.5))
 axis_fun(2,ymaj,ymin,ymaj)
 axis_fun(1,xmaj,xmin,format(xmaj,"%b-%Y"),line=-0.5)
 box(lwd=1)
 mtext(side=1,line=1.5,"Date (Month-Year)")
 mtext(side=2,line=2.5,"Cyanobacteria Algal Bloom\ncoverage (% LOK)")
-legend("topleft",legend=c("2016 - 2022 30d MA range","2016 - 2022 30d MA median","30d MA coverage"),
-       lty=c(NA,1,NA),lwd=c(0.1,1,0.1),col=c("limegreen","forestgreen","black"),
-       pch=c(22,NA,21),pt.bg=c(adjustcolor("limegreen",0.5),NA,"indianred1"),
+legend("topleft",legend=c("2016 - 2022 30d MA range","2016 - 2022 30d MA median","30d MA coverage","Daily Values"),
+       lty=c(NA,1,1,NA),lwd=c(0.1,1,2,0.1),col=c("limegreen","forestgreen","indianred1",adjustcolor("red",0.5)),
+       pch=c(22,NA,NA,21),pt.bg=c(adjustcolor("limegreen",0.5),NA,"indianred1",adjustcolor("indianred",0.5)),
        pt.cex=1.25,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 mtext(side=3,adj=1,"Data Source: NOAA NCCOS",font=3)
 mtext(side=3,adj=0,"Lake Okeechobee",font=3)
@@ -368,7 +374,7 @@ xlim.val=date.fun(c("2023-01-01","2023-12-31"));xmaj.lab=seq(xlim.val[1],xlim.va
 xlim.val=as.numeric(format(xlim.val,"%j"));xmaj=as.numeric(format(xmaj.lab,"%j"));xmin=as.numeric(format(xmin.lab,"%j"))
 
 # xlim.val=c(1,365);by.x=90;xmaj=seq(xlim.val[1],xlim.val[2],by.x);xmin=seq(xlim.val[1],xlim.val[2],by.x/3)
-ylim.val=c(0,60);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
+ylim.val=c(0,100);by.y=10;ymaj=seq(ylim.val[1],ylim.val[2],by.y);ymin=seq(ylim.val[1],ylim.val[2],by.y/2)
 
 plot(area.per.MA~DOY,cyano_area.all,axes=F,ann=F,type="n",ylim=ylim.val,xlim=xlim.val,yaxs="i",xaxs="i")
 abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.75)
@@ -385,6 +391,152 @@ legend("topleft",legend=c("2018 - 30d MA coverage","2023 - 30d MA coverage"),
        pt.cex=1.25,ncol=1,cex=1,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=0)
 dev.off()
 
+
+
+tmp.raster=raster::raster("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata/20230711_LOK_CIcyano.tif")
+tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+tmp.raster[tmp.raster==255]=NA; # No Data
+
+cloud.area=tmp.raster>253
+cloud.area.raster=cloud.area
+cloud.area=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
+
+# remove cloud/no data values (see tif header)
+# 0= nodetect
+# 250 = saturated; 251 = ci adj; 252 = land; 253 = cloud;
+# 254 = mixed pixel; 255 = no data
+
+# vals=c(0,250,251,252,253,254,255)
+vals=c(0,250,251,252,253,254,255)
+tmp.raster[tmp.raster%in%vals]=NA
+
+tmp.raster=calc(tmp.raster,fun=function(x) x*1)
+rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+
+# png(filename=paste0(plot.path,"20230711_CiCyano_area.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
+par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
+layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
+
+b=c(0,20,100,500,1000,6300)*1000
+cols=viridisLite::turbo(249,direction=1)
+plot(lakeO,lwd=0.05)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T)
+image(rev.scale,add=T,col = cols)
+image(cloud.area.raster,add=T,col=c(NA,"grey"))
+if(sum(is.na(getValues(rev.scale)))/length(getValues(rev.scale))<0.75){
+  plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)}
+mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
+
+with(subset(cyano_area.all,date==date.fun("2023-07-11")),
+mtext(side=3,line=-2.5,adj=0,paste("Date: ",format(date,"%m-%d-%Y"),
+                                   "\nData Source: NOAA NCCOS\nAlgae Coverage: ",
+                                   round(bloom.area.mi2)," mi\u00B2 (",round(bloom.area.per)," %)",sep="")))
+
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+b2=b/1000
+l.b=length(b2)
+labs=b2
+n.bks=length(b2) -1
+top.val=0.8
+bot.val=0.2
+mid.v.val=bot.val+(top.val-bot.val)/2
+x.max=0.3
+x.min=0
+mid.val=x.min+(x.max-x.min)/2
+txt.offset.val=-0.01
+lab.pos=seq(bot.val,top.val,length.out=l.b)
+legend_image=as.raster(matrix(rev(cols),ncol=1))
+rasterImage(legend_image,x.min,bot.val,x.max,top.val)
+text(x=x.max, y = lab.pos, labels = format(b2),cex=0.75,adj=0,pos=4,offset=0.5)
+segments(rep(x.min,l.b),lab.pos,rep(x.max,l.b),lab.pos,lwd=2)
+#add cloud
+legend_image=as.raster(matrix("grey",ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.05,x.max,bot.val)
+text(x=x.max, y = bot.val-0.025, labels = "Clouds/Invalid data",cex=0.5,adj=0,pos=4,offset=0.5)
+
+legend_image=as.raster(matrix(adjustcolor("honeydew2",0.5),ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.1,x.max,bot.val-0.05)
+text(x=x.max, y = bot.val-0.075, labels = "Littoral Zone",cex=0.5,adj=0,pos=4,offset=0.5)
+# bx.val= seq(bot.val,top.val,(top.val-bot.val)/n.bks)
+# rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(col.rmp),lty=0)
+# text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
+text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000)")),adj=0,cex=0.8,pos=3,xpd=NA)
+dev.off()
+
+
+tmp.raster=raster::raster("C:/Julian_LaCie/_GitHub/CRE_Conditions/report/RSdata/20230621_LOK_CIcyano.tif")
+tmp.raster=mask(tmp.raster,gBuffer(lakeO,width=500))
+tmp.raster[tmp.raster==255]=NA; # No Data
+
+cloud.area=tmp.raster>253
+cloud.area.raster=cloud.area
+cloud.area=cellStats(cloud.area,sum)*raster::res(cloud.area)[1]*raster::res(cloud.area)[2]
+
+# remove cloud/no data values (see tif header)
+# 0= nodetect
+# 250 = saturated; 251 = ci adj; 252 = land; 253 = cloud;
+# 254 = mixed pixel; 255 = no data
+
+# vals=c(0,250,251,252,253,254,255)
+vals=c(0,250,251,252,253,254,255)
+tmp.raster[tmp.raster%in%vals]=NA
+
+tmp.raster=calc(tmp.raster,fun=function(x) x*1)
+rev.scale=calc(tmp.raster,fun=ci.reverse.scaling.fun)*100000000
+
+# png(filename=paste0(plot.path,"20230621_CiCyano_area.png"),width=6.5,height=5,units="in",res=200,type="windows",bg="white")
+par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
+layout(matrix(1:2,1,2,byrow = T),widths=c(1,0.4))
+
+b=c(0,20,100,500,1000,6300)*1000
+cols=viridisLite::turbo(249,direction=1)
+plot(lakeO,lwd=0.05)
+plot(lakeO.lit,lwd=0.05,col=adjustcolor("honeydew2",0.5),border=NA,add=T)
+plot(lakeO,lwd=0.05,add=T)
+image(rev.scale,add=T,col = cols)
+image(cloud.area.raster,add=T,col=c(NA,"grey"))
+if(sum(is.na(getValues(rev.scale)))/length(getValues(rev.scale))<0.75){
+  plot(rasterToContour(rev.scale,levels=b,nlevels=length(b)),col="black",lwd=2,add=T)}
+mapmisc::scaleBar(utm17,"bottomright",bty="n",cex=1,seg.len=4,outer=F)
+
+with(subset(cyano_area.all,date==date.fun("2023-06-21")),
+     mtext(side=3,line=-2.5,adj=0,paste("Date: ",format(date,"%m-%d-%Y"),
+                                        "\nData Source: NOAA NCCOS\nAlgae Coverage: ",
+                                        round(bloom.area.mi2)," mi\u00B2 (",round(bloom.area.per)," %)",sep="")))
+
+
+plot(0:1,0:1,ann=F,axes=F,type="n")
+b2=b/1000
+l.b=length(b2)
+labs=b2
+n.bks=length(b2) -1
+top.val=0.8
+bot.val=0.2
+mid.v.val=bot.val+(top.val-bot.val)/2
+x.max=0.3
+x.min=0
+mid.val=x.min+(x.max-x.min)/2
+txt.offset.val=-0.01
+lab.pos=seq(bot.val,top.val,length.out=l.b)
+legend_image=as.raster(matrix(rev(cols),ncol=1))
+rasterImage(legend_image,x.min,bot.val,x.max,top.val)
+text(x=x.max, y = lab.pos, labels = format(b2),cex=0.75,adj=0,pos=4,offset=0.5)
+segments(rep(x.min,l.b),lab.pos,rep(x.max,l.b),lab.pos,lwd=2)
+#add cloud
+legend_image=as.raster(matrix("grey",ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.05,x.max,bot.val)
+text(x=x.max, y = bot.val-0.025, labels = "Clouds/Invalid data",cex=0.5,adj=0,pos=4,offset=0.5)
+
+legend_image=as.raster(matrix(adjustcolor("honeydew2",0.5),ncol=1))
+rasterImage(legend_image,x.min,bot.val-0.1,x.max,bot.val-0.05)
+text(x=x.max, y = bot.val-0.075, labels = "Littoral Zone",cex=0.5,adj=0,pos=4,offset=0.5)
+# bx.val= seq(bot.val,top.val,(top.val-bot.val)/n.bks)
+# rect(x.min,bx.val[1:n.bks],x.max,bx.val[2:(n.bks+1)],col=rev(col.rmp),lty=0)
+# text(y=bx.val[2:(n.bks+1)]-c(mean(diff(bx.val[2:(n.bks+1)]))/2), x = x.max, labels = rev(labs),cex=0.75,xpd=NA,pos=4,adj=0)
+text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000)")),adj=0,cex=0.8,pos=3,xpd=NA)
+dev.off()
 # bloom duration metric ---------------------------------------------------
 
 # for(j in 1:length(YRS)){
