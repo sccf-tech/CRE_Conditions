@@ -54,7 +54,7 @@ knitr::opts_chunk$set(echo=FALSE,
                       message=FALSE,
                       warning=FALSE,
                       fig.path="plots/")
-BGPlot=TRUE
+BGPlot=FALSE
 ## Libraries
 library(AnalystHelper)
 library(reshape)
@@ -1380,7 +1380,7 @@ algae.week%>%
 ### Algae Coverage
 
 
-```{r noaa hab data,echo=F,include=F}
+```{r noaa hab data,echo=F,include=F,eval=F}
 LOK.area=area(lakeO)-area(lakeO.lit)
 noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iYjNnK3AvTWRrYmNWbXU0K0YvMlA1UlBtTWZlRFV3R1RicVRYb2pxeVJBUA==")
 
@@ -1538,7 +1538,7 @@ algae.cov.per=subset(cyano_area,date==max(cyano_area$date))$bloom.area.per
 
 <br>
 
-```{r NOAA RS Plot,fig.width=6.5,fig.height=5,fig.align='center',fig.cap="Cyanobacteria Algal Index across Lake Okeechobee. Percent area based on open water coverage (Lake Area minus Littoral Zone). Data from NOAA NCCOS HAB data explorer.Data are provisional and subject to change."}
+```{r NOAA RS Plot,fig.width=6.5,fig.height=5,fig.align='center',fig.cap="Cyanobacteria Algal Index across Lake Okeechobee. Percent area based on open water coverage (Lake Area minus Littoral Zone). Data from NOAA NCCOS HAB data explorer.Data are provisional and subject to change.",eval=FALSE,include=FALSE}
 
 
 par(family="serif",mar=c(0.5,0.5,0.5,0.5),oma=c(0.1,0.1,0.1,0.1));
@@ -1599,7 +1599,7 @@ text(x=mid.val,y=top.val,expression(paste("CI"["Cyano"]," (cells mL"^"-1","x1000
 
 <br>
 
-```{r NOAA LOK area,fig.width=6.5,fig.height=5,fig.align='center',fig.cap="Daily cloud cover and cyanobacteria algal bloom coverage of Lake Okeechobee. Percent area based on open water coverage (Lake Area minus Littoral Zone). Data from NOAA NCCOS HAB data explorer.Data are provisional and subject to change. "}
+```{r NOAA LOK area,fig.width=6.5,fig.height=5,fig.align='center',fig.cap="Daily cloud cover and cyanobacteria algal bloom coverage of Lake Okeechobee. Percent area based on open water coverage (Lake Area minus Littoral Zone). Data from NOAA NCCOS HAB data explorer.Data are provisional and subject to change. ",eval=FALSE,include=FALSE}
 par(family="serif",mar=c(1,3,0.5,2),oma=c(2,2,0.5,2))
 layout(matrix(1:2,2,1),heights=c(0.5,1))
 
@@ -1657,44 +1657,44 @@ legend("topleft",legend=c("Smoothed Trend"),
 ```
 
 
-```{r noaa hab image,echo=F,include=F}
-# 
-# noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iVGZLZEU0cHZqYXlMWldYTlRDMWtEcz0=")
-# 
-# vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
-# 
-# noaa.image.inventory=data.frame()
-# # for(i in 1:6){
-# for(i in 1:length(vals)){
-#   tmp=noaa.HAB[vals[i]]
-#   tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
-#   tmp3=strsplit(tmp2,"href=|title=|>")
-# 
-#   dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp3,"[",3))
-# 
-#   fname.vals=strsplit(dat$filename,"_")
-#   dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
-# 
-#   date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
-#   yr.val=as.numeric(substr(sapply(date.vals,"[",2),1,4))
-#   month.val=as.numeric(substr(sapply(date.vals,"[",3),1,2))
-#   day.val=as.numeric(substr(sapply(date.vals,"[",3),3,4))
-#   dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
-# 
-#   noaa.image.inventory=rbind(dat,noaa.image.inventory)
-# }
-# 
-# noaa.HAB.image=subset(noaa.image.inventory,data.product=="CIcyano.LakeOkee.png'"&date==max(noaa.image.inventory$date))
-# 
-# 
-# 
-# ```{r, out.width="100%",echo=FALSE,fig.align="center",fig.cap=paste("Cyanobacteria Index for Lake Okeechobee for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)")}
-# 
-# knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
-# 
-# 
-# ```{r, out.width="50%",echo=FALSE,fig.align="center"}
-# knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
+```{r noaa hab image,echo=F,include=T}
+
+noaa.HAB=readLines("https://products.coastalscience.noaa.gov/habs_explorer/index.php?path=ajZiOVoxaHZNdE5nNytEb3RZdU5iVGZLZEU0cHZqYXlMWldYTlRDMWtEcz0=")
+
+vals=grep("<section class='onecol habonecol'><a href='https://products.coastalscience.noaa.gov/habs_explorer/index.ph",noaa.HAB)
+
+noaa.image.inventory=data.frame()
+# for(i in 1:6){
+for(i in 1:length(vals)){
+  tmp=noaa.HAB[vals[i]]
+  tmp2=strsplit(tmp,"<a|</a>")[[1]][4]
+  tmp3=strsplit(tmp2,"href=|title=|>")
+
+  dat=data.frame(fileadd=sapply(tmp3,"[",2),filename=sapply(tmp3,"[",3))
+
+  fname.vals=strsplit(dat$filename,"_")
+  dat$data.product=sapply(fname.vals,"[",length(fname.vals[[1]]))
+
+  date.vals=strsplit(sapply(fname.vals,"[",1),"\\.")
+  yr.val=as.numeric(substr(sapply(date.vals,"[",2),1,4))
+  month.val=as.numeric(substr(sapply(date.vals,"[",3),1,2))
+  day.val=as.numeric(substr(sapply(date.vals,"[",3),3,4))
+  dat$date=as.Date(paste(yr.val,month.val,day.val,sep="-"))
+
+  noaa.image.inventory=rbind(dat,noaa.image.inventory)
+}
+
+noaa.HAB.image=subset(noaa.image.inventory,data.product=="CIcyano.LakeOkee.png'"&date==max(noaa.image.inventory$date))
+
+```
+
+```{r, out.width="100%",echo=FALSE,fig.align="center",fig.cap=paste("Cyanobacteria Index for Lake Okeechobee for",noaa.HAB.image$date,"(Data Source: NOAA NCCOS)"),include=TRUE}
+
+knitr::include_graphics(noquote(gsub("'",'',noaa.HAB.image$fileadd)))
+```
+
+```{r, out.width="50%",echo=FALSE,fig.align="center",include=TRUE}
+knitr::include_graphics("https://nccospublicstor.blob.core.windows.net/hab-data/data/web/olci_fl_lake_o/legend.png")
 ```
 
 
