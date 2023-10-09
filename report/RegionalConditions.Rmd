@@ -1811,19 +1811,19 @@ par(family="serif",oma=c(0.25,0.25,0.25,0.25),mar=c(0.1,0.1,0.1,0.1),xpd=F)
 layout(matrix(1:2,1,2,byrow=F),widths=c(1,0.5))
 bbox.lims=bbox(bgdat_30d.shp)
 
-if(is.null(bgdat)==T){
-  plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
-  text(gCentroid(bbox.lims),"No data available\nat this time\n(data server issues)",col="red",cex=3)
-  plot(0:1,0:1,ann=F,axes=F,type="n")
-  }else{
+# if(is.null(bgdat)==T){
+#   plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
+#   text(gCentroid(bbox.lims),"No data available\nat this time\n(data server issues)",col="red",cex=3)
+#   plot(0:1,0:1,ann=F,axes=F,type="n")
+#   }else{
 
 plot(shore,col="cornsilk",border="grey",bg="lightblue",ylim=bbox.lims[c(2,4)],xlim=bbox.lims[c(1,3)],lwd=0.01)
-if(is.null(bgdat_30d.shp)==F){
+# if(is.null(bgdat_30d.shp)==F){
 plot(subset(bgdat_30d.shp,is.na(toxinpresent)==T),add=T,pch=21,bg="grey",cex=1)
 plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="NO"),add=T,pch=21,bg="green",cex=1,lwd=0.1)
 plot(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES"),add=T,pch=21,bg="red",
      cex=ifelse(subset(bgdat_30d.shp,toupper(toxinpresent)=="YES")$microcystin.val>8,2,1),lwd=0.1)
-}
+# }
 box(lwd=1)
 mapmisc::scaleBar(wgs84,"bottomleft",bty="n",cex=1,seg.len=4,outer=F)
 
@@ -1834,7 +1834,7 @@ legend("center",legend=c("Toxin Present","Microcystin Present >8 \u03BCg L\u207B
        col=c("black"),pt.bg=c("red","red","green","grey"),
        pt.cex=c(1,2,1,1),ncol=1,cex=0.8,bty="n",y.intersp=1,x.intersp=0.75,xpd=NA,xjust=0.5,yjust=1,
        title.adj = 0,title=paste0("Blue-green Algae Toxin status\n",format(date.rng[1],"%b %d,%Y")," to ",format(date.rng[2],"%b %d,%Y"),"\n(Presence/Absence)"))
-}
+# }
 ```
 
 ```{r,out.width='100%'}
