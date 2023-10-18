@@ -55,6 +55,24 @@ knitr::opts_chunk$set(echo=FALSE,
                       warning=FALSE,
                       fig.path="plots/")
 BGPlot=FALSE
+
+check.packages <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg)) 
+    install.packages(new.pkg, dependencies = TRUE)
+  sapply(pkg, require, character.only = TRUE)
+}
+
+check.package.git <- function(repo,pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg)) 
+    remotes::install_github(paste(repo,pkg,sep="/"))
+  sapply(pkg, require, character.only = TRUE)
+}
+
+check.packages("remotes")
+check.package.git("SwampThingPaul","AnalystHelper")
+
 ## Libraries
 library(AnalystHelper)
 library(reshape)
@@ -2403,6 +2421,14 @@ bk.dbkeys.bot=rbind(bk.dbkeys.bot,
                          param=c("WT","SPC"),
                          DBKEY=c("WZ152","WZ156")
                          ));# Adds site MARKHA - temporary alterantive site for MARKH
+
+bk.dbkeys.bot=subset(bk.dbkeys.bot,DBKEY!="UO832");# temperature data not reporting
+bk.dbkeys.bot=rbind(bk.dbkeys.bot,
+                    data.frame(depth="top",
+                         SITE=c("CCORAL"),
+                         param=c("WT"),
+                         DBKEY=c("UO834")
+                         ));# using top water temp as proxy to calculate salinity
 
 sal.dat=data.frame()
 for(i in 1:nrow(bk.dbkeys.bot)){
