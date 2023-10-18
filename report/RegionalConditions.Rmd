@@ -56,22 +56,22 @@ knitr::opts_chunk$set(echo=FALSE,
                       fig.path="plots/")
 BGPlot=FALSE
 
-check.packages <- function(pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if (length(new.pkg)) 
-    install.packages(new.pkg, dependencies = TRUE)
-  sapply(pkg, require, character.only = TRUE)
-}
-
-check.package.git <- function(repo,pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if (length(new.pkg)) 
-    remotes::install_github(paste(repo,pkg,sep="/"))
-  sapply(pkg, require, character.only = TRUE)
-}
-
-check.packages("remotes")
-check.package.git("SwampThingPaul","AnalystHelper")
+# check.packages <- function(pkg){
+#   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+#   if (length(new.pkg)) 
+#     install.packages(new.pkg, dependencies = TRUE)
+#   sapply(pkg, require, character.only = TRUE)
+# }
+# 
+# check.package.git <- function(repo,pkg){
+#   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+#   if (length(new.pkg)) 
+#     remotes::install_github(paste(repo,pkg,sep="/"))
+#   sapply(pkg, require, character.only = TRUE)
+# }
+# 
+# check.packages("remotes")
+# check.package.git("SwampThingPaul","AnalystHelper")
 
 ## Libraries
 library(AnalystHelper)
