@@ -32,9 +32,8 @@ jobs:
           install.packages('raster', repos='https://rspatial.r-universe.dev')
           # pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
           # install.packages(pack.url,repos=NULL,type="source")
-          remotes::install_url("https://raw.githubusercontent.com/sccf-tech/CRE_Conditions/main/report/resource/AnalystHelper_0.1.2.tar.gz")
-          # install.packages("SwampThingPaul/AnalystHelper")
-          # remotes::install_github("cran/mapmisc")
+          # remotes::install_url("https://raw.githubusercontent.com/sccf-tech/CRE_Conditions/main/report/resource/AnalystHelper_0.1.2.tar.gz")
+          remotes::install_github("cran/mapmisc")
           # remotes::install_github("rspatial/raster")
         shell: Rscript {0}
         
