@@ -55,23 +55,29 @@ knitr::opts_chunk$set(echo=FALSE,
                       warning=FALSE,
                       fig.path="plots/")
 BGPlot=FALSE
-
-check.packages <- function(pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if (length(new.pkg))
-    install.packages(new.pkg, dependencies = TRUE)
-  sapply(pkg, require, character.only = TRUE)
+# 
+# check.packages <- function(pkg){
+#   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+#   if (length(new.pkg))
+#     install.packages(new.pkg, dependencies = TRUE)
+#   sapply(pkg, require, character.only = TRUE)
+# }
+# 
+# check.package.git <- function(repo,pkg){
+#   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+#   if (length(new.pkg))
+#     remotes::install_github(paste(repo,pkg,sep="/"))
+#   sapply(pkg, require, character.only = TRUE)
+# }
+# 
+# check.packages("remotes")
+# check.package.git("SwampThingPaul","AnalystHelper")
+## Specific to AnalystHelper for GA actions issues
+pkg=c("AnalystHelper" )
+new.pkg=pkg[!(pkg %in% installed.packages()[, "Package"])]
+if(length(new.pkg)){
+  remotes::install_url("https://raw.githubusercontent.com/sccf-tech/CRE_Conditions/main/report/resource/AnalystHelper_0.1.2.tar.gz")
 }
-
-check.package.git <- function(repo,pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if (length(new.pkg))
-    remotes::install_github(paste(repo,pkg,sep="/"))
-  sapply(pkg, require, character.only = TRUE)
-}
-
-check.packages("remotes")
-check.package.git("SwampThingPaul","AnalystHelper")
 
 ## Libraries
 library(AnalystHelper)
