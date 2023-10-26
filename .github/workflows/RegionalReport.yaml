@@ -29,6 +29,7 @@ jobs:
                   "RcppRoll","downloadthis","dataRetrieval",
                   "RCurl","png","jsonlite","httr","sp","rgdal",
                   "rgeos","remotes","httr","sf","mapmisc"))
+          remotes::install_github("SwampThingPaul/AnalystHelper")
           install.packages('raster', repos='https://rspatial.r-universe.dev')
           # pack.url<-"https://cran.r-project.org/src/contrib/Archive/tmap/tmap_3.3-1.tar.gz"
           # install.packages(pack.url,repos=NULL,type="source")
