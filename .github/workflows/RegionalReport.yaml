@@ -1,10 +1,10 @@
 ## from https://distillery.rbind.io/posts/2021-03-18-use-github-actions-with-r-markdown-and-distill/
 name: Render & Deploy Site
-# on: [push]
-on:
-  push:
-  schedule:
-    - cron: '55 10 * * *'
+on: [push]
+# on:
+#   push:
+#   schedule:
+#     - cron: '55 10 * * *'
 #    - cron: '55 10,15 * * *'
 #    - cron: '40 11,12,15 * * 1,2,3,4,5'
 # https://crontab.guru/#5_*_*_*_*
